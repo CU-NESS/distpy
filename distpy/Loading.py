@@ -1,7 +1,7 @@
 """
 File: distpy/Loading.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 7 Aug 2017
 
 Description: File containing a function which loads a Distribution from an hdf5
              file which was saved using the prior's save() or
@@ -16,6 +16,7 @@ from .BinomialDistribution import BinomialDistribution
 from .ExponentialDistribution import ExponentialDistribution
 from .DoubleSidedExponentialDistribution import\
     DoubleSidedExponentialDistribution
+from .WeibullDistribution import WeibullDistribution
 from .EllipticalUniformDistribution import EllipticalUniformDistribution
 from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
 from .GaussianDistribution import GaussianDistribution
@@ -73,6 +74,10 @@ def load_distribution_from_hdf5_group(group):
         low = group.attrs['low']
         high = group.attrs['high']
         return UniformDistribution(low=low, high=high)
+    elif class_name == '': 
+        shape = group.attrs['shape']
+        scale = group.attrs['scale']
+        return WeibullDistribution(shape=shape, scale=scale)
     elif class_name == 'TruncatedGaussianDistribution':
         mean = group.attrs['mean']
         variance = group.attrs['variance']

@@ -124,6 +124,17 @@ The included univariate distributions (and their initializations, equals signs i
 (variance) --- no convenient expression; in limit, approaches variance
 
 
+(12) WeibullDistribution(shape=1, scale=1.)
+
+(pdf) --- f(x) = (shape / scale) * (x / scale)^(shape - 1) * e^(-(x / scale)^shape)
+
+(support) --- x > 0
+
+(mean) --- scale * Gamma(1 + (1 / shape))
+
+(variance) --- scale^2 * [Gamma(1 + (2 / shape)) - (Gamma(1 + (1 / shape)))^2]
+
+
 
 And the following multivariate distributions are included:
 

@@ -16,6 +16,7 @@ from .ParallelepipedDistribution import ParallelepipedDistribution
 from .PoissonDistribution import PoissonDistribution
 from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
 from .UniformDistribution import UniformDistribution
+from .WeibullDistribution import WeibullDistribution
 from .LinkedDistribution import LinkedDistribution
 from .SequentialDistribution import SequentialDistribution
 from .DistributionSet import DistributionSet
