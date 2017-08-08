@@ -12,7 +12,7 @@ mcov = [[125., 75.], [75., 125.]]
 distribution = GaussianDistribution(mmean, mcov)
 assert distribution.numparams == 2
 t0 = time.time()
-sample = [distribution.draw() for i in xrange(sample_size)]
+sample = distribution.draw(sample_size)
 print (('It took %.3f s for a sample ' % (time.time()-t0)) +\
       ('of size %i to be drawn from a multivariate ' % (sample_size,)) +\
       ('(%i parameters) Gaussian.' % distribution.numparams))

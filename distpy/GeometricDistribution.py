@@ -45,11 +45,19 @@ class GeometricDistribution(Distribution):
             self._log_common_ratio = np.log(self.common_ratio)
         return self._log_common_ratio
     
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws and returns a value from this distribution using numpy.random.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
         """
-        return int(np.floor(np.log(rand.rand()) / self.log_common_ratio))
+        return rand.geometric(1 - self.common_ratio, size=shape)
     
     def log_value(self, point):
         """

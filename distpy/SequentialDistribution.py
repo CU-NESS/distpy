@@ -8,7 +8,7 @@ Description: File containing distribution which has a 1D form but manifests in
 """
 import numpy as np
 from scipy.special import gammaln as log_gamma
-from .TypeCategories import numerical_types, sequence_types
+from .TypeCategories import int_types, numerical_types, sequence_types
 from .Distribution import Distribution
 from .UniformDistribution import UniformDistribution
 
@@ -62,15 +62,31 @@ class SequentialDistribution(Distribution):
         """
         return self._numparams
     
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws values from shared_distribution and sorts them.
         
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
+        
         returns numpy.ndarray of values (sorted by design)
         """
-        unsorted =\
-            [self.shared_distribution.draw() for i in range(self.numparams)]
-        return np.sort(np.array(unsorted))
+        none_shape = (shape is None)
+        if none_shape:
+            shape = (1,)
+        elif type(shape) in int_types:
+            shape = (shape,)
+        unsorted = self.shared_distribution.draw(shape=shape+(self.numparams,))
+        points = np.sort(np.array(unsorted))
+        if none_shape:
+            return points[0]
+        else:
+            return points
 
     def log_value(self, point):
         """

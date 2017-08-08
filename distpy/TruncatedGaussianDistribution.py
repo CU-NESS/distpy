@@ -9,6 +9,7 @@ Description: File containing class representing a truncated 1-dimensional
 import numpy as np
 import numpy.random as rand
 from scipy.special import erf, erfinv
+from .TypeCategories import int_types
 from .Distribution import Distribution
 
 class TruncatedGaussianDistribution(Distribution):
@@ -55,13 +56,31 @@ class TruncatedGaussianDistribution(Distribution):
         """
         return 1
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws and returns a value from this distribution using numpy.random.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
         """
-        unif = rand.rand()
-        arg_to_erfinv = (unif * self._hi_term) + ((1. - unif) * self._lo_term)
-        return self.mean + (np.sqrt(2 * self.var) * erfinv(arg_to_erfinv))
+        none_shape = (shape is None)
+        if none_shape:
+            shape = (1,)
+        elif type(shape) in int_types:
+            shape = (shape,)
+        unifs = rand.rand(*shape)
+        args_to_erfinv =\
+            (unifs * self._hi_term) + ((1. - unifs) * self._lo_term)
+        points = self.mean + (np.sqrt(2 * self.var) * erfinv(args_to_erfinv))
+        if none_shape:
+            return points[0]
+        else:
+            return points
 
     def log_value(self, point):
         """

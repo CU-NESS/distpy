@@ -52,12 +52,20 @@ class BinomialDistribution(Distribution):
         """
         return 1
     
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws and returns a value from this distribution using numpy.random.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
         """
-        return\
-            rand.binomial(self.number_of_trials, self.probability_of_success)
+        return rand.binomial(self.number_of_trials,\
+            self.probability_of_success, size=shape)
     
     def log_value(self, point):
         """

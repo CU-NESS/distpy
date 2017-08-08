@@ -18,7 +18,7 @@ ellmean = [4.76, -12.64]
 ellcov = [[1, -0.5], [-0.5, 1]]
 distribution = EllipticalUniformDistribution(ellmean, ellcov)
 t0 = time.time()
-sample = [distribution.draw() for i in xrange(sample_size)]
+sample = distribution.draw(sample_size)
 print (('It took %.3f s for a sample ' % (time.time()-t0)) +\
       ('of size %i' % (sample_size,)) +\
       ' to be drawn from a uniform multivariate elliptical prior.')

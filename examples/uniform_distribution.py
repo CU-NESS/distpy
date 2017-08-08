@@ -20,7 +20,7 @@ assert distribution.numparams == 1
 assert (distribution.low == distribution2.low) and\
     (distribution.high == distribution2.high)
 t0 = time.time()
-sample = [distribution.draw() for i in range(sample_size)]
+sample = distribution.draw(sample_size)
 print ('It took %.5f s to draw %i' % (time.time()-t0, sample_size)) +\
       ' points from a univariate uniform distribution.'
 pl.figure()

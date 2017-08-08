@@ -38,6 +38,7 @@ class BetaDistribution(Distribution):
         else:
             raise ValueError('The alpha or beta parameter given to a ' +\
                              'Beta were not of a numerical type.')
+        self.const_lp_term = -np.log(beta_func(self.alpha, self.beta))
     
     @property
     def numparams(self):
@@ -46,11 +47,19 @@ class BetaDistribution(Distribution):
         """
         return 1
     
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws and returns a value from this distribution using numpy.random.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
         """
-        return rand.beta(self.alpha, self.beta)
+        return rand.beta(self.alpha, self.beta, size=shape)
     
     def log_value(self, point):
         """
@@ -61,9 +70,8 @@ class BetaDistribution(Distribution):
         """
         if (point <= 0) or (point >= 1):
             return -np.inf
-        return (self._alpha_min_one * np.log(point)) +\
-               (self._beta_min_one * np.log(1. - point)) -\
-               np.log(beta_func(self.alpha, self.beta))
+        return self.const_lp_term + (self._alpha_min_one * np.log(point)) +\
+               (self._beta_min_one * np.log(1. - point))
     
     def to_string(self):
         """

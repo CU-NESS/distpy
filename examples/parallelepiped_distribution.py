@@ -21,7 +21,7 @@ distribution = ParallelepipedDistribution(center, face_directions, distances,\
     norm_dirs=False)
 assert distribution.numparams == 2
 t0 = time.time()
-sample = [distribution.draw() for i in range(sample_size)]
+sample = distribution.draw(sample_size)
 print (('It took %.5f s to draw %i ' % (time.time()-t0,sample_size,)) +\
       'points from a bivariate parallelogram shaped uniform distribution.')
 xs = [sample[i][0] for i in range(sample_size)]

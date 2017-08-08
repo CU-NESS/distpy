@@ -33,10 +33,18 @@ class Distribution():
     single number for a univariate distribution or a numpy.ndarray for a
     multivariate distribution.
     """
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws a point from the distribution. Must be implemented by any base
         class.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
         
         returns: either single value (if distribution is 1D) or array of values
         """

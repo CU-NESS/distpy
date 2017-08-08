@@ -8,7 +8,7 @@ Description: File containing class representing an arbitrary dimensional
 """
 import numpy as np
 import numpy.random as rand
-from .TypeCategories import sequence_types
+from .TypeCategories import int_types, sequence_types
 from .Distribution import Distribution
 
 
@@ -117,13 +117,34 @@ class GriddedDistribution(Distribution):
         """
         return self._N
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws and returns a point from this distribution.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
         """
-        rval = rand.rand()
-        inv_cdf_index = self._inverse_cdf_by_packed_index(rval)
-        return self._point_from_packed_index(inv_cdf_index)
+        none_shape = (shape is None)
+        if none_shape:
+            shape = (1,)
+        elif type(shape) in int_types:
+            shape = (shape,)
+        rvals = rand.rand(*shape)
+        points = np.ndarray(shape + (self.numparams,))
+        for multi_index in np.ndindex(*shape):
+            inv_cdf_index =\
+                self._inverse_cdf_by_packed_index(rvals[multi_index])
+            points[multi_index] =\
+                self._point_from_packed_index(inv_cdf_index)
+        if none_shape:
+            return points[0]
+        else:
+            return points
 
     def log_value(self, point):
         """

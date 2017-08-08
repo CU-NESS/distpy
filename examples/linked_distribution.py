@@ -16,7 +16,7 @@ sample_size = int(1e5)
 
 distribution = LinkedDistribution(GaussianDistribution(0., 1.), 2)
 t0 = time.time()
-sample = [distribution.draw() for i in xrange(sample_size)]
+sample = distribution.draw(sample_size)
 print ("It took %.3f s to draw %i" % (time.time()-t0,sample_size,)) +\
       " vectors from a LinkedPrior with a Normal(0,1) distribution."
 sam_xs = [sample[i][0] for i in xrange(sample_size)]

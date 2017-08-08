@@ -15,7 +15,7 @@ sample_size = int(1e5)
 distribution = GeometricDistribution(0.5)
 assert distribution.numparams == 1
 t0 = time.time()
-sample = [distribution.draw() for i in range(sample_size)]
+sample = distribution.draw(sample_size)
 print ('It took %.5f s to draw %i ' % (time.time() - t0, sample_size)) +\
       'points from a geometric distribution.'
 pl.figure()

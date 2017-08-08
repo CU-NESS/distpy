@@ -17,7 +17,7 @@ uvar = 2.5
 distribution = GaussianDistribution(umean, uvar)
 assert distribution.numparams == 1
 t0 = time.time()
-sample = [distribution.draw() for i in xrange(sample_size)]
+sample = distribution.draw(sample_size)
 print (('It took %.3f s for a sample ' % (time.time()-t0)) +\
       ('of size %i' % (sample_size,)) +\
       ' to be drawn from a univariate Gaussian.')

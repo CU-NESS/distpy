@@ -9,7 +9,7 @@ Description: File containing class represening a uniform distribution over an
 import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
-from .TypeCategories import sequence_types
+from .TypeCategories import int_types, sequence_types
 from .Distribution import Distribution
 
 def _normed(vec):
@@ -141,18 +141,32 @@ class ParallelepipedDistribution(Distribution):
             self._area = np.abs(lalg.det(self.matrix))
         return self._area
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws a value from the parallelepiped this object describes (uniform
         distribution over support).
         
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
+        
         returns random draw in form of numpy.ndarray
         """
-        transformed_point = rand.rand(self.numparams)
-        ret_val = self.vertex
-        for i in range(self.numparams):
-            ret_val = ret_val + (transformed_point[i] * self.matrix.A[i,:])
-        return ret_val
+        none_shape = (shape is None)
+        if none_shape:
+            shape = (1,)
+        elif type(shape) in int_types:
+            shape = (shape,)
+        transformed_point = rand.rand(*(shape + (self.numparams,)))
+        points = self.vertex + np.dot(transformed_point, self.matrix.A)
+        if none_shape:
+            return points[0]
+        else:
+            return points
 
     def log_value(self, point):
         """

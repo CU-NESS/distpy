@@ -11,11 +11,8 @@ import numpy.random as rand
 import numpy.linalg as lalg
 import scipy.linalg as slalg
 from scipy.special import gammaln as log_gamma
+from .TypeCategories import int_types
 from .Distribution import Distribution
-
-def _normed(vec):
-    arrvec = np.array(vec)
-    return (arrvec / lalg.norm(arrvec))
 
 class EllipticalUniformDistribution(Distribution):
     """
@@ -76,21 +73,41 @@ class EllipticalUniformDistribution(Distribution):
             self._numparams = len(self.mean)
         return self._numparams
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws a random vector from this uniform elliptical distribution. By the
         definition of this class, the point it draws is equally likely to lie
         anywhere inside the ellipse defining this distribution.
         
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
+        
         returns numpy.ndarray of containing random variates for each parameter
         """
-        xi = _normed(rand.randn(self.numparams))
-        # xi is now random directional unit vector
-        radial_cdf = rand.rand()
+        none_shape = (shape is None)
+        if none_shape:
+            shape = (1,)
+        elif type(shape) in int_types:
+            shape = (shape,)
+        xis = rand.randn(*(shape + (self.numparams,)))
+        xis = xis / np.sqrt(np.sum(np.power(xis, 2), axis=-1, keepdims=True))
+        # xi now contains random directional unit vectors
+        radial_cdfs = rand.rand(*shape)
         max_z_radius = np.sqrt(self.numparams + 2)
-        fractional_radius = np.power(radial_cdf, 1. / self.numparams)
-        deviation = max_z_radius * fractional_radius * np.dot(xi, self.sqrtcov)
-        return self.mean + deviation
+        fractional_radii = np.power(radial_cdfs, 1. / self.numparams)
+        deviations = max_z_radius * fractional_radii[...,np.newaxis] *\
+            np.dot(xis, self.sqrtcov)
+        points = self.mean[((np.newaxis,)*len(shape)) + (slice(None),)] +\
+            deviations
+        if none_shape:
+            return points[0]
+        else:
+            return points
     
     def log_value(self, point):
         """

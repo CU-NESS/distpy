@@ -32,7 +32,7 @@ for ix in range(len(xs)):
         pdf[ix,iy] = pdf_func(xs[ix], ys[iy])
 distribution = GriddedDistribution([xs, ys], pdf=pdf)
 t0 = time.time()
-sample = [distribution.draw() for i in range(sample_size)]
+sample = distribution.draw(sample_size)
 print ("It took %.3f s to draw %i " % (time.time()-t0, sample_size,)) +\
        "points from a user-defined distribution with " +\
        ("%i pixels." % (len(xs) * len(ys),))

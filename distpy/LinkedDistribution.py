@@ -7,7 +7,7 @@ Description: File containing class representing distribution of many random
              variates which must all be equal.
 """
 import numpy as np
-from .TypeCategories import numerical_types, sequence_types
+from .TypeCategories import int_types, numerical_types, sequence_types
 from .Distribution import Distribution
 
 class LinkedDistribution(Distribution):
@@ -60,14 +60,28 @@ class LinkedDistribution(Distribution):
         """
         return self._numparams
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws value from shared_distribution and assigns that value to all
         parameters.
         
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
+        
         returns numpy.ndarray of values (all are equal by design)
         """
-        return np.ones(self.numparams) * self.shared_distribution.draw()
+        if shape is None:
+            return np.ones(self.numparams) * self.shared_distribution.draw()
+        else:
+            if type(shape) in int_types:
+                shape = (shape,)
+            return np.ones(shape + (self.numparams,)) *\
+                self.shared_distribution.draw(shape=shape)[...,np.newaxis]
 
     def log_value(self, point):
         """

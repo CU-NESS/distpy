@@ -200,17 +200,26 @@ class GaussianDistribution(Distribution):
         """
         return self.__mul__(other)
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws a point from this distribution using numpy.random.
+        
+        shape: if None, returns single random variate
+                        (scalar for univariate ; 1D array for multivariate)
+               if int, n, returns n random variates
+                          (1D array for univariate ; 2D array for multivariate)
+               if tuple of n ints, returns that many random variates
+                                   n-D array for univariate ;
+                                   (n+1)-D array for multivariate
 
         returns a numpy.ndarray containing the values from this draw
         """
         if (self.numparams == 1):
             loc = self.mean.A[0,0]
             scale = np.sqrt(self.covariance.A[0,0])
-            return rand.normal(loc=loc, scale=scale)
-        return rand.multivariate_normal(self.mean.A[0,:], self.covariance.A)
+            return rand.normal(loc=loc, scale=scale, size=shape)
+        return rand.multivariate_normal(self.mean.A[0,:], self.covariance.A,\
+            size=shape)
 
     def log_value(self, point):
         """
