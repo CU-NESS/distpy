@@ -57,7 +57,7 @@ class GeometricDistribution(Distribution):
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
         """
-        return rand.geometric(1 - self.common_ratio, size=shape)
+        return rand.geometric(1 - self.common_ratio, size=shape) - 1
     
     def log_value(self, point):
         """
