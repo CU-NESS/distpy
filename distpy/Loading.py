@@ -24,6 +24,8 @@ from .ParallelepipedDistribution import ParallelepipedDistribution
 from .LinkedDistribution import LinkedDistribution
 from .SequentialDistribution import SequentialDistribution
 from .GriddedDistribution import GriddedDistribution
+from .UniformDirectionDistribution import UniformDirectionDistribution
+from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .DistributionSet import DistributionSet
 
 
@@ -113,6 +115,20 @@ def load_distribution_from_hdf5_group(group):
             ivar += 1
         pdf = group['pdf'].value
         return GriddedDistribution(variables=variables, pdf=pdf)
+    elif class_name == 'UniformDirectionDistribution':
+        pointing_center = tuple(group.attrs['pointing_center'])
+        low_theta = group.attrs['low_theta']
+        high_theta = group.attrs['high_theta']
+        low_phi = group.attrs['low_phi']
+        high_phi = group.attrs['high_phi']
+        return UniformDirectionDistribution(low_theta=low_theta,\
+            high_theta=high_theta, low_phi=low_phi, high_phi=high_phi,\
+            pointing_center=pointing_center, psi_center=psi_center)
+    elif class_name == 'GaussianDirectionDistribution':
+        pointing_center = tuple(group.attrs['pointing_center'])
+        sigma = group.attrs['sigma']
+        return GaussianDirectionDistribution(pointing_center=pointing_center,\
+            sigma=sigma, degrees=False)
     else:
         raise ValueError("The class of the Distribution was not recognized.")
 

@@ -19,6 +19,8 @@ from .UniformDistribution import UniformDistribution
 from .WeibullDistribution import WeibullDistribution
 from .LinkedDistribution import LinkedDistribution
 from .SequentialDistribution import SequentialDistribution
+from .UniformDirectionDistribution import UniformDirectionDistribution
+from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .DistributionSet import DistributionSet
 from .Loading import load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file, load_distribution_set_from_hdf5_group,\
