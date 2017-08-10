@@ -204,3 +204,24 @@ And the following multivariate distributions are included:
 
 (variance) --- cov
 
+
+(7) UniformDirectionDistribution(low_theta=0, high_theta=np.pi, low_phi=0, high_phi=2*np.pi, pointing_center=(90, 0), psi_center=0)
+
+(pdf) --- f(theta, phi) = 1 / area_of_support
+
+(support) --- low_theta < rotate(theta) < high_theta ; low_phi < rotate(phi) < high_phi ; rotate is a function describing rotation to pointing_center and psi_center
+
+(mean) --- pointing_center
+
+(variance) --- no convenient expression
+
+
+(8) GaussianDirectionDistribution(pointing_center=(90, 0), sigma=10)
+
+(pdf) --- f(theta,phi) = e^(-gamma^2/sigma^2) where gamma is the angle between theta,phi and pointing_center
+
+(support) --- all valid theta and phi
+
+(mean) --- pointing_center
+
+(variance) --- no convenient expression
