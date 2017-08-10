@@ -466,11 +466,17 @@ class DistributionSet(object):
         
         group: the hdf5 file group to fill
         """
-        for (ituple, (distribution, params, transforms)) in self._data:
+        for (ituple, (distribution, params, transforms)) in\
+            enumerate(self._data):
             subgroup = group.create_group('distribution_%i' % (ituple,))
             distribution.fill_hdf5_group(subgroup)
-            subgroup.attrs['params'] = params
-            subgroup.attrs['transforms'] = transforms
+            for iparam in xrange(distribution.numparams):
+                subgroup.attrs['parameter_%i' % (iparam,)] = params[iparam]
+                if transforms[iparam] is not None:
+                    subgroup.attrs['transformation_%i' % (iparam)] =\
+                        transforms[iparam]
+            #subgroup.attrs['params'] = params
+            #subgroup.attrs['transforms'] = transforms
 
     def save(self, file_name):
         """

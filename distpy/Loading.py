@@ -160,8 +160,16 @@ def load_distribution_set_from_hdf5_group(group):
     while ('distribution_%i' % (ituple,)) in group:
         subgroup = group['distribution_%i' % (ituple,)]
         distribution = load_distribution_from_hdf5_group(subgroup)
-        params = subgroup.attrs['params']
-        transforms = subgroup.attrs['transforms']
+        params = []
+        transforms = []
+        iparam = 0
+        while ('parameter_%i' % (iparam,)) in subgroup.attrs:
+            params.append(subgroup.attrs['parameter_%i' % (iparam,)])
+            if ('transformation_%i' % (iparam,)) in subgroup.attrs:
+                transforms.append(\
+                    subgroup.attrs['transformation_%i' % (iparam,)])
+            else:
+                transforms.append(None)
         distribution_tuples.append((distribution, params, transforms))
         ituple += 1
     return DistributionSet(distribution_tuples=distribution_tuples)
