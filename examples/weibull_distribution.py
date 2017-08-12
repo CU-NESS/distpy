@@ -21,7 +21,7 @@ print 'It took %.5f s to draw %i points from a Weibull distribution.' %\
 pl.figure()
 pl.hist(sample, bins=100, linewidth=2, color='b', histtype='step',\
     label='sampled', normed=True)
-xs = np.arange(0., 3., 0.001)
+xs = np.arange(0.001, 3., 0.001)
 pl.plot(xs, map((lambda x : np.exp(distribution.log_value(x))), xs),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.title('Weibull distribution test', size='xx-large')

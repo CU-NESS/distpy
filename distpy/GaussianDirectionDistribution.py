@@ -61,8 +61,8 @@ class GaussianDirectionDistribution(DirectionDistribution):
         
         value: single positive number (in radians)
         """
-        if type(sigma) in numerical_types:
-            if sigma > 0:
+        if type(value) in numerical_types:
+            if value > 0:
                 self._sigma = value
             else:
                 raise ValueError("sigma given to " +\

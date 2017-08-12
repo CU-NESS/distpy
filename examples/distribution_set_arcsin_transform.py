@@ -24,7 +24,7 @@ print ('It took %.3f s to draw %i ' % (time.time()-t0,sample_size,)) +\
 pl.figure()
 pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
     label='sampled', normed=True)
-xs = np.arange(0, 1.001, 0.001)
+xs = np.linspace(0.001, 0.999, 999)
 pl.plot(xs, map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.legend(fontsize='xx-large', loc='upper left')

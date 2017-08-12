@@ -1,5 +1,3 @@
-from .TypeCategories import int_types, float_types, numerical_types,\
-    sequence_types
 from .Distribution import Distribution
 from .BetaDistribution import BetaDistribution
 from .BinomialDistribution import BinomialDistribution
@@ -23,6 +21,7 @@ from .DirectionDistribution import DirectionDistribution
 from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .DistributionSet import DistributionSet
+from .Saving import Savable
 from .Loading import load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file, load_distribution_set_from_hdf5_group,\
     load_distribution_set_from_hdf5_file

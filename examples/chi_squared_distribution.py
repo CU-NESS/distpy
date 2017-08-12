@@ -21,7 +21,7 @@ print 'It took %.5f s to draw %i points from a chisquared distribution.' %\
 pl.figure()
 pl.hist(sample, bins=100, linewidth=2, color='b', histtype='step',\
     label='sampled', normed=True)
-xs = np.arange(0., 30., 0.01)
+xs = np.arange(0.01, 30., 0.01)
 pl.plot(xs, map((lambda x : np.exp(distribution.log_value(x))), xs),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.title('Chi-squared distribution test', size='xx-large')
