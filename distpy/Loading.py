@@ -28,6 +28,15 @@ from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .DistributionSet import DistributionSet
 
+try:
+    import h5py
+except:
+    have_h5py = False
+    no_h5py_error = NotImplementedError("Loading couldn't be completed " +\
+                                        "because h5py couldn't be imported.")
+else:
+    have_h5py = True
+
 
 def load_distribution_from_hdf5_group(group):
     """
@@ -76,7 +85,7 @@ def load_distribution_from_hdf5_group(group):
         low = group.attrs['low']
         high = group.attrs['high']
         return UniformDistribution(low=low, high=high)
-    elif class_name == '': 
+    elif class_name == 'WeibullDistribution': 
         shape = group.attrs['shape']
         scale = group.attrs['scale']
         return WeibullDistribution(shape=shape, scale=scale)
@@ -141,10 +150,13 @@ def load_distribution_from_hdf5_file(file_name):
     
     returns: Distribution object contained in the hdf5 file
     """
-    hdf5_file = h5py.File(file_name, 'r')
-    distribution = load_distribution_from_hdf5_group(hdf5_file)
-    hdf5_file.close()
-    return distribution
+    if have_h5py:
+        hdf5_file = h5py.File(file_name, 'r')
+        distribution = load_distribution_from_hdf5_group(hdf5_file)
+        hdf5_file.close()
+        return distribution
+    else:
+        raise no_h5py_error
 
 
 def load_distribution_set_from_hdf5_group(group):
@@ -182,8 +194,11 @@ def load_distribution_set_from_hdf5_file(file_name):
     
     returns: DistributionSet object contained in the hdf5 file
     """
-    hdf5_file = h5py.File(file_name, 'r')
-    distribution_set = load_distribution_set_from_hdf5_group(hdf5_file)
-    hdf5_file.close()
-    return distribution_set
+    if have_h5py:
+        hdf5_file = h5py.File(file_name, 'r')
+        distribution_set = load_distribution_set_from_hdf5_group(hdf5_file)
+        hdf5_file.close()
+        return distribution_set
+    else:
+        raise no_h5py_error
 

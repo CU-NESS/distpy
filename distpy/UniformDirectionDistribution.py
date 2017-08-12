@@ -7,47 +7,222 @@ Description: File containing class representing uniform distribution on the
              (2D) surface of the sphere.
 """
 import numpy as np
-import healpy as hp
-from .TypeCategories import int_types
-from .Distribution import Distribution
+from .TypeCategories import int_types, numerical_types
+from .DirectionDistribution import DirectionDistribution
 from .UniformDistribution import UniformDistribution
 
-class UniformDirectionDistribution(Distribution):
+class UniformDirectionDistribution(DirectionDistribution):
     """
     Class representing a uniform distribution on the surface of a sphere.
     """
     def __init__(self, low_theta=0, high_theta=np.pi, low_phi=0,\
         high_phi=2*np.pi, pointing_center=(90, 0), psi_center=0):
         """
-        low_theta, high_theta, low_phi, and high_phi are given in radians.
-        pointing_center is given in (lat, lon) in degrees and psi_center is
-        given in degrees
+        Initializes a new UniformDirectionDistribution with the given
+        parameters.
+        
+        low_theta, high_theta, low_phi, and high_phi: constants defining
+                                                      support of distribution.
+                                                      theta (phi) represents
+                                                      the polar (azimuthal)
+                                                      angle are given in
+                                                      radians.
+        pointing_center: (latitude, longitude) in degrees. Must be (90, 0)
+                         (i.e. left default) if healpy is not installed.
+        psi_center: single number in degrees. Must be 0 (i.e. left default) if
+                    healpy is not installed
         """
+        self.psi_center = psi_center
+        self.pointing_center = pointing_center
         self.low_theta = low_theta
         self.high_theta = high_theta
         self.low_phi = low_phi
         self.high_phi = high_phi
-        self.psi_center = psi_center
-        self.pointing_center = pointing_center
-        self.theta_center = 90 - self.pointing_center[0]
-        self.phi_center = self.pointing_center[1]
-        self.cos_low_theta = np.cos(self.low_theta)
-        self.cos_high_theta = np.cos(self.high_theta)
-        self.phi_distribution =\
-            UniformDistribution(self.low_phi, self.high_phi)
-        self.cos_theta_distribution =\
-            UniformDistribution(self.cos_high_theta, self.cos_low_theta)
-        self.delta_cos_theta = self.cos_low_theta - self.cos_high_theta
-        self.delta_phi = self.high_phi - self.low_phi
-        self.delta_omega = self.delta_cos_theta * self.delta_phi
-        self.const_log_value = -np.log(self.delta_omega)
-        rot_zprime = hp.rotator.Rotator(rot=(-self.phi_center, 0, 0),\
-            deg=True, eulertype='y')
-        rot_yprime = hp.rotator.Rotator(rot=(0, self.theta_center, 0),\
-            deg=True, eulertype='y')
-        rot_z = hp.rotator.Rotator(rot=(self.psi_center, 0, 0), deg=True,\
-            eulertype='y')
-        self.rotator = rot_zprime * rot_yprime * rot_z
+    
+    @property
+    def low_theta(self):
+        """
+        Property storing the lowest value of the polar angle of distribution
+        support in radians.
+        """
+        if not hasattr(self, '_low_theta'):
+            raise AttributeError("low_theta was referenced before it was set.")
+        return self._low_theta
+    
+    @low_theta.setter
+    def low_theta(self, value):
+        """
+        Setter for the lowest value of the polar angle of distribution support in
+        radians.
+        
+        value: Must be between 0 and pi, inclusive.
+        """
+        if type(value) in numerical_types:
+            if (value >= 0) and (value <= np.pi):
+                self._low_theta = value
+            else:
+                raise ValueError("low_theta must be between 0 and pi.")
+        else:
+            raise TypeError("low_theta must be single number.")
+    
+    @property
+    def cos_low_theta(self):
+        """
+        Property storing cosine of smallest polar angle in the support of this
+        distribution.
+        """
+        if not hasattr(self, '_cos_low_theta'):
+            self._cos_low_theta = np.cos(self.low_theta)
+        return self._cos_low_theta
+    
+    @property
+    def high_theta(self):
+        """
+        Property storing the highest value of the polar angle of distribution
+        support in radians.
+        """
+        if not hasattr(self, '_high_theta'):
+            raise AttributeError("high_theta was referenced before it was " +\
+                                 "set.")
+        return self._high_theta
+    
+    @high_theta.setter
+    def high_theta(self, value):
+        """
+        Setter for the highest value of the polar angle of distribution support
+        in radians.
+        
+        value: Must be between 0 and pi, inclusive.
+        """
+        if type(value) in numerical_types:
+            if (value >= self.low_theta) and (value <= np.pi):
+                self._high_theta = value
+            else:
+                raise ValueError("high_theta must be between low_theta and " +\
+                                 "pi.")
+        else:
+            raise TypeError("high_theta must be single number.")
+    
+    @property
+    def cos_high_theta(self):
+        """
+        Property storing the cosine of the largest polar angle in the support
+        of this distribution.
+        """
+        if not hasattr(self, '_cos_high_theta'):
+            self._cos_high_theta = np.cos(self.high_theta)
+        return self._cos_high_theta
+    
+    @property
+    def delta_cos_theta(self):
+        """
+        Property storing the difference between the largest and smallest values
+        of the cosine of the polar angle.
+        """
+        if not hasattr(self, '_delta_cos_theta'):
+            self._delta_cos_theta = self.cos_low_theta - self.cos_high_theta
+        return self._delta_cos_theta
+    
+    @property
+    def cos_theta_distribution(self):
+        """
+        Property storing the distribution of the cosine of the polar angle.
+        """
+        if not hasattr(self, '_cos_theta_distribution'):
+            self._cos_theta_distribution =\
+                UniformDistribution(self.cos_high_theta, self.cos_low_theta)
+        return self._cos_theta_distribution
+    
+    @property
+    def low_phi(self):
+        """
+        Property storing the lowest value of the azimuthal angle of
+        distribution support in radians.
+        """
+        if not hasattr(self, '_low_phi'):
+            raise AttributeError("low_phi was referenced before it was set.")
+        return self._low_phi
+    
+    @low_phi.setter
+    def low_phi(self, value):
+        """
+        Setter for the lowest value of the azimuthal angle of distribution
+        support in radians.
+        
+        value: single number
+        """
+        if type(value) in numerical_types:
+            self._low_phi = value
+        else:
+            raise TypeError("low_phi must be single number.")
+    
+    @property
+    def high_phi(self):
+        """
+        Property storing the highest value of the azimuthal angle of
+        distribution support in radians.
+        """
+        if not hasattr(self, '_high_phi'):
+            raise AttributeError("high_phi was referenced before it was set.")
+        return self._high_phi
+    
+    @high_phi.setter
+    def high_phi(self, value):
+        """
+        Setter for the highest value of the azimuthal angle of distribution
+        support in radians.
+        
+        value: single number larger than low_phi
+        """
+        if type(value) in numerical_types:
+            if value > self.low_phi:
+                self._high_phi = value
+            else:
+                raise ValueError("high_phi must be greater than low_phi.")
+        else:
+            raise TypeError("high_phi must be single number.")
+    
+    @property
+    def delta_phi(self):
+        """
+        Property storing difference between largest and smallest values of
+        azimuthal angle in distribution.
+        """
+        if not hasattr(self, '_delta_phi'):
+            self._delta_phi = self.high_phi - self.low_phi
+        return self._delta_phi
+    
+    @property
+    def phi_distribution(self):
+        """
+        Property storing distribution of the azimuthal angle in radians.
+        """
+        if not hasattr(self, '_phi_distribution'):
+            self._phi_distribution =\
+                UniformDistribution(self.low_phi, self.high_phi)
+        return self._phi_distribution
+    
+    @property
+    def delta_omega(self):
+        """
+        Property storing the size (in solid angle) of the support of this
+        distribution. The value of the distribution is 1 / delta_omega.
+        """
+        if not hasattr(self, '_delta_omega'):
+            self._delta_omega = self.delta_cos_theta * self.delta_phi
+        return self._delta_omega
+    
+    @property
+    def const_log_value(self):
+        """
+        Property storing the logarithm of the constant value of the
+        distribution of any point inside the support of the distribution.
+        
+        returns: -np.log(self.delta_omega)
+        """
+        if not hasattr(self, '_const_log_value'):
+            self._const_log_value = -np.log(self.delta_omega)
+        return self._const_log_value
 
     def draw(self, shape=None):
         """
@@ -85,7 +260,8 @@ class UniformDirectionDistribution(Distribution):
         if (theta < self.low_theta) or (theta > self.high_theta) or\
             (phi < self.low_phi) or (phi > self.high_phi):
             return -np.inf
-        return self.const_log_value
+        else:
+            return self.const_log_value
     
     def to_string(self):
         """
@@ -94,13 +270,6 @@ class UniformDirectionDistribution(Distribution):
         return "UniformDirection((%.3g, %.3g), %.3g, %.3g, %.3g, %.3g)" %\
             (self.pointing_center[0], self.pointing_center[1], self.low_theta,\
             self.high_theta, self.low_phi, self.high_phi)
-    
-    @property
-    def numparams(self):
-        """
-        pointing directions are 2D because the surface of the sphere is 2D
-        """
-        return 2
     
     def __eq__(self, other):
         """
@@ -124,10 +293,9 @@ class UniformDirectionDistribution(Distribution):
         group: hdf5 file group to fill with data about this distribution
         """
         group.attrs['class'] = 'UniformDirectionDistribution'
+        DirectionDistribution.fill_hdf5_group(self, group)
         group.attrs['low_theta'] = self.low_theta
         group.attrs['high_theta'] = self.high_theta
         group.attrs['low_phi'] = self.low_phi
         group.attrs['high_phi'] = self.high_phi
-        group.attrs['pointing_center'] = self.pointing_center
-        group.attrs['psi_center'] = self.psi_center
 

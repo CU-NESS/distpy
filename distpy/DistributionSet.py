@@ -16,9 +16,9 @@ Description: A container which can hold an arbitrary number of distributions,
              DistributionSet.log_value(point). See documentation of individual
              functions for further details.
 """
-import h5py
 import numpy as np
 from .TypeCategories import sequence_types
+from .Saving import Savable
 from .Distribution import Distribution
 
 valid_transforms = ['log', 'log10', 'square', 'arcsin', 'logistic']
@@ -107,7 +107,7 @@ def _apply_inverse_transform(value, transform):
                          "should've been caught by previous error catching!")
         
 
-class DistributionSet(object):
+class DistributionSet(Savable):
     """
     An object which keeps track of many distributions which can be univariate
     or multivariate. It provides methods like log_value, which calls log_value
@@ -477,15 +477,4 @@ class DistributionSet(object):
                         transforms[iparam]
             #subgroup.attrs['params'] = params
             #subgroup.attrs['transforms'] = transforms
-
-    def save(self, file_name):
-        """
-        Saves DistributionSet in hdf5 file using the fill_hdf5_file group
-        function.
-        
-        file_name: name of hdf5 file to write
-        """
-        hdf5_file = h5py.File(file_name, 'w')
-        self.fill_hdf5_group(hdf5_file)
-        hdf5_file.close()
 

@@ -5,14 +5,14 @@ Date: 6 Aug 2017
 
 Description: File containing base class for all distributions.
 """
-import h5py
+from .Saving import Savable
 
 def raise_cannot_instantiate_distribution_error():
     raise NotImplementedError("Some part of Distribution class was not " +\
                               "implemented by subclass or Distribution is " +\
                               "being instantiated.")
 
-class Distribution():
+class Distribution(Savable):
     """
     This class exists for error catching. Since it exists as
     a superclass of all the distributions, one can call
@@ -103,15 +103,4 @@ class Distribution():
         distribution objects a and b.
         """
         return (not self.__eq__(other))
-    
-    def save(self, file_name):
-        """
-        Saves this distribution in an hdf5 file using the distribution's
-        fill_hdf5_group function.
-        
-        file_name: name of hdf5 file to write
-        """
-        hdf5_file = h5py.File(file_name, 'w')
-        self.fill_hdf5_group(hdf5_file)
-        hdf5_file.close()
 

@@ -8,12 +8,11 @@ Description: File containing class representing Gaussian distribution on the
 """
 import numpy as np
 import numpy.random as rand
-import healpy as hp
-from .TypeCategories import int_types
-from .Distribution import Distribution
+from .TypeCategories import int_types, numerical_types
+from .DirectionDistribution import DirectionDistribution
 from .UniformDistribution import UniformDistribution
 
-class GaussianDirectionDistribution(Distribution):
+class GaussianDirectionDistribution(DirectionDistribution):
     """
     Class representing Gaussian distribution on the surface of the sphere.
     """
@@ -22,31 +21,67 @@ class GaussianDirectionDistribution(Distribution):
         Generates a new GaussianPointingPrior centered at the given pointing
         and with the given angular scale.
         
-        pointing_center is always given in degrees, no matter value of degrees
-        sigma angular scale of Gaussian
+        pointing_center: (latitude, longitude) always given in degrees, no
+                         matter value of degrees parameter. Only (90,0) is
+                         allowed if healpy is not installed.
+        sigma: angular scale of Gaussian. in degrees if degrees parameter is
+               True
         degrees: if True, sigma is in degres; if False, sigma is in radians
         """
+        self.psi_center = 0
         self.pointing_center = pointing_center
-        self.theta_center = 90 - pointing_center[0]
-        self.phi_center = pointing_center[1]
-        self.sigma = sigma
         if degrees:
-            self.sigma = np.radians(self.sigma)
-        self.psi_prior = UniformDistribution(0, 2 * np.pi)
-        rot_zprime = hp.rotator.Rotator(rot=(-self.phi_center, 0, 0),\
-            deg=True, eulertype='y')
-        rot_yprime = hp.rotator.Rotator(rot=(0, self.theta_center, 0),\
-            deg=True, eulertype='y')
-        self.rotator = rot_zprime * rot_yprime
-        self.log_pdf_constant = -np.log((self.sigma ** 2) * 2 * np.pi)
+            self.sigma = np.radians(sigma)
+        else:
+            self.sigma = sigma
     
     @property
-    def numparams(self):
+    def psi_distribution(self):
         """
-        number of parameters is always 1 for pointing properties because they
-        specify a single point on the celestial sphere.
+        Property storing the distribution of the azimuthal angle about
+        pointing_center.
         """
-        return 2
+        if not hasattr(self, '_psi_distribution'):
+            self._psi_distribution = UniformDistribution(0, 2 * np.pi)
+        return self._psi_distribution
+    
+    @property
+    def sigma(self):
+        """
+        Property storing the angular scale of this distribution in radians.
+        """
+        if not hasattr(self, '_sigma'):
+            raise AttributeError("sigma was referenced before it was set.")
+        return self._sigma
+    
+    @sigma.setter
+    def sigma(self, value):
+        """
+        Setter for the angular scale of this distribution (in radians).
+        
+        value: single positive number (in radians)
+        """
+        if type(sigma) in numerical_types:
+            if sigma > 0:
+                self._sigma = value
+            else:
+                raise ValueError("sigma given to " +\
+                                 "GaussianDirectionDistribution was not " +\
+                                 "positive.")
+        else:
+            raise TypeError("sigma given to GaussianDirectionDistribution " +\
+                            "was not a single number.")
+    
+    @property
+    def const_log_value_contribution(self):
+        """
+        Property storing the constant part of the logarithm of the value of the
+        distribution at each given point.
+        """
+        if not hasattr(self, '_const_log_value_contribution'):
+            self._const_log_value_contribution =\
+                -np.log((self.sigma ** 2) * 2 * np.pi)
+        return self._const_log_value_contribution
     
     def to_string(self):
         """
@@ -61,9 +96,16 @@ class GaussianDirectionDistribution(Distribution):
         
         point: tuple of form (latitude, longitude)
         """
-        gamma = hp.rotator.angdist((point[1], point[0]),\
-            (self.pointing_center[1], self.pointing_center[0]), lonlat=True)[0]
-        return self.log_pdf_constant - (((gamma / self.sigma) ** 2) / 2)
+        sine_latitude_product = np.sin(np.radians(point[0])) *\
+            self.cos_theta_center
+        cosine_latitude_product = np.cos(np.radians(point[0])) *\
+            self.sin_theta_center
+        cosine_longitude_difference =\
+            np.cos(np.radians(point[1] - self.phi_center))
+        gamma = np.arccos(sine_latitude_product +\
+            (cosine_latitude_product * cosine_longitude_difference))
+        return self.const_log_value_contribution -\
+            (((gamma / self.sigma) ** 2) / 2)
     
     def draw(self, shape=None):
         """
@@ -73,7 +115,7 @@ class GaussianDirectionDistribution(Distribution):
                if int, n, returns n random variates (array of shape (n, 2))
                if tuple of n ints, (n+1)-D array
         """
-        psi_draw = self.psi_prior.draw(shape=shape)
+        psi_draw = self.psi_distribution.draw(shape=shape)
         if shape is None:
             gamma_draw =\
                 self.sigma * np.sqrt(-2 * np.log(1 - rand.rand()))
@@ -107,6 +149,6 @@ class GaussianDirectionDistribution(Distribution):
         group: hdf5 file group to file with data about this distribution
         """
         group.attrs['class'] = 'GaussianDirectionDistribution'
-        group.attrs['pointing_center'] = self.pointing_center
+        DirectionDistribution.fill_hdf5_group(self, group)
         group.attrs['sigma'] = self.sigma
 

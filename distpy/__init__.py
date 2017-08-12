@@ -19,6 +19,7 @@ from .UniformDistribution import UniformDistribution
 from .WeibullDistribution import WeibullDistribution
 from .LinkedDistribution import LinkedDistribution
 from .SequentialDistribution import SequentialDistribution
+from .DirectionDistribution import DirectionDistribution
 from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .DistributionSet import DistributionSet
