@@ -1,3 +1,11 @@
+"""
+File: distpy/__init__.py
+Author: Keith Tauscher
+Date: 12 Aug 2017
+
+Description: Imports classes in this module so that any given class, CLASS, can
+             be imported using "from distpy import CLASS"
+"""
 from .Distribution import Distribution
 from .BetaDistribution import BetaDistribution
 from .BinomialDistribution import BinomialDistribution

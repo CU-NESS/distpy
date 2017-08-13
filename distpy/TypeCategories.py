@@ -3,7 +3,7 @@ File: distpy/TypeCategories.py
 Author: Keith Tauscher
 Date: 6 Aug 2017
 
-Description: File containing 
+Description: File containing categories of types.
 """
 import numpy as np
 

@@ -95,6 +95,9 @@ class TruncatedGaussianDistribution(Distribution):
         return self._cons_lp_term - ((point - self.mean) ** 2) / (2 * self.var)
 
     def to_string(self):
+        """
+        Finds and returns string representation of this distribution.
+        """
         if self.lo is None:
             low_string = "-inf"
         else:

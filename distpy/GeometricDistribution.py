@@ -41,6 +41,10 @@ class GeometricDistribution(Distribution):
     
     @property
     def log_common_ratio(self):
+        """
+        Property storing the natural logarithm of the common ratio of
+        successive probabilities.
+        """
         if not hasattr(self, '_log_common_ratio'):
             self._log_common_ratio = np.log(self.common_ratio)
         return self._log_common_ratio

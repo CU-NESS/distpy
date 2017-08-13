@@ -416,6 +416,9 @@ class DistributionSet(Savable):
             return False
     
     def __ne__(self, other):
+        """
+        This function simply asserts that (a != b) == (not (a == b))
+        """
         return (not self.__eq__(other))
 
     def _numerical_adjective(self, num):

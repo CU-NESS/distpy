@@ -13,6 +13,11 @@ from .TypeCategories import int_types, sequence_types
 from .Distribution import Distribution
 
 def _normed(vec):
+    """
+    Finds and returns a normalized version of the given vector.
+    
+    vec: 1D sequence of numbers
+    """
     arrvec = np.array(vec)
     return (arrvec / lalg.norm(arrvec))
 

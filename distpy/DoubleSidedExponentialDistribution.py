@@ -52,6 +52,10 @@ class DoubleSidedExponentialDistribution(Distribution):
     
     @property
     def root_half_variance(self):
+        """
+        Property storing the square root of half the variance. This is the same
+        as 1/sqrt(2) times the standard deviation.
+        """
         if not hasattr(self, '_root_half_variance'):
             self._root_half_variance = np.sqrt(self.variance / 2.)
         return self._root_half_variance
