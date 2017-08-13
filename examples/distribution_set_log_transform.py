@@ -17,7 +17,7 @@ sample_size = int(1e4)
 distribution_set = DistributionSet()
 distribution_set.add_distribution(GaussianDistribution(5., 1.), 'x', 'log')
 t0 = time.time()
-sample = [distribution_set.draw()['x'] for i in range(sample_size)]
+sample = distribution_set.draw(sample_size)['x']
 print ('It took %.3f s to draw %i ' % (time.time()-t0,sample_size,)) +\
       'points from a 1 parameter lognormal distribution.'
 pl.figure()

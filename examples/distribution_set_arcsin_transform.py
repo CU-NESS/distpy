@@ -18,7 +18,7 @@ distribution_set = DistributionSet()
 distribution_set.add_distribution(UniformDistribution(0, np.pi / 2.), 'x',\
     'arcsin')
 t0 = time.time()
-sample = [distribution_set.draw()['x'] for i in range(sample_size)]
+sample = distribution_set.draw(sample_size)['x']
 print ('It took %.3f s to draw %i ' % (time.time()-t0,sample_size,)) +\
       'points from a 1D uniform distribution (in arcsin space).'
 pl.figure()

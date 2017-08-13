@@ -25,15 +25,12 @@ distribution_set.add_distribution(ParallelepipedDistribution([69., 156.],\
                                   [[1.,-1.], [1.,1.]], [1., 1.]),\
                                   ['f', 'g'])
 t0 = time.time()
-sample = [distribution_set.draw() for i in range(sample_size)]
+sample = distribution_set.draw(sample_size)
 print ('It took %.3f s to draw %i ' % (time.time()-t0,sample_size,)) +\
     'points from a mixed distribution with 7 ' +\
     'parameters, in groups of 3, 2, 1, and 1.'
-all_vals = {}
-for char in list('abcdefg'):
-    all_vals[char] = [sample[i][char] for i in range(sample_size)]
 pl.figure()
-pl.hist2d(all_vals['b'], all_vals['g'], bins=100, cmap=cm.bone)
+pl.hist2d(sample['b'], sample['g'], bins=100, cmap=cm.bone)
 pl.title('PriorSet seven-parameter test. b should be in [0,1] and g should ' +\
          'be around 156', size='xx-large')
 pl.xlabel('b', size='xx-large')

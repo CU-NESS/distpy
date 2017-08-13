@@ -17,7 +17,7 @@ Description: A container which can hold an arbitrary number of distributions,
              functions for further details.
 """
 import numpy as np
-from .TypeCategories import sequence_types
+from .TypeCategories import int_types, sequence_types
 from .Saving import Savable
 from .Distribution import Distribution
 
@@ -92,15 +92,15 @@ def _apply_inverse_transform(value, transform):
     if transform is None:
         return value
     elif transform == 'log':
-        return np.e ** value
+        return np.exp(value)
     elif transform == 'log10':
-        return 10. ** value
+        return np.power(10, value)
     elif transform == 'square':
         return np.sqrt(value)
     elif transform == 'arcsin':
         return np.sin(value)
     elif transform == 'logistic':
-        return 1 / (1. + (np.e ** (-value)))
+        return 1 / (1. + (np.exp(-value)))
     else:
         raise ValueError("Something went wrong and an attempt to evaluate" +\
                          " an invalid (inverse) transform was made. This" +\
@@ -253,9 +253,11 @@ class DistributionSet(Savable):
             # this line looks weird but it works for any input
             self._params.append(self._data[-1][1][iparam])
 
-    def draw(self):
+    def draw(self, shape=None):
         """
         Draws a point from all distributions.
+        
+        shape: shape of arrays which are values of return value
         
         returns a dictionary of random values indexed by parameter name
         """
@@ -264,12 +266,18 @@ class DistributionSet(Savable):
             (distribution, params, transforms) = self._data[idistribution]
             if (distribution.numparams == 1):
                 point[params[0]] = _apply_inverse_transform(\
-                    distribution.draw(), transforms[0])
+                    distribution.draw(shape=shape), transforms[0])
             else:
-                this_draw = distribution.draw()
-                for iparam in range(len(params)):
+                this_draw = distribution.draw(shape=shape)
+                if shape is None:
+                    slices = ()
+                elif type(shape) in int_types:
+                    slices = (slice(None),)
+                else:
+                    slices = (slice(None),) * len(shape)
+                for iparam in xrange(len(params)):
                     point[params[iparam]] = _apply_inverse_transform(\
-                        this_draw[iparam], transforms[iparam])
+                        this_draw[slices + (iparam,)], transforms[iparam])
         return point
 
     def log_value(self, point):
@@ -478,6 +486,4 @@ class DistributionSet(Savable):
                 if transforms[iparam] is not None:
                     subgroup.attrs['transformation_%i' % (iparam)] =\
                         transforms[iparam]
-            #subgroup.attrs['params'] = params
-            #subgroup.attrs['transforms'] = transforms
 
