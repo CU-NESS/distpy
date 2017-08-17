@@ -182,6 +182,7 @@ def load_distribution_set_from_hdf5_group(group):
                     subgroup.attrs['transformation_%i' % (iparam,)])
             else:
                 transforms.append(None)
+            iparam += 1
         distribution_tuples.append((distribution, params, transforms))
         ituple += 1
     return DistributionSet(distribution_tuples=distribution_tuples)
