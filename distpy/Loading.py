@@ -7,6 +7,9 @@ Description: File containing a function which loads a Distribution from an hdf5
              file which was saved using the prior's save() or
              load_hdf5_group(group) functions.
 """
+from Transform import NullTransform, LogTransform, Log10Transform,\
+    SquareTransform, ArcsinTransform, LogisticTransform
+
 from .UniformDistribution import UniformDistribution
 from .GammaDistribution import GammaDistribution
 from .BetaDistribution import BetaDistribution
@@ -36,6 +39,49 @@ except:
                                         "because h5py couldn't be imported.")
 else:
     have_h5py = True
+
+def load_transform_from_hdf5_group(group):
+    """
+    Loads a Transform object from an hdf5 file group.
+    
+    group: the hdf5 file group from which to load the Transform
+    
+    returns: Transform object of the correct type
+    """
+    try:
+        class_name = group.attrs['class']
+    except KeyError:
+        raise ValueError("group does not appear to contain a transform.")
+    if class_name == 'NullTransform':
+        return NullTransform()
+    elif class_name == 'LogTransform':
+        return LogTransform()
+    elif class_name == 'Log10Transform':
+        return Log10Transform()
+    elif class_name == 'SquareTransform':
+        return SquareTransform()
+    elif class_name == 'ArcsinTransform':
+        return ArcsinTransform()
+    elif class_name == 'LogisticTransform':
+        return LogisticDistribution()
+    else:
+        raise ValueError("class of transform not recognized.")
+
+def load_transform_from_hdf5_file(file_name):
+    """
+    Loads a Transform object from the given hdf5 file.
+    
+    file_name: string name of hdf5 file from which to load Transform object
+    
+    return: Transform object of the correct type
+    """
+    if have_h5py:
+        hdf5_file = h5py.File(file_name, 'r')
+        transform = load_transform_from_hdf5_group(hdf5_file)
+        hdf5_file.close()
+        return transform
+    else:
+        raise no_h5py_error
 
 
 def load_distribution_from_hdf5_group(group):
@@ -175,14 +221,10 @@ def load_distribution_set_from_hdf5_group(group):
         params = []
         transforms = []
         iparam = 0
-        while ('parameter_%i' % (iparam,)) in subgroup.attrs:
+        for iparam in xrange(distribution.numparams):
             params.append(subgroup.attrs['parameter_%i' % (iparam,)])
-            if ('transformation_%i' % (iparam,)) in subgroup.attrs:
-                transforms.append(\
-                    subgroup.attrs['transformation_%i' % (iparam,)])
-            else:
-                transforms.append(None)
-            iparam += 1
+            subsubgroup = subgroup['transform_%i' % (iparam,)]
+            transforms.append(load_transform_from_hdf5_group(subsubgroup))
         distribution_tuples.append((distribution, params, transforms))
         ituple += 1
     return DistributionSet(distribution_tuples=distribution_tuples)

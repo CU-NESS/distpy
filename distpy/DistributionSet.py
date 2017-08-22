@@ -19,93 +19,8 @@ Description: A container which can hold an arbitrary number of distributions,
 import numpy as np
 from .TypeCategories import int_types, sequence_types
 from .Saving import Savable
-from .Distribution import Distribution
-
-valid_transforms = ['log', 'log10', 'square', 'arcsin', 'logistic']
-
-ln10 = np.log(10)
-
-def _check_if_valid_transform(transform):
-    #
-    # Checks if the given variable is either None
-    # or a string describing a valid transform.
-    #
-    if type(transform) is str:
-        if transform not in valid_transforms:
-            raise ValueError("The transform given to apply" +\
-                             " to a variable was not valid.")
-    elif (transform is not None):
-        raise ValueError("The type of the transform given to a " +\
-                         "DistributionSet to apply to a parameter was not " +\
-                         "recognized.")
-
-def _log_value_addition(value, transform):
-    #
-    # Finds the term which should be added to the log value of the distribution
-    # due to the transform (pretty much the log of the derivative of the
-    # transformed parameter with respect to the original parameter evaluated at
-    # value.
-    #
-    if transform is None:
-        return 0.
-    elif transform == 'log':
-        return -1. * np.log(value)
-    elif transform == 'log10':
-        return -1. * np.log(ln10 * value)
-    elif transform == 'square':
-        return np.log(2 * value)
-    elif transform == 'arcsin':
-        return -np.log(1.-np.power(value, 2.)) / 2.
-    elif transform == 'logistic':
-        return -np.log(value * (1. - value))
-    else:
-        raise ValueError("For some reason the _log_value_addition " +\
-                         "function wasn't implemented for the transform " +\
-                         "given, which is \"%s\"." % (transform,))
-
-def _apply_transform(value, transform):
-    #
-    # Applies the given transform to the value and returns the result.
-    #
-    if transform is None:
-        return value
-    elif transform == 'log':
-        return np.log(value)
-    elif transform == 'log10':
-        return np.log10(value)
-    elif transform == 'square':
-        return np.power(value, 2.)
-    elif transform == 'arcsin':
-        return np.arcsin(value)
-    elif transform == 'logistic':
-        return np.log(value / (1. - value))
-    else:
-        raise ValueError("Something went wrong and an attempt to evaluate " +\
-                         "an invalid transform was made. This should " +\
-                         "have been caught by previous error catching!")
-
-def _apply_inverse_transform(value, transform):
-    #
-    # Applies the inverse of the given transform
-    # to the value and returns the result.
-    #
-    if transform is None:
-        return value
-    elif transform == 'log':
-        return np.exp(value)
-    elif transform == 'log10':
-        return np.power(10, value)
-    elif transform == 'square':
-        return np.sqrt(value)
-    elif transform == 'arcsin':
-        return np.sin(value)
-    elif transform == 'logistic':
-        return 1 / (1. + (np.exp(-value)))
-    else:
-        raise ValueError("Something went wrong and an attempt to evaluate" +\
-                         " an invalid (inverse) transform was made. This" +\
-                         "should've been caught by previous error catching!")
-        
+from .Transform import NullTransform, cast_to_transform, castable_to_transform
+from .Distribution import Distribution        
 
 class DistributionSet(Savable):
     """
@@ -129,10 +44,8 @@ class DistributionSet(Savable):
         if type(distribution_tuples) in sequence_types:
             for idistribution in xrange(len(distribution_tuples)):
                 this_tup = distribution_tuples[idistribution]
-                if (type(this_tup) in sequence_types) and len(this_tup) == 3:
-                    (distribution, params, transforms) =\
-                        distribution_tuples[idistribution]
-                    self.add_distribution(distribution, params, transforms)
+                if (type(this_tup) in sequence_types):
+                    self.add_distribution(*this_tup)
                 else:
                     raise ValueError("One of the distribution tuples " +\
                                      "provided to the initializer of a " +\
@@ -164,6 +77,13 @@ class DistributionSet(Savable):
         """
         return self._params
 
+    @property
+    def numparams(self):
+        """
+        Property storing the number of parameters in this DistributionSet.
+        """
+        return len(self.params)
+
     def add_distribution(self, distribution, params, transforms=None):
         """
         Adds a distribution and the parameters it describes to the
@@ -177,11 +97,10 @@ class DistributionSet(Savable):
         """
         if isinstance(distribution, Distribution):
             if transforms is None:
-                transforms = [None] * distribution.numparams
-            elif (type(transforms) is str):
-                _check_if_valid_transform(transforms)
+                transforms = [NullTransform()] * distribution.numparams
+            elif castable_to_transform(transforms):
                 if (distribution.numparams == 1):
-                    transforms = [transforms]
+                    transforms = [cast_to_transform(transforms)]
                 else:
                     raise ValueError("The transforms variable applied" +\
                                      " to parameters of a DistributionSet " +\
@@ -190,8 +109,14 @@ class DistributionSet(Savable):
                                      "multivariate.")
             elif type(transforms) in sequence_types:
                 if len(transforms) == distribution.numparams:
-                    for itransform in range(len(transforms)):
-                        _check_if_valid_transform(transforms[itransform])
+                    all_castable_to_transforms =\
+                        all([castable_to_transform(val) for val in transforms])
+                    if all_castable_to_transforms:
+                        transforms =\
+                            [cast_to_transform(val) for val in transforms]
+                    else:
+                        raise ValueError("Not all transforms given to " +\
+                                         "add_distribution were understood.")
                 else:
                     raise ValueError("The list of transforms applied to " +\
                                      "parameters in a DistributionSet was " +\
@@ -249,7 +174,7 @@ class DistributionSet(Savable):
         else:
             raise ValueError("The distribution given to a DistributionSet " +\
                              "was not recognized as a distribution.")
-        for iparam in range(distribution.numparams):
+        for iparam in xrange(distribution.numparams):
             # this line looks weird but it works for any input
             self._params.append(self._data[-1][1][iparam])
 
@@ -265,8 +190,8 @@ class DistributionSet(Savable):
         for idistribution in range(len(self._data)):
             (distribution, params, transforms) = self._data[idistribution]
             if (distribution.numparams == 1):
-                point[params[0]] = _apply_inverse_transform(\
-                    distribution.draw(shape=shape), transforms[0])
+                point[params[0]] = transforms[0].apply_inverse(\
+                    distribution.draw(shape=shape))
             else:
                 this_draw = distribution.draw(shape=shape)
                 if shape is None:
@@ -276,8 +201,8 @@ class DistributionSet(Savable):
                 else:
                     slices = (slice(None),) * len(shape)
                 for iparam in xrange(len(params)):
-                    point[params[iparam]] = _apply_inverse_transform(\
-                        this_draw[slices + (iparam,)], transforms[iparam])
+                    point[params[iparam]] = transforms[iparam].apply_inverse(\
+                        this_draw[slices + (iparam,)])
         return point
 
     def log_value(self, point):
@@ -292,18 +217,18 @@ class DistributionSet(Savable):
         """
         if type(point) is dict:
             result = 0.
-            for idistribution in range(len(self._data)):
+            for idistribution in xrange(len(self._data)):
                 (distribution, params, transforms) = self._data[idistribution]
                 if (distribution.numparams == 1):
                     result += distribution.log_value(\
-                        _apply_transform(point[params[0]], transforms[0]))
+                        transforms[0].apply(point[params[0]]))
                 else:
                     result += distribution.log_value(\
-                        [_apply_transform(point[params[i]], transforms[i])\
-                                                  for i in range(len(params))])
-                for i in range(len(params)):
+                        [transforms[i].apply(point[params[i]])\
+                                                  for i in xrange(len(params))])
+                for i in xrange(len(params)):
                     result +=\
-                        _log_value_addition(point[params[i]], transforms[i])
+                        transforms[i].log_value_addition(point[params[i]])
             return result
         else:
             raise ValueError("point given to log_value function of a " +\
@@ -371,14 +296,14 @@ class DistributionSet(Savable):
         
         parameter string name of parameter
         
-        returns (param_string, transform) in tuple form
+        returns (param_string, transform_string) in tuple form
         """
         string = ""
         (distribution, index, transform) = self.find_distribution(parameter)
         if distribution.numparams != 1:
             string += (self._numerical_adjective(index) + ' param of ')
         string += distribution.to_string()
-        return (string, transform)
+        return (string, transform.to_string())
     
     def __eq__(self, other):
         """
@@ -433,8 +358,7 @@ class DistributionSet(Savable):
         #
         # Creates a numerical adjective, such as '1st', '2nd', '6th' and so on.
         #
-        if (type(num) in [int, np.int8, np.int16, np.int32, np.int64]) and\
-            (num >= 0):
+        if (type(num) in int_types) and (num >= 0):
             base_string = str(num)
             if num == 0:
                 return '0th'
@@ -483,7 +407,7 @@ class DistributionSet(Savable):
             distribution.fill_hdf5_group(subgroup)
             for iparam in xrange(distribution.numparams):
                 subgroup.attrs['parameter_%i' % (iparam,)] = params[iparam]
-                if transforms[iparam] is not None:
-                    subgroup.attrs['transformation_%i' % (iparam)] =\
-                        transforms[iparam]
+                subsubgroup =\
+                    subgroup.create_group('transform_%i' % (iparam))
+                transforms[iparam].fill_hdf5_group(subsubgroup)
 
