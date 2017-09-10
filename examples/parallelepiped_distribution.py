@@ -22,8 +22,9 @@ distribution = ParallelepipedDistribution(center, face_directions, distances,\
 assert distribution.numparams == 2
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print (('It took %.5f s to draw %i ' % (time.time()-t0,sample_size,)) +\
-      'points from a bivariate parallelogram shaped uniform distribution.')
+print(('It took {0:.5f} s to draw {1} points from a bivariate ' +\
+    'parallelogram shaped unform distribution.').format(time.time() - t0,\
+    sample_size))
 xs = [sample[i][0] for i in range(sample_size)]
 ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
@@ -38,8 +39,8 @@ ys = np.arange(14.5, 25.6, 0.1)
 (xs, ys) = np.meshgrid(xs, ys)
 (x_size, y_size) = xs.shape
 logvalues = np.ndarray(xs.shape)
-for ix in xrange(x_size):
-    for iy in xrange(y_size):
+for ix in range(x_size):
+    for iy in range(y_size):
         logvalues[ix,iy] = distribution.log_value([xs[ix,iy], ys[ix,iy]])
 pl.figure()
 pl.imshow(np.exp(logvalues), cmap=def_cm, extent=[-25.,-4.9,14.,26.1],\

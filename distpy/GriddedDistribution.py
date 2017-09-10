@@ -24,7 +24,7 @@ def search_sorted(array, value):
             returns None if value is outside variable bounds
     """
     def index_to_check(rmin, rmax):
-        return (rmin + rmax) / 2
+        return (rmin + rmax) // 2
     range_min = 0
     range_max_0 = len(array)
     range_max = range_max_0
@@ -193,13 +193,13 @@ class GriddedDistribution(Distribution):
         # Constructs the cdf array.
         #
         running_sum = 0.
-        print 'initializing cdf'
+        print('initializing cdf')
         self.cdf = np.ndarray(len(self.pdf))
-        print 'filling cdf'
+        print('filling cdf')
         for i in range(len(self.pdf)):
             self.cdf[i] = running_sum
             running_sum += (self.pdf[i] * self._pixel_area(i))
-        print 'renormalizing pdf and cdf'
+        print('renormalizing pdf and cdf')
         self.cdf = self.cdf / self.cdf[-1]
         self.pdf = self.pdf / self.cdf[-1]
 
@@ -214,7 +214,7 @@ class GriddedDistribution(Distribution):
         inds_in_reverse.append(index % running_product)
         for k in range(1, self._N):
             rel_dim = self.shape[self._N - k - 1]
-            inds_in_reverse.append((index / running_product) % rel_dim)
+            inds_in_reverse.append((index // running_product) % rel_dim)
             running_product *= rel_dim
         return inds_in_reverse[-1::-1]
 
@@ -318,7 +318,7 @@ class GriddedDistribution(Distribution):
         """
         group.attrs['class'] = 'GriddedDistribution'
         group.attrs['numparams'] = self.numparams
-        for ivar in xrange(len(self.vars)):
+        for ivar in range(len(self.vars)):
             group.attrs['variable_%i' % (ivar,)] = self.vars[ivar]
         group.create_dataset('pdf', data=self.pdf)
 

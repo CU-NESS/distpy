@@ -17,10 +17,10 @@ sample_size = int(1e5)
 distribution = LinkedDistribution(GaussianDistribution(0., 1.), 2)
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print ("It took %.3f s to draw %i" % (time.time()-t0,sample_size,)) +\
-      " vectors from a LinkedPrior with a Normal(0,1) distribution."
-sam_xs = [sample[i][0] for i in xrange(sample_size)]
-sam_ys = [sample[i][1] for i in xrange(sample_size)]
+print(("It took {0:.5f} s to draw {1} vectors from a LinkedDistribution " +\
+    "with a Normal(0,1) distribution.").format(time.time() - t0, sample_size))
+sam_xs = [sample[i][0] for i in range(sample_size)]
+sam_ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
 pl.hist2d(sam_xs, sam_ys, bins=100, cmap=def_cm)
 pl.title('Sampled distribution of a LinkedPrior ' +\
@@ -33,8 +33,8 @@ ys = np.arange(-3., 3.03, 0.03)
 row_size = len(xs)
 (xs, ys) = np.meshgrid(xs, ys)
 logvalues = np.ndarray(xs.shape)
-for ix in xrange(row_size):
-    for iy in xrange(row_size):
+for ix in range(row_size):
+    for iy in range(row_size):
         logvalues[ix,iy] = distribution.log_value([xs[ix,iy], ys[ix,iy]])
 pl.figure()
 pl.imshow(np.exp(logvalues), cmap=def_cm, extent=[-3.,3.,-3.,3.],\

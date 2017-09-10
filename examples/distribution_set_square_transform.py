@@ -18,13 +18,14 @@ distribution_set = DistributionSet()
 distribution_set.add_distribution(UniformDistribution(1., 90.), 'x', 'square')
 t0 = time.time()
 sample = distribution_set.draw(sample_size)['x']
-print ('It took %.3f s to draw %i ' % (time.time()-t0,sample_size,)) +\
-      'points from a 1D uniform distribution (in square space).'
+print(('It took {0:.5f} s to draw {1} points from a 1D uniform ' +\
+    'distribution (in square space).').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
     label='sampled', normed=True)
 xs = np.arange(0.001, 10, 0.001)
-pl.plot(xs, map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs),\
+pl.plot(xs,\
+    list(map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.legend(fontsize='xx-large', loc='upper left')
 pl.title('Uniform distribution in square space', size='xx-large')

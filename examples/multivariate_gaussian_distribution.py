@@ -13,9 +13,9 @@ distribution = GaussianDistribution(mmean, mcov)
 assert distribution.numparams == 2
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print (('It took %.3f s for a sample ' % (time.time()-t0)) +\
-      ('of size %i to be drawn from a multivariate ' % (sample_size,)) +\
-      ('(%i parameters) Gaussian.' % distribution.numparams))
+print (('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
+    'multivariate ({2}-parameter) gaussian').format(time.time() - t0,\
+    sample_size, distribution.numparams))
 mgp_xs = [sample[i][0] for i in range(sample_size)]
 mgp_ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
@@ -30,8 +30,8 @@ ys = np.arange(-25., 65.1, 0.1)
 row_size = len(xs)
 (xs, ys) = np.meshgrid(xs, ys)
 logvalues = np.ndarray(xs.shape)
-for ix in xrange(row_size):
-    for iy in xrange(row_size):
+for ix in range(row_size):
+    for iy in range(row_size):
         logvalues[ix,iy] = distribution.log_value([xs[ix,iy], ys[ix,iy]])
 pl.figure()
 pl.imshow(np.exp(logvalues), cmap=def_cm, extent=[-50.,40.,-25.,65.],\

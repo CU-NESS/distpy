@@ -33,9 +33,9 @@ for ix in range(len(xs)):
 distribution = GriddedDistribution([xs, ys], pdf=pdf)
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print ("It took %.3f s to draw %i " % (time.time()-t0, sample_size,)) +\
-       "points from a user-defined distribution with " +\
-       ("%i pixels." % (len(xs) * len(ys),))
+print(("It took {0:.5f} s to draw {1} points from a user-defined " +\
+    "distribution with {2} pixels.").format(time.time() - t0, sample_size,\
+    len(xs) * len(ys)))
 sampled_xs = [sample[i][0] for i in range(sample_size)]
 sampled_ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
@@ -47,8 +47,8 @@ pl.ylabel('y', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)
 pdf_from_log_value = np.ndarray((len(ys), len(xs)))
 Xs, Ys = np.meshgrid(xs, ys)
-for ix in xrange(len(xs)):
-    for iy in xrange(len(ys)):
+for ix in range(len(xs)):
+    for iy in range(len(ys)):
         pdf_from_log_value[iy,ix] =\
             np.exp(distribution.log_value([Xs[iy,ix], Ys[iy,ix]]))
 pl.figure()

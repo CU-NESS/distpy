@@ -7,9 +7,8 @@ Description: File containing a function which loads a Distribution from an hdf5
              file which was saved using the prior's save() or
              load_hdf5_group(group) functions.
 """
-from Transform import NullTransform, LogTransform, Log10Transform,\
+from .Transform import NullTransform, LogTransform, Log10Transform,\
     SquareTransform, ArcsinTransform, LogisticTransform
-
 from .UniformDistribution import UniformDistribution
 from .GammaDistribution import GammaDistribution
 from .BetaDistribution import BetaDistribution
@@ -221,7 +220,7 @@ def load_distribution_set_from_hdf5_group(group):
         params = []
         transforms = []
         iparam = 0
-        for iparam in xrange(distribution.numparams):
+        for iparam in range(distribution.numparams):
             params.append(subgroup.attrs['parameter_%i' % (iparam,)])
             subsubgroup = subgroup['transform_%i' % (iparam,)]
             transforms.append(load_transform_from_hdf5_group(subsubgroup))

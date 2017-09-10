@@ -16,13 +16,13 @@ distribution = WeibullDistribution(5)
 assert distribution.numparams == 1
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print 'It took %.5f s to draw %i points from a Weibull distribution.' %\
-    (time.time()-t0,sample_size,)
+print(('It took {0:.5f} s to draw {1} points from a Weibull ' +\
+    'distribution.').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=100, linewidth=2, color='b', histtype='step',\
     label='sampled', normed=True)
 xs = np.arange(0.001, 3., 0.001)
-pl.plot(xs, map((lambda x : np.exp(distribution.log_value(x))), xs),\
+pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.title('Weibull distribution test', size='xx-large')
 pl.xlabel('Value', size='xx-large')

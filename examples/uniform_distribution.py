@@ -21,13 +21,13 @@ assert (distribution.low == distribution2.low) and\
     (distribution.high == distribution2.high)
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print ('It took %.5f s to draw %i' % (time.time()-t0, sample_size)) +\
-      ' points from a univariate uniform distribution.'
+print(('It took {0:.5f} s to draw {1} points from a univariate uniform ' +\
+    'distribution.').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
     normed=True, label='sampled')
 xs = np.arange(-30., 20., 0.01)
-pl.plot(xs, map((lambda x : np.exp(distribution.log_value(x))), xs),\
+pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.title('Uniform distribution on ' +\
          '[%s,%s]' % (distribution.low, distribution.high,), size='xx-large')

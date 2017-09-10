@@ -6,34 +6,34 @@ Date: 12 Aug 2017
 Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
 """
-from .Transform import Transform, NullTransform, LogTransform, Log10Transform,\
-    SquareTransform, ArcsinTransform, LogisticTransform,\
+from distpy.Transform import Transform, NullTransform, LogTransform,\
+    Log10Transform, SquareTransform, ArcsinTransform, LogisticTransform,\
     castable_to_transform, cast_to_transform
-from .Distribution import Distribution
-from .BetaDistribution import BetaDistribution
-from .BinomialDistribution import BinomialDistribution
-from .ChiSquaredDistribution import ChiSquaredDistribution
-from .DoubleSidedExponentialDistribution import\
+from distpy.Distribution import Distribution
+from distpy.BetaDistribution import BetaDistribution
+from distpy.BinomialDistribution import BinomialDistribution
+from distpy.ChiSquaredDistribution import ChiSquaredDistribution
+from distpy.DoubleSidedExponentialDistribution import\
     DoubleSidedExponentialDistribution
-from .EllipticalUniformDistribution import EllipticalUniformDistribution
-from .ExponentialDistribution import ExponentialDistribution
-from .GammaDistribution import GammaDistribution
-from .GaussianDistribution import GaussianDistribution
-from .GeometricDistribution import GeometricDistribution
-from .GriddedDistribution import GriddedDistribution
-from .ParallelepipedDistribution import ParallelepipedDistribution
-from .PoissonDistribution import PoissonDistribution
-from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
-from .UniformDistribution import UniformDistribution
-from .WeibullDistribution import WeibullDistribution
-from .LinkedDistribution import LinkedDistribution
-from .SequentialDistribution import SequentialDistribution
-from .DirectionDistribution import DirectionDistribution
-from .UniformDirectionDistribution import UniformDirectionDistribution
-from .GaussianDirectionDistribution import GaussianDirectionDistribution
-from .DistributionSet import DistributionSet
-from .Saving import Savable
-from .Loading import load_transform_from_hdf5_group,\
+from distpy.EllipticalUniformDistribution import EllipticalUniformDistribution
+from distpy.ExponentialDistribution import ExponentialDistribution
+from distpy.GammaDistribution import GammaDistribution
+from distpy.GaussianDistribution import GaussianDistribution
+from distpy.GeometricDistribution import GeometricDistribution
+from distpy.GriddedDistribution import GriddedDistribution
+from distpy.ParallelepipedDistribution import ParallelepipedDistribution
+from distpy.PoissonDistribution import PoissonDistribution
+from distpy.TruncatedGaussianDistribution import TruncatedGaussianDistribution
+from distpy.UniformDistribution import UniformDistribution
+from distpy.WeibullDistribution import WeibullDistribution
+from distpy.LinkedDistribution import LinkedDistribution
+from distpy.SequentialDistribution import SequentialDistribution
+from distpy.DirectionDistribution import DirectionDistribution
+from distpy.UniformDirectionDistribution import UniformDirectionDistribution
+from distpy.GaussianDirectionDistribution import GaussianDirectionDistribution
+from distpy.DistributionSet import DistributionSet
+from distpy.Saving import Savable
+from distpy.Loading import load_transform_from_hdf5_group,\
     load_transform_from_hdf5_file, load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file, load_distribution_set_from_hdf5_group,\
     load_distribution_set_from_hdf5_file

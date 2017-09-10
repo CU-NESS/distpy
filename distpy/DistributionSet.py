@@ -42,7 +42,7 @@ class DistributionSet(Savable):
         self._data = []
         self._params = []
         if type(distribution_tuples) in sequence_types:
-            for idistribution in xrange(len(distribution_tuples)):
+            for idistribution in range(len(distribution_tuples)):
                 this_tup = distribution_tuples[idistribution]
                 if (type(this_tup) in sequence_types):
                     self.add_distribution(*this_tup)
@@ -174,7 +174,7 @@ class DistributionSet(Savable):
         else:
             raise ValueError("The distribution given to a DistributionSet " +\
                              "was not recognized as a distribution.")
-        for iparam in xrange(distribution.numparams):
+        for iparam in range(distribution.numparams):
             # this line looks weird but it works for any input
             self._params.append(self._data[-1][1][iparam])
 
@@ -200,7 +200,7 @@ class DistributionSet(Savable):
                     slices = (slice(None),)
                 else:
                     slices = (slice(None),) * len(shape)
-                for iparam in xrange(len(params)):
+                for iparam in range(len(params)):
                     point[params[iparam]] = transforms[iparam].apply_inverse(\
                         this_draw[slices + (iparam,)])
         return point
@@ -217,7 +217,7 @@ class DistributionSet(Savable):
         """
         if type(point) is dict:
             result = 0.
-            for idistribution in xrange(len(self._data)):
+            for idistribution in range(len(self._data)):
                 (distribution, params, transforms) = self._data[idistribution]
                 if (distribution.numparams == 1):
                     result += distribution.log_value(\
@@ -225,8 +225,8 @@ class DistributionSet(Savable):
                 else:
                     result += distribution.log_value(\
                         [transforms[i].apply(point[params[i]])\
-                                                  for i in xrange(len(params))])
-                for i in xrange(len(params)):
+                                                  for i in range(len(params))])
+                for i in range(len(params)):
                     result +=\
                         transforms[i].log_value_addition(point[params[i]])
             return result
@@ -383,7 +383,7 @@ class DistributionSet(Savable):
             raise ValueError("A parameter provided to a " +\
                              "DistributionSet was not a string.")
         broken = False
-        for idistribution in xrange(len(self._data)):
+        for idistribution in range(len(self._data)):
             for param in self._data[idistribution]:
                 if name == param:
                     broken = True
@@ -405,7 +405,7 @@ class DistributionSet(Savable):
             enumerate(self._data):
             subgroup = group.create_group('distribution_%i' % (ituple,))
             distribution.fill_hdf5_group(subgroup)
-            for iparam in xrange(distribution.numparams):
+            for iparam in range(distribution.numparams):
                 subgroup.attrs['parameter_%i' % (iparam,)] = params[iparam]
                 subsubgroup =\
                     subgroup.create_group('transform_%i' % (iparam))

@@ -39,7 +39,7 @@ for ipixel in range(len(unique)):
 histogram = histogram / (4 * np.pi * np.mean(histogram))
 hp.mollview(histogram, title='Histogram of draws')
 
-print distribution.to_string()
+print(distribution.to_string())
 
 pl.figure()
 pl.hist(lons, bins=10)

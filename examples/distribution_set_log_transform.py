@@ -18,13 +18,14 @@ distribution_set = DistributionSet()
 distribution_set.add_distribution(GaussianDistribution(5., 1.), 'x', 'log')
 t0 = time.time()
 sample = distribution_set.draw(sample_size)['x']
-print ('It took %.3f s to draw %i ' % (time.time()-t0,sample_size,)) +\
-      'points from a 1 parameter lognormal distribution.'
+print(('It took {0:.5f} s to draw {1} points from a 1-parameter lognormal ' +\
+    'distribution.').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=np.arange(0., 1501., 15.), histtype='step',\
     color='b', linewidth=2, label='sampled', normed=True)
 xs = np.arange(0.1, 1500., 0.1)
-pl.plot(xs, map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs),\
+pl.plot(xs,\
+    list(map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
 pl.title('Normal distribution in log space', size='xx-large')
 pl.xlabel('Value', size='xx-large')

@@ -18,14 +18,13 @@ distribution = GaussianDistribution(umean, uvar)
 assert distribution.numparams == 1
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print (('It took %.3f s for a sample ' % (time.time()-t0)) +\
-      ('of size %i' % (sample_size,)) +\
-      ' to be drawn from a univariate Gaussian.')
+print(('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
+    'univariate Gaussian.').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
     label='sampled', normed=True)
 xs = np.arange(5., 20., 0.01)
-pl.plot(xs, map((lambda x : np.exp(distribution.log_value(x))), xs),\
+pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_prior)')
 pl.title('Univariate Gaussian distribution with mean=%s and variance=%s' %\
     (umean,uvar,), size='xx-large')

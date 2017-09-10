@@ -16,7 +16,8 @@ nside = 2 ** nsiden
 npix = hp.pixelfunc.nside2npix(nside)
 
 pointing_center = (0, 0)
-distribution = UniformDirectionDistribution(pointing_center=pointing_center, high_theta=np.radians(90))
+distribution = UniformDirectionDistribution(pointing_center=pointing_center,\
+    high_theta=np.radians(90))
 ndraws = int(1e6)
 draws = distribution.draw(ndraws)
 lons = draws[:,1]
@@ -38,7 +39,7 @@ for ipixel in range(len(unique)):
 histogram = histogram / (4 * np.pi * np.mean(histogram))
 hp.mollview(histogram, title='Histogram of draws')
 
-print distribution.to_string()
+print(distribution.to_string())
 
 pl.figure()
 pl.hist(lons, bins=10)

@@ -98,7 +98,7 @@ class LinkedDistribution(Distribution):
             return self.shared_distribution.log_value(point)
         elif type(point) in sequence_types:
             if (len(point) == self.numparams):
-                for ival in xrange(len(point)):
+                for ival in range(len(point)):
                     if point[ival] != point[0]:
                         return -np.inf
                 return self.shared_distribution.log_value(point[0])
