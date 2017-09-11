@@ -1,4 +1,4 @@
-distpy is a clean and simple Python package meant to store analytical distributions efficiently and effectively. The module has no submodules, and in it are defined the distributions defined below.
+distpy is a clean and simple Python package meant to store analytical distributions efficiently and effectively. The module has no submodules, and in it are defined the distributions defined below. distpy is compatible with Python 2.7+ and Python 3.5+. The only dependencies are numpy, scipy, and matplotlib.
 
 The included univariate distributions (and their initializations, equals signs indicate optional parameters and their default values) are (pdf's apply only in support):
 
