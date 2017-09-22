@@ -35,24 +35,21 @@ class SequentialDistribution(Distribution):
                 self.shared_distribution = shared_distribution
             else:
                 raise NotImplementedError("The shared_distribution " +\
-                                          "provided to a " +\
-                                          "SequentialDistribution was " +\
-                                          "multivariate (I don't know how " +\
-                                          "to deal with this!).")
+                    "provided to a SequentialDistribution was multivariate " +\
+                    "(I don't know how to deal with this!).")
         else:
             raise ValueError("The shared_distribution given to a " +\
-                             "SequentialDistribution was not recognizable " +\
-                             "as a distribution.")
+                "SequentialDistribution was not recognizable as a " +\
+                "distribution.")
         if (type(numpars) in numerical_types):
             if int(numpars) > 1:
                 self._numparams = int(numpars)
             else:
                 raise ValueError("A SequentialDistribution was initialized " +\
-                                 "with only one parameter. Is this really " +\
-                                 "what you want?")
+                    "with only one parameter. Is this really what you want?")
         else:
             raise ValueError("The type of the number of parameters given " +\
-                             "to a SequentialDistribution was not numerical.")
+                "to a SequentialDistribution was not numerical.")
 
     @property
     def numparams(self):
@@ -106,12 +103,11 @@ class SequentialDistribution(Distribution):
                     return -np.inf
             else:
                 raise ValueError("The length of the point provided to a " +\
-                                 "SequentialDistribution was not the same " +\
-                                 "as the SequentialDistribution's number " +\
-                                 "of parameters")
+                    "SequentialDistribution was not the same as the " +\
+                    "SequentialDistribution's number of parameters")
         else:
             raise ValueError("The point given to a SequentialDistribution " +\
-                             "was not of a list type.")
+                "was not of a list type.")
         return result
 
     def to_string(self):
@@ -119,7 +115,7 @@ class SequentialDistribution(Distribution):
         Finds and returns a string representation of this
         SequentialDistribution.
         """
-        return "Sequential(%s)" % (self.shared_distribution.to_string(),)
+        return "Sequential({!s})".format(self.shared_distribution.to_string())
     
     def __eq__(self, other):
         """

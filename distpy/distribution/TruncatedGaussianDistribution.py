@@ -101,13 +101,13 @@ class TruncatedGaussianDistribution(Distribution):
         if self.lo is None:
             low_string = "-inf"
         else:
-            low_string = "%.1g" % (self.lo,)
+            low_string = "{:.1g}".format(self.lo)
         if self.hi is None:
             high_string = "inf"
         else:
-            high_string = "%.1g" % (self.hi,)
-        return "Normal(%.2g, %.2g) on [%s,%s]" %\
-            (self.mean, self.var, low_string, high_string)
+            high_string = "{:.1g}".format(self.hi)
+        return "Normal({0:.2g}, {1:.2g}) on [{2!s},{3!s}]".format(self.mean,\
+            self.var, low_string, high_string)
     
     def __eq__(self, other):
         """

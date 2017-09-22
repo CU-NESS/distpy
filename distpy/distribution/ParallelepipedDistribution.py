@@ -50,13 +50,12 @@ class ParallelepipedDistribution(Distribution):
                 self.center = to_set
                 self._numparams = len(self.center)
             else:
-                raise ValueError('The number of dimensions of the center ' +\
-                                 'given to a ParallelepipedDistribution is ' +\
-                                 ('not 1. It is %i-' % (to_set.ndim,)) +\
-                                 'dimensional.')
+                raise ValueError(('The number of dimensions of the center ' +\
+                    'given to a ParallelepipedDistribution is not 1. It ' +\
+                    'is {}-dimensional.').format(to_set.ndim))
         else:
             raise ValueError('A ParallelepipedDistribution was given with ' +\
-                             'a center of an unrecognizable type.')
+                'a center of an unrecognizable type.')
         if (type(face_directions) in sequence_types):
             to_set = np.matrix(face_directions)
             if (to_set.shape == ((self.numparams,) * 2)):
@@ -70,19 +69,19 @@ class ParallelepipedDistribution(Distribution):
                                    for i in range(self.numparams)])
             else:
                 raise ValueError('The shape of the face directions in ' +\
-                                 'matrix form was not the expected value, ' +\
-                                 'which is (self.numparams, self.numparams).')
+                    'matrix form was not the expected value, which is ' +\
+                    '(self.numparams, self.numparams).')
         else:
             raise ValueError('A ParallelepipedDistribution was given ' +\
-                             'face_directions of an unrecognizable type.')
+                'face_directions of an unrecognizable type.')
         if (type(distances) in sequence_types):
             arrdists = np.array(distances)
             if (arrdists.ndim == 1) and (len(arrdists) == self.numparams):
                 self.distances = arrdists
             else:
                 raise ValueError('distances given to ' +\
-                                 'ParallelepipedDistribution are either of ' +\
-                                 'the wrong dimension or the wrong length.')
+                    'ParallelepipedDistribution are either of the wrong ' +\
+                    'dimension or the wrong length.')
         self.inv_face_directions = lalg.inv(self.face_directions)
 
     @property
@@ -93,8 +92,7 @@ class ParallelepipedDistribution(Distribution):
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("For some reason, I don't know how many " +\
-                                 "params this ParallelepipedDistribution " +\
-                                 "describes!")
+                "params this ParallelepipedDistribution describes!")
         return self._numparams
 
     @property
@@ -190,8 +188,8 @@ class ParallelepipedDistribution(Distribution):
         Finds and returns a string representation of this
         ParallelepipedDistribution.
         """
-        return "Parallelepiped(%s, %s, %s)" %\
-            (self.center, self.face_directions, self.distance)
+        return "Parallelepiped({0!s}, {1!s}, {2!s})".format(self.center,\
+            self.face_directions, self.distance)
 
     def _in_region(self, point):
         #
@@ -203,12 +201,12 @@ class ParallelepipedDistribution(Distribution):
         # returns True if point in region, False otherwise
         #
         if type(point) not in sequence_types:
-            raise ValueError('point given to log_value ' +\
-                             'was not of an arraylike type.')
+            raise ValueError('point given to log_value was not of an ' +\
+                'array-like type.')
         arrpoint = np.array(point)
         if (arrpoint.ndim != 1) or (len(arrpoint) != self.numparams):
-            raise ValueError('The point given is either of the ' +\
-                             'wrong direction or the wrong length.')
+            raise ValueError('The point given is either of the wrong ' +\
+                'direction or the wrong length.')
         from_center = arrpoint - self.center
         return_val = True
         for i in range(self.numparams):

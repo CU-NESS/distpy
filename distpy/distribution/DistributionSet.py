@@ -47,18 +47,15 @@ class DistributionSet(Savable):
                     self.add_distribution(*this_tup)
                 else:
                     raise ValueError("One of the distribution tuples " +\
-                                     "provided to the initializer of a " +\
-                                     "DistributionSet was not a sequence " +\
-                                     "of length 3 like " +\
-                                     "(distribution, params, transforms).")
+                        "provided to the initializer of a DistributionSet " +\
+                        "was not a sequence of length 3 like " +\
+                        "(distribution, params, transforms).")
         else:
             raise ValueError("The distribution_tuples argument given to " +\
-                             "the initializer was not list-like. It should " +\
-                             "be a list of tuples of the form " +\
-                             "(distribution, params, transformations) " +\
-                             "where distribution is a Distribution " +\
-                             "object and params and transformations " +\
-                             "are lists of strings.")
+                "the initializer was not list-like. It should be a list of " +\
+                "tuples of the form (distribution, params, " +\
+                "transformations) where distribution is a Distribution " +\
+                "object and params and transformations are lists of strings.")
 
     @property
     def empty(self):
@@ -101,11 +98,10 @@ class DistributionSet(Savable):
                 if (distribution.numparams == 1):
                     transforms = [cast_to_transform(transforms)]
                 else:
-                    raise ValueError("The transforms variable applied" +\
-                                     " to parameters of a DistributionSet " +\
-                                     "was provided as a string even though " +\
-                                     "the distribution being provided was " +\
-                                     "multivariate.")
+                    raise ValueError("The transforms variable applied to " +\
+                        "parameters of a DistributionSet was provided as a " +\
+                        "string even though the distribution being " +\
+                        "provided was multivariate.")
             elif type(transforms) in sequence_types:
                 if len(transforms) == distribution.numparams:
                     all_castable_to_transforms =\
@@ -115,20 +111,18 @@ class DistributionSet(Savable):
                             [cast_to_transform(val) for val in transforms]
                     else:
                         raise ValueError("Not all transforms given to " +\
-                                         "add_distribution were understood.")
+                            "add_distribution were understood.")
                 else:
                     raise ValueError("The list of transforms applied to " +\
-                                     "parameters in a DistributionSet was " +\
-                                     "not the same length as the list of " +\
-                                     "parameters of the distribution.")
+                        "parameters in a DistributionSet was not the same " +\
+                        "length as the list of parameters of the " +\
+                        "distribution.")
             else:
                 raise ValueError("The type of the transforms variable " +\
-                                 "supplied to DistributionSet's " +\
-                                 "add_distribution function was not " +\
-                                 "recognized. It should be a single valid " +\
-                                 "string (if distribution is univariate) " +\
-                                 "or list of valid strings (if " +\
-                                 "distribution is multivariate).")
+                    "supplied to DistributionSet's add_distribution " +\
+                    "function was not recognized. It should be a single " +\
+                    "valid string (if distribution is univariate) or list " +\
+                    "of valid strings (if distribution is multivariate).")
             if distribution.numparams == 1:
                 if type(params) is str:
                     self._check_name(params)
@@ -136,22 +130,19 @@ class DistributionSet(Savable):
                 elif type(params) in sequence_types:
                     if len(params) > 1:
                         raise ValueError("The distribution given to a " +\
-                                         "DistributionSet was univariate, " +\
-                                         "but more than one parameter was " +\
-                                         "given.")
+                            "DistributionSet was univariate, but more than " +\
+                            "one parameter was given.")
                     else:
                         self._check_name(params[0])
                         self._data.append(\
                             (distribution, [params[0]], transforms))
                 else:
                     raise ValueError("The type of the parameters given " +\
-                                     "to a DistributionSet was not " +\
-                                     "recognized.")
+                        "to a DistributionSet was not recognized.")
             elif type(params) is str:
-                raise ValueError("A single parameter was given even though" +\
-                                 " the distribution given is multivariate (" +\
-                                 "numparams=" +\
-                                 ("%i)." % (distribution.numparams,)))
+                raise ValueError(("A single parameter was given even " +\
+                   "though the distribution given is multivariate " +\
+                   "(numparams={}).").format(distribution.numparams)))
             elif type(params) in sequence_types:
                 if (len(params) == distribution.numparams):
                     for name in params:
@@ -160,19 +151,18 @@ class DistributionSet(Savable):
                         [params[i] for i in range(len(params))], transforms)
                     self._data.append(data_tup)
                 else:
-                    raise ValueError("The number of parameters of the " +\
-                                     "given distribution (" +\
-                                     ("%i) " % (distribution.numparams,)) +\
-                                     "was not equal to the number of " +\
-                                     "parameters given (" +\
-                                     ("%i)." % (len(params),)))
+                    raise ValueError(("The number of parameters of the " +\
+                                     "given distribution ({0:d}) was not " +\
+                                     "equal to the number of parameters " +\
+                                     "given ({1:d}).").format(\
+                                     distribution.numparams, len(params))
             else:
-                raise ValueError("The params given to a DistributionSet" +\
-                                 " (along with a distribution) was not " +\
-                                 "a string nor a list of strings.")
+                raise ValueError("The params given to a DistributionSet " +\
+                    "(along with a distribution) was not a string nor a " +\
+                    "list of strings.")
         else:
             raise ValueError("The distribution given to a DistributionSet " +\
-                             "was not recognized as a distribution.")
+                "was not recognized as a distribution.")
         for iparam in range(distribution.numparams):
             # this line looks weird but it works for any input
             self._params.append(self._data[-1][1][iparam])
@@ -231,8 +221,8 @@ class DistributionSet(Savable):
             return result
         else:
             raise ValueError("point given to log_value function of a " +\
-                             "DistributionSet was not a dictionary of " +\
-                             "values indexed by parameter names.")
+                "DistributionSet was not a dictionary of values indexed by " +\
+                "parameter names.")
 
     def find_distribution(self, parameter):
         """
@@ -248,8 +238,8 @@ class DistributionSet(Savable):
                 if parameter == these_params[iparam]:
                     return\
                         (this_distribution, iparam, these_transforms[iparam])
-        raise ValueError(("The parameter searched for (%s) " % (parameter,)) +\
-                         "in a DistributionSet was not found.")
+        raise ValueError(("The parameter searched for ({!s}) in a " +\
+            "DistributionSet was not found.").format(parameter))
     
     def __getitem__(self, parameter):
         """
@@ -278,8 +268,8 @@ class DistributionSet(Savable):
         except:
             if throw_error:
                 raise ValueError('The parameter given to ' +\
-                                 'DistributionSet.delete_distribution was ' +\
-                                 'not in the DistributionSet.')
+                    'DistributionSet.delete_distribution was not in the ' +\
+                    'DistributionSet.')
     
     def __delitem__(self, parameter):
         """
@@ -370,8 +360,8 @@ class DistributionSet(Savable):
             else:
                 return str(num) + 'th'
         else:
-            raise ValueError("Numerical adjectives apply " +\
-                             "only to non-negative integers.")
+            raise ValueError("Numerical adjectives apply only to " +\
+                "non-negative integers.")
 
     def _check_name(self, name):
         #
@@ -379,8 +369,8 @@ class DistributionSet(Savable):
         # of the distributions in this DistributionSet.
         #
         if not (type(name) is str):
-            raise ValueError("A parameter provided to a " +\
-                             "DistributionSet was not a string.")
+            raise ValueError("A parameter provided to a DistributionSet " +\
+                "was not a string.")
         broken = False
         for idistribution in range(len(self._data)):
             for param in self._data[idistribution]:
@@ -390,8 +380,8 @@ class DistributionSet(Savable):
             if broken:
                 break
         if broken:
-            raise ValueError("The name of a parameter provided" +\
-                             " to a DistributionSet is already taken.")
+            raise ValueError("The name of a parameter provided to a " +\
+                "DistributionSet is already taken.")
     
     def fill_hdf5_group(self, group):
         """
@@ -402,11 +392,11 @@ class DistributionSet(Savable):
         """
         for (ituple, (distribution, params, transforms)) in\
             enumerate(self._data):
-            subgroup = group.create_group('distribution_%i' % (ituple,))
+            subgroup = group.create_group('distribution_{}'.format(ituple))
             distribution.fill_hdf5_group(subgroup)
             for iparam in range(distribution.numparams):
-                subgroup.attrs['parameter_%i' % (iparam,)] = params[iparam]
+                subgroup.attrs['parameter_{}'.format(iparam)] = params[iparam]
                 subsubgroup =\
-                    subgroup.create_group('transform_%i' % (iparam))
+                    subgroup.create_group('transform_{}'.format(iparam))
                 transforms[iparam].fill_hdf5_group(subsubgroup)
 

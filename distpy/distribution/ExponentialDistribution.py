@@ -29,17 +29,15 @@ class ExponentialDistribution(Distribution):
                 self.rate = (rate * 1.)
             else:
                 raise ValueError('The rate parameter given to an ' +\
-                                 'ExponentialDistribution was not positive.')
+                    'ExponentialDistribution was not positive.')
         else:
             raise ValueError('The rate parameter given to an ' +\
-                             'ExponentialDistribution was not of a ' +\
-                             'numerical type.')
+                'ExponentialDistribution was not of a numerical type.')
         if type(shift) in numerical_types:
             self.shift = (1. * shift)
         else:
             raise ValueError('The shift given to an ' +\
-                             'ExponentialDistribution was not of numerical ' +\
-                             'type.')
+                'ExponentialDistribution was not of numerical type.')
     
     @property
     def numparams(self):
@@ -81,8 +79,8 @@ class ExponentialDistribution(Distribution):
         Finds and returns a string version of this ExponentialDistribution.
         """
         if self.shift != 0:
-            return "Exp(%.2g, shift=%.2g)" % (self.rate, self.shift)
-        return "Exp(%.2g)" % (self.rate,)
+            return "Exp({0:.2g}, shift={1:.2g})".format(self.rate, self.shift)
+        return "Exp({:.2g})".format(self.rate)
     
     def __eq__(self, other):
         """

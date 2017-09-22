@@ -27,10 +27,10 @@ class PoissonDistribution(Distribution):
                 self.scale = (scale * 1.)
             else:
                 raise ValueError("scale given to PoissonDistribution was " +\
-                                 "not positive.")
+                    "not positive.")
         else:
             raise ValueError("scale given to PoissonDistribution was not a " +\
-                             "number.")
+                "number.")
     
     @property
     def numparams(self):
@@ -68,13 +68,13 @@ class PoissonDistribution(Distribution):
                 return -np.inf
         else:
             raise TypeError("point given to PoissonDistribution was not an " +\
-                            "integer.")
+                "integer.")
 
     def to_string(self):
         """
         Finds and returns a string version of this PoissonDistribution.
         """
-        return "Poisson(%.4g)" % (self.scale,)
+        return "Poisson({:.4g})".format(self.scale)
     
     def __eq__(self, other):
         """

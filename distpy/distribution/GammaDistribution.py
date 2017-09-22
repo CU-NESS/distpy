@@ -66,7 +66,7 @@ class GammaDistribution(Distribution):
         """
         Finds and returns the string representation of this GammaDistribution.
         """
-        return "Gamma(%.2g, %.2g)" % (self.shape, self.scale)
+        return "Gamma({0:.2g}, {1:.2g})".format(self.shape, self.scale)
     
     def __eq__(self, other):
         """
@@ -99,9 +99,9 @@ class GammaDistribution(Distribution):
         #
         if type(value) in numerical_types:
             if value <= 0:
-                raise ValueError(("The %s given to " % (name,)) +\
-                                 "a GammaDistribution wasn't positive.")
+                raise ValueError(("The {!s} given to a GammaDistribution " +\
+                    "wasn't positive.").format(name))
         else:
-            raise ValueError(("The %s given to a " % (name,)) +\
-                             "GammaDistribution wasn't of a numerical type.")
+            raise ValueError(("The {!s} given to a GammaDistribution " +\
+                "wasn't of a numerical type.").format(name))
 

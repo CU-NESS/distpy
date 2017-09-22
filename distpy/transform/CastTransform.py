@@ -45,13 +45,13 @@ def cast_to_transform(key):
         elif lower_cased_key == 'logistic':
             return LogisticTransform()
         else:
-            raise ValueError("transform could not be reconstructed from " +\
-                             "key, " + key + ", as key was not understood.")
+            raise ValueError(("transform could not be reconstructed from " +\
+                "key, {!s}, as key was not understood.").format(key))
     elif isinstance(key, Transform):
         return key
     else:
         raise TypeError("key cannot be cast to transform because it is " +\
-                        "neither None nor a string nor a Transform.")
+            "neither None nor a string nor a Transform.")
 
 def castable_to_transform(key, return_transform_if_true=False):
     """

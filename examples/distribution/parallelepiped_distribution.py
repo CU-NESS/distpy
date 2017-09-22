@@ -29,8 +29,8 @@ xs = [sample[i][0] for i in range(sample_size)]
 ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
 pl.hist2d(xs, ys, bins=100, cmap=def_cm)
-pl.title('Parallelogram shaped uniform dist. centered at %s.' % center,\
-    size='xx-large')
+pl.title('Parallelogram shaped uniform distribution centered at {!s}.'.format(\
+    center), size='xx-large')
 pl.xlabel('x', size='xx-large')
 pl.ylabel('y', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)

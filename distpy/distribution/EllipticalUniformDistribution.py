@@ -35,28 +35,24 @@ class EllipticalUniformDistribution(Distribution):
             self.mean = np.array(mean)
         except:
             raise TypeError("mean given to EllipticalUniformDistribution " +\
-                            "could not be cast as a numpy.ndarray.")
+                "could not be cast as a numpy.ndarray.")
         try:
             self.cov = np.array(cov)
         except:
             raise TypeError("cov given to EllipticalUniformDistribution " +\
-                            "could not be cast as a numpy.ndarray.")
+                "could not be cast as a numpy.ndarray.")
         if (self.cov.shape != (2 * self.mean.shape)) or (self.mean.ndim != 1):
             raise ValueError("The shapes of the mean and cov given to " +\
-                             "EllipticalUniformDistribution did not make " +\
-                             "sense. They should fit the following " +\
-                             "pattern: mean.shape=(rank,) and " +\
-                             "cov.shape=(rank,rank).")
+                "EllipticalUniformDistribution did not make sense. They " +\
+                "should fit the following pattern: mean.shape=(rank,) and " +\
+                "cov.shape=(rank,rank).")
         self._numparams = self.mean.shape[0]
         if self.numparams < 2:
             raise NotImplementedError("The EllipticalUniformDistribution " +\
-                                      "doesn't take single variable random " +\
-                                      "variates since, in the 1D case, it " +\
-                                      "is the same as a simple uniform " +\
-                                      "distribution; so, using the " +\
-                                      "EllipticalUniformDistribution class " +\
-                                      "would involve far too much " +\
-                                      "computational overhead.")
+                "doesn't take single variable random variates since, in " +\
+                "the 1D case, it is the same as a simple uniform " +\
+                "distribution; so, using the EllipticalUniformDistribution " +\
+                "class would involve far too much computational overhead.")
         half_rank = self.numparams / 2.
         self.invcov = lalg.inv(self.cov)
         self.const_log_value = log_gamma(half_rank + 1) -\
@@ -132,7 +128,7 @@ class EllipticalUniformDistribution(Distribution):
         Gives a simple string (of the form: "N-dim elliptical" where N is the
         number of parameters) summary of this distribution.
         """
-        return ('%i-dim elliptical' % (self.numparams,))
+        return ('{}-dim elliptical'.format(self.numparams))
     
     def __eq__(self, other):
         """

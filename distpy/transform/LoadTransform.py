@@ -10,7 +10,7 @@ try:
 except:
     have_h5py = False
     no_h5py_error = NotImplementedError("Loading couldn't be completed " +\
-                                        "because h5py couldn't be imported.")
+        "because h5py couldn't be imported.")
 else:
     have_h5py = True
 

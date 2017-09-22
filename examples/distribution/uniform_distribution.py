@@ -29,8 +29,8 @@ pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
 xs = np.arange(-30., 20., 0.01)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
-pl.title('Uniform distribution on ' +\
-         '[%s,%s]' % (distribution.low, distribution.high,), size='xx-large')
+pl.title(('Uniform distribution on [{0!s},{1!s}]').format(distribution.low,\
+    distribution.high), size='xx-large')
 pl.xlabel('Value', size='xx-large')
 pl.ylabel('PDF', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)

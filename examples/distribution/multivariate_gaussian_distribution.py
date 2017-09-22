@@ -21,15 +21,15 @@ distribution = GaussianDistribution(mmean, mcov)
 assert distribution.numparams == 2
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print (('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
+print(('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
     'multivariate ({2}-parameter) gaussian').format(time.time() - t0,\
     sample_size, distribution.numparams))
 mgp_xs = [sample[i][0] for i in range(sample_size)]
 mgp_ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
 pl.hist2d(mgp_xs, mgp_ys, bins=100, cmap=def_cm)
-pl.title('Multivariate Gaussian prior (2 dimensions) with ' +\
-         ('mean=%s and covariance=%s' % (mmean, mcov)), size='xx-large')
+pl.title(('Multivariate Gaussian prior (2 dimensions) with ' +\
+    'mean={0!s} and covariance={1!s}').format(mmean, mcov), size='xx-large')
 pl.xlabel('x', size='xx-large')
 pl.ylabel('y', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)

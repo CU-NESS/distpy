@@ -23,7 +23,7 @@ try:
 except:
     have_h5py = False
     no_h5py_error = NotImplementedError("Loading couldn't be completed " +\
-                                        "because h5py couldn't be imported.")
+        "because h5py couldn't be imported.")
 else:
     have_h5py = True
 
@@ -39,7 +39,7 @@ def load_distribution_from_hdf5_group(group):
         class_name = group.attrs['class']
     except KeyError:
         raise ValueError("group given does not appear to contain a " +\
-                         "distribution.")
+            "distribution.")
     if class_name == 'GammaDistribution':
         shape = group.attrs['shape']
         scale = group.attrs['scale']
@@ -108,8 +108,8 @@ def load_distribution_from_hdf5_group(group):
     elif class_name == 'GriddedDistribution':
         variables = []
         ivar = 0
-        while ('variable_%i' % (ivar,)) in group.attrs:
-            variables.append(group.attrs['variable_%i' % (ivar,)])
+        while ('variable_{}'.format(ivar)) in group.attrs:
+            variables.append(group.attrs['variable_{}'.format(ivar)])
             ivar += 1
         pdf = group['pdf'].value
         return GriddedDistribution(variables=variables, pdf=pdf)

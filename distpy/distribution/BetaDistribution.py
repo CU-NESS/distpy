@@ -33,11 +33,11 @@ class BetaDistribution(Distribution):
                 self._alpha_min_one = self.alpha - 1.
                 self._beta_min_one = self.beta - 1.
             else:
-                raise ValueError('The alpha or beta parameter given ' +\
-                                 'to a Beta was not non-negative.')
+                raise ValueError('The alpha or beta parameter given to a ' +\
+                    'Beta was not non-negative.')
         else:
-            raise ValueError('The alpha or beta parameter given to a ' +\
-                             'Beta were not of a numerical type.')
+            raise ValueError('The alpha or beta parameter given to a Beta ' +\
+                'were not of a numerical type.')
         self.const_lp_term = -np.log(beta_func(self.alpha, self.beta))
     
     @property
@@ -77,7 +77,7 @@ class BetaDistribution(Distribution):
         """
         Finds and returns a string representation of this BetaDistribution.
         """
-        return "Beta(%.2g, %.2g)" % (self.alpha, self.beta)
+        return "Beta({0:.2g}, {1:.2g})".format(self.alpha, self.beta)
     
     def __eq__(self, other):
         """

@@ -66,11 +66,10 @@ class GaussianDirectionDistribution(DirectionDistribution):
                 self._sigma = value
             else:
                 raise ValueError("sigma given to " +\
-                                 "GaussianDirectionDistribution was not " +\
-                                 "positive.")
+                    "GaussianDirectionDistribution was not positive.")
         else:
             raise TypeError("sigma given to GaussianDirectionDistribution " +\
-                            "was not a single number.")
+                "was not a single number.")
     
     @property
     def const_log_value_contribution(self):
@@ -87,8 +86,8 @@ class GaussianDirectionDistribution(DirectionDistribution):
         """
         Creates a string representation of this distribution.
         """
-        return 'GaussianDirection((%.3g, %.3g), %.3g)' %\
-            (self.pointing_center[0], self.pointing_center[1], self.sigma)
+        return 'GaussianDirection(({0:.3g}, {1:.3g}), {2:.3g})'.format(\
+            self.pointing_center[0], self.pointing_center[1], self.sigma)
     
     def log_value(self, point):
         """

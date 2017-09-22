@@ -26,19 +26,19 @@ class WeibullDistribution(Distribution):
                 self.shape = shape
             else:
                 raise ValueError("shape parameter of WeibullDistribution " +\
-                                 "was not positive.")
+                    "was not positive.")
         else:
             raise TypeError("shape parameter of WeibullDistribution was " +\
-                            "not a number.")
+                "not a number.")
         if type(scale) in numerical_types:
             if scale > 0:
                 self.scale = scale
             else:
                 raise ValueError("scale parameter of WeibullDistribution " +\
-                                 "was not positive.")
+                    "was not positive.")
         else:
             raise TypeError("scale parameter of WeibullDistribution was " +\
-                            "not a number.")
+                "not a number.")
         self.const_lp_term = np.log(self.shape) -\
             (self.shape * np.log(self.scale))
         
@@ -81,7 +81,7 @@ class WeibullDistribution(Distribution):
         """
         Finds and returns a string representation of this distribution.
         """
-        return "Weibull(%.2g, %.2g)" % (self.shape, self.scale)
+        return "Weibull({0:.2g}, {1:.2g})".format(self.shape, self.scale)
     
     def __eq__(self, other):
         """

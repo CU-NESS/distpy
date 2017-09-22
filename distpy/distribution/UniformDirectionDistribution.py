@@ -83,7 +83,7 @@ class UniformDirectionDistribution(DirectionDistribution):
         """
         if not hasattr(self, '_high_theta'):
             raise AttributeError("high_theta was referenced before it was " +\
-                                 "set.")
+                "set.")
         return self._high_theta
     
     @high_theta.setter
@@ -99,7 +99,7 @@ class UniformDirectionDistribution(DirectionDistribution):
                 self._high_theta = value
             else:
                 raise ValueError("high_theta must be between low_theta and " +\
-                                 "pi.")
+                    "pi.")
         else:
             raise TypeError("high_theta must be single number.")
     
@@ -267,9 +267,10 @@ class UniformDirectionDistribution(DirectionDistribution):
         """
         Returns a string representation of this distribution.
         """
-        return "UniformDirection((%.3g, %.3g), %.3g, %.3g, %.3g, %.3g)" %\
-            (self.pointing_center[0], self.pointing_center[1], self.low_theta,\
-            self.high_theta, self.low_phi, self.high_phi)
+        return ("UniformDirection(({0:.3g}, {1:.3g}), {2:.3g}, {3:.3g}, " +\
+            "{4:.3g}, {5:.3g})").format(self.pointing_center[0],\
+            self.pointing_center[1], self.low_theta, self.high_theta,\
+            self.low_phi, self.high_phi)
     
     def __eq__(self, other):
         """

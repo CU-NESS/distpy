@@ -28,19 +28,18 @@ class DoubleSidedExponentialDistribution(Distribution):
             self.mean = (mean * 1.)
         else:
             raise ValueError('The mean parameter given to a ' +\
-                             'DoubleSidedExponentialDistribution was not ' +\
-                             'of a numerical type.')
+                'DoubleSidedExponentialDistribution was not of a numerical ' +\
+                'type.')
         if type(variance) in numerical_types:
             if variance > 0:
                 self.variance = (1. * variance)
             else:
                 raise ValueError("The variance given to a " +\
-                                 "DoubleSidedExponentialDistribution was " +\
-                                 "not positive.")
+                    "DoubleSidedExponentialDistribution was not positive.")
         else:
             raise ValueError("The variance given to a " +\
-                             "DoubleSidedExponentialDistribution was not " +\
-                             "of numerical type.")
+                "DoubleSidedExponentialDistribution was not of a numerical " +\
+                "type.")
         self._const_lp_term = (np.log(2) + np.log(self.variance)) / (-2)
     
     @property
@@ -90,7 +89,7 @@ class DoubleSidedExponentialDistribution(Distribution):
         Finds and returns a string version of this
         DoubleSidedExponentialDistribution.
         """
-        return "DSExp(%.2g, %.2g)" % (self.mean, self.variance)
+        return "DSExp({0:.2g}, {1:.2g})".format(self.mean, self.variance)
     
     def __eq__(self, other):
         """

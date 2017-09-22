@@ -30,20 +30,19 @@ class BinomialDistribution(Distribution):
                 self.probability_of_success = probability_of_success
             else:
                 raise ValueError("probability_of_success given to " +\
-                                 "BinomialDistribution was not between 0 " +\
-                                 "and 1.")
+                    "BinomialDistribution was not between 0 and 1.")
         else:
             raise ValueError("probability_of_success given to " +\
-                             "BinomialDistribution was not a number.")
+                "BinomialDistribution was not a number.")
         if type(number_of_trials) in int_types:
             if number_of_trials > 0:
                 self.number_of_trials = number_of_trials
             else:
                 raise ValueError("number_of_trials given to " +\
-                                 "BinomialDistribution was not positive.")
+                    "BinomialDistribution was not positive.")
         else:
             raise ValueError("number_of_trials given to " +\
-                             "BinomialDistribution was not a number.")
+                "BinomialDistribution was not a number.")
     
     @property
     def numparams(self):
@@ -85,14 +84,14 @@ class BinomialDistribution(Distribution):
                 return -np.inf
         else:
             raise TypeError("point given to BinomialDistribution was not " +\
-                            "an integer.")
+                "an integer.")
 
     def to_string(self):
         """
         Finds and returns a string version of this BinomialDistribution.
         """
-        return "Binomial(%.2g,%.i)" %\
-            (self.probability_of_success, self.number_of_trials)
+        return "Binomial({0:.2g},{1:d})".format(self.probability_of_success,\
+            self.number_of_trials)
     
     def __eq__(self, other):
         """

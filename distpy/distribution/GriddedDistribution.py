@@ -33,12 +33,10 @@ def search_sorted(array, value):
         numloops += 1
         if (range_max - range_min) == 1:
             if (range_max == range_max_0) or (range_min == 0):
-                raise LookupError("For some reason, range_max-" +\
-                                  "range_min reached 1 before " +\
-                                  "the element was found. The " +\
-                                  "element being searched for " +\
-                                  ("was %s. (min,max)" % (value,) +\
-                                  ("=%s" % ((range_min, range_max),))))
+                raise LookupError(("For some reason, range_max-" +\
+                    "range_min reached 1 before the element was found. The " +\
+                    "element being searched for was {0!s}. (min,max)=" +\
+                    "({1!s},{2!s})").format(value, range_min, range_max))
             else:
                 high_index = range_max
         else:
@@ -55,7 +53,7 @@ def search_sorted(array, value):
             else:
                 return high_index - 1
     raise NotImplementedError("Something went wrong! I got " +\
-                              "caught a pseudo-infinite loop!")
+        "caught a pseudo-infinite loop!")
         
 
 class GriddedDistribution(Distribution):
@@ -85,27 +83,24 @@ class GriddedDistribution(Distribution):
                 if arrpdf.shape == self.shape:
                     self.pdf = arrpdf
                 else:
-                    raise ValueError("The pdf given to a " +\
-                                     "GriddedDistribution were not of the " +\
-                                     "expected shape. It should be an " +\
-                                     "N-dimensional array with each " +\
-                                     "dimension given by the length of the " +\
-                                     "corresponding variable's range. Its " +\
-                                     "values should be proportional to the " +\
-                                     "pdf. The shape was " +\
-                                     ("%s when it should have been %s" %\
-                                     (arrpdf.shape, self.shape,)))
+                    raise ValueError(("The pdf given to a " +\
+                        "GriddedDistribution were not of the expected " +\
+                        "shape. It should be an N-dimensional array with " +\
+                        "each dimension given by the length of the " +\
+                        "corresponding variable's range. Its values should " +\
+                        "be proportional to the pdf. The shape was {0!s} " +\
+                        "when it should have been {1!s}.").format(\
+                        arrpdf.shape, self.shape))
             else:
                 raise ValueError("The pdf given to a GriddedDistribution " +\
-                                 "were not of a sequence type. It should " +\
-                                 "be an N-dimensional array with each " +\
-                                 "dimension given by the length of the " +\
-                                 "corresponding variable's range. Its " +\
-                                 "values should be proportional to the pdf.")
+                    "were not of a sequence type. It should be an " +\
+                    "N-dimensional array with each dimension given by the " +\
+                    "length of the corresponding variable's range. Its " +\
+                    "values should be proportional to the pdf.")
         else:
             raise ValueError("The variables given to a GriddedDistribution " +\
-                             "were not of a list type. It should be a " +\
-                             "sequence of variable ranges.")
+                "were not of a list type. It should be a sequence of " +\
+                "variable ranges.")
         self.pdf = self.pdf.flatten()
         self._make_cdf()
 
@@ -319,6 +314,6 @@ class GriddedDistribution(Distribution):
         group.attrs['class'] = 'GriddedDistribution'
         group.attrs['numparams'] = self.numparams
         for ivar in range(len(self.vars)):
-            group.attrs['variable_%i' % (ivar,)] = self.vars[ivar]
+            group.attrs['variable_{}'.format(ivar)] = self.vars[ivar]
         group.create_dataset('pdf', data=self.pdf)
 

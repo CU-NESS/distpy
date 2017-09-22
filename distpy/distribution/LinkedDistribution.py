@@ -33,24 +33,20 @@ class LinkedDistribution(Distribution):
                 self.shared_distribution = shared_distribution
             else:
                 raise NotImplementedError("The shared_distribution " +\
-                                          "provided to a " +\
-                                          "LinkedDistribution was " +\
-                                          "multivariate (I don't know how " +\
-                                          "to deal with this).")
+                    "provided to a LinkedDistribution was multivariate (I " +\
+                    "don't know how to deal with this).")
         else:
             raise ValueError("The shared_distribution given to a " +\
-                             "LinkedDistribution was not recognizable as a " +\
-                             "distribution.")
+                "LinkedDistribution was not recognizable as a distribution.")
         if (type(numpars) in numerical_types):
             if numpars > 1:
                 self._numparams = numpars
             else:
                 raise ValueError("A LinkedDistribution was initialized " +\
-                                 "with only one parameter. Is this really " +\
-                                 "what you want?")
+                    "with only one parameter. Is this really what you want?")
         else:
             raise ValueError("The type of the number of parameters given " +\
-                             "given to a LinkedDistribution was not numerical.")
+                "given to a LinkedDistribution was not numerical.")
 
     @property
     def numparams(self):
@@ -104,18 +100,17 @@ class LinkedDistribution(Distribution):
                 return self.shared_distribution.log_value(point[0])
             else:
                 raise ValueError("The length of the point given to a " +\
-                                 "LinkedDistribution was not the same as " +\
-                                 "the LinkedDistribution's number of " +\
-                                 "parameters.")
+                    "LinkedDistribution was not the same as the " +\
+                    "LinkedDistribution's number of parameters.")
         else:
             raise ValueError("The point provided to a LinkedDistribution " +\
-                             "was not of a numerical type or a list type.")
+                "was not of a numerical type or a list type.")
 
     def to_string(self):
         """
         Finds and returns a string representation of this LinkedDistribution.
         """
-        return "Linked(%s)" % (self.shared_distribution.to_string(),)
+        return "Linked({!s})".format(self.shared_distribution.to_string())
     
     def __eq__(self, other):
         """

@@ -26,8 +26,8 @@ pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
 xs = np.arange(5., 20., 0.01)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_prior)')
-pl.title('Univariate Gaussian distribution with mean=%s and variance=%s' %\
-    (umean,uvar,), size='xx-large')
+pl.title(('Univariate Gaussian distribution with mean={0!s} and ' +\
+    'variance={1!s}').format(umean, uvar), size='xx-large')
 pl.xlabel('Value', size='xx-large')
 pl.ylabel('PDF', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)

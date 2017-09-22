@@ -36,10 +36,10 @@ class GaussianDistribution(Distribution):
             arrmean = np.array(mean)
             if arrmean.ndim != 1:
                 raise ValueError("The mean of a GaussianDistribution was " +\
-                                 "not 1 dimensional.")
+                    "not 1 dimensional.")
             elif arrmean.size == 0:
                 raise ValueError("The mean of a GaussianDistribution was " +\
-                                 "set to something like an empty array.")
+                    "set to something like an empty array.")
             elif arrmean.size == 1:
                 self._check_covariance_when_mean_has_size_1(mean[0],\
                                                             covariance)
@@ -51,18 +51,15 @@ class GaussianDistribution(Distribution):
                     self.covariance = np.matrix(arrcov)
                 else:
                     raise ValueError("The covariance given to a " +\
-                                     "GaussianDistribution was not " +\
-                                     "castable to an array of the correct " +\
-                                     "shape. It should be a square shape " +\
-                                     "with the same side length as length " +\
-                                     "of mean.")
+                        "GaussianDistribution was not castable to an array " +\
+                        "of the correct shape. It should be a square shape " +\
+                        "with the same side length as length of mean.")
             else:
-                raise ValueError("The mean of a GaussianDistribution " +\
-                                 "is array-like but its covariance" +\
-                                 " isn't matrix like.")
+                raise ValueError("The mean of a GaussianDistribution is " +\
+                    "array-like but its covariance isn't matrix like.")
         else:
-            raise ValueError("The mean of a GaussianDistribution " +\
-                             "is not of a recognizable type.")
+            raise ValueError("The mean of a GaussianDistribution is not of " +\
+                "a recognizable type.")
         self.invcov = lalg.inv(self.covariance)
         self.logdetcov = lalg.slogdet(self.covariance)[1]
     
@@ -86,11 +83,11 @@ class GaussianDistribution(Distribution):
                 self.covariance = np.matrix([[arrcov[(0,) * arrcov.ndim]]])
             else:
                 raise ValueError("The mean of a GaussianDistribution was " +\
-                                 "set to a number but the covariance can't " +\
-                                 "be cast into a number.")
+                    "set to a number but the covariance can't be cast into " +\
+                    "a number.")
         else:
             raise ValueError("The covariance of a GaussianDistribution is " +\
-                             "not of a recognizable type.")
+                "not of a recognizable type.")
         self.mean = np.matrix([true_mean])
         self._numparams = 1
 
@@ -103,7 +100,7 @@ class GaussianDistribution(Distribution):
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("For some reason, I don't know how many " +\
-                                 "parameters this GaussianDistribution has!")
+                "parameters this GaussianDistribution has!")
         return self._numparams
     
     def __add__(self, other):
@@ -160,8 +157,7 @@ class GaussianDistribution(Distribution):
                         np.dot(np.dot(self.covariance.A, other), other)
                 else:
                     raise ValueError("Cannot multiply Gaussian distributed " +\
-                                     "random vector by a vector of " +\
-                                     "different size.")
+                        "random vector by a vector of different size.")
             elif other.ndim == 2:
                 if other.shape[1] == self.numparams:
                     if other.shape[0] <= self.numparams:
@@ -171,21 +167,18 @@ class GaussianDistribution(Distribution):
                             np.dot(other, np.dot(self.covariance.A, other.T))
                     else:
                         raise ValueError("Cannot multiply Gaussian " +\
-                                         "distributed random vector by " +\
-                                         "matrix which will expand the " +\
-                                         "number of parameters because the " +\
-                                         "covariance matrix of the result " +\
-                                         "would be singular.")
+                            "distributed random vector by matrix which " +\
+                            "will expand the number of parameters because " +\
+                            "the covariance matrix of the result would be " +\
+                            "singular.")
                 else:
                     raise ValueError("Cannot multiply given matrix with " +\
-                                     "Gaussian distributed random vector " +\
-                                     "because the axis of its second " +\
-                                     "dimension is not the same length as " +\
-                                     "the random vector.")
+                        "Gaussian distributed random vector because the " +\
+                        "axis of its second dimension is not the same " +\
+                        "length as the random vector.")
             else:
                 raise ValueError("Cannot multiply Gaussian distributed " +\
-                                 "random vector by a tensor with more than " +\
-                                 "3 indices.")
+                    "random vector by a tensor with more than 3 indices.")
         else:
             # assume other is a constant
             new_mean = self.mean.A[0] * other
@@ -235,10 +228,9 @@ class GaussianDistribution(Distribution):
             minus_mean = np.matrix(point) - self.mean
         else:
             raise ValueError("The type of point provided to a " +\
-                             "GaussianDistribution was not of a numerical " +\
-                             "type (should be if distribution is " +\
-                             "univariate) or of a list type (should be if " +\
-                             "distribution is multivariate).")
+                "GaussianDistribution was not of a numerical type (should " +\
+                "be if distribution is univariate) or of a list type " +\
+                "(should be if distribution is multivariate).")
         expon = np.float64(minus_mean * self.invcov * minus_mean.T) / 2.
         return -1. * ((self.logdetcov / 2.) + expon +\
             ((self.numparams * np.log(two_pi)) / 2.))
@@ -249,10 +241,10 @@ class GaussianDistribution(Distribution):
         GaussianDistribution.
         """
         if self.numparams == 1:
-            return "Normal(mean=%.3g,variance=%.3g)" %\
-                (self.mean.A[0,0], self.covariance.A[0,0])
+            return "Normal(mean={0:.3g},variance={1:.3g})".format(\
+                self.mean.A[0,0], self.covariance.A[0,0])
         else:
-            return "%i-dim Normal" % (len(self.mean.A[0]),)
+            return "{}-dim Normal".format(len(self.mean.A[0]))
     
     def __eq__(self, other):
         """

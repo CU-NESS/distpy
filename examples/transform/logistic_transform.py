@@ -18,7 +18,7 @@ conditions =\
 ]
 if not all(conditions):
     raise AssertionError("LogisticTransform test failed at least one " +\
-                         "condition.")
+        "condition.")
 
 file_name = 'Logistic_transform_TEST.hdf5'
 transform.save(file_name)

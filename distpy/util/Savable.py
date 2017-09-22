@@ -12,7 +12,7 @@ try:
 except:
     have_h5py = False
     no_h5py_error = NotImplementedError("Saving couldn't be completed " +\
-                                        "because h5py was not installed.")
+        "because h5py was not installed.")
 else:
     have_h5py = True
 

@@ -9,8 +9,7 @@ from ..util import Savable
 
 def raise_cannot_instantiate_distribution_error():
     raise NotImplementedError("Some part of Distribution class was not " +\
-                              "implemented by subclass or Distribution is " +\
-                              "being instantiated.")
+        "implemented by subclass or Distribution is being instantiated.")
 
 class Distribution(Savable):
     """

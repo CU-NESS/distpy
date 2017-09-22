@@ -31,12 +31,11 @@ class UniformDistribution(Distribution):
                 self.low = high
                 self.high = low
             else:
-                raise ValueError('The high and low endpoints ' +\
-                                 'of a UniformDistribution are equal!')
+                raise ValueError('The high and low endpoints of a ' +\
+                    'UniformDistribution are equal!')
         else:
             raise ValueError('Either the low or high endpoint of a ' +\
-                             'UniformDistribution was not of a numerical ' +\
-                             'type.')
+                'UniformDistribution was not of a numerical type.')
         self._log_P = - np.log(self.high - self.low)
 
     @property
@@ -77,7 +76,7 @@ class UniformDistribution(Distribution):
         """
         Finds and returns a string representation of this distribution.
         """
-        return "Uniform(%.2g, %.2g)" % (self.low, self.high)
+        return "Uniform({0:.2g}, {1:.2g})".format(self.low, self.high)
     
     def __eq__(self, other):
         """

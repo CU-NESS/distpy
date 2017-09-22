@@ -52,7 +52,7 @@ class DirectionDistribution(Distribution):
         this initializer just returns an error.
         """
         raise NotImplementedError("DirectionDistribution is not meant to " +\
-                                  "be instantiated directly.")
+            "be instantiated directly.")
     
     @property
     def numparams(self):
@@ -69,7 +69,7 @@ class DirectionDistribution(Distribution):
         """
         if not hasattr(self, '_pointing_center'):
             raise AttributeError("pointing_center referenced before it was " +\
-                                 "set.")
+                "set.")
         return self._pointing_center
     
     @pointing_center.setter
@@ -86,11 +86,11 @@ class DirectionDistribution(Distribution):
             if abs(value[0]) <= 90:
                 if (not have_healpy) and (value != (90, 0)):
                     raise ValueError("pointing_center must be (90, 0) " +\
-                                     "because healpy is not installed.")
+                        "because healpy is not installed.")
                 self._pointing_center = value
             else:
                 raise ValueError("latitude given as pointing_center[0] was " +\
-                                 "not between -90 and 90 (degrees).")
+                    "not between -90 and 90 (degrees).")
         else:
             raise ValueError("pointing_center must be a length-2 1D sequence.")
     
@@ -138,7 +138,7 @@ class DirectionDistribution(Distribution):
         """
         if not hasattr(self, '_psi_center'):
             raise AttributeError("psi_center was referenced before it was " +\
-                                 "set.")
+                "set.")
         return self._psi_center
     
     @psi_center.setter
@@ -152,11 +152,11 @@ class DirectionDistribution(Distribution):
         if type(value) in numerical_types:
             if (not have_healpy) and (value != 0):
                 raise ValueError("psi_center must be 0 because healpy is " +\
-                                 "not installed.")
+                    "not installed.")
             self._psi_center = value
         else:
             raise TypeError("psi_center given to DirectionDistribution was " +\
-                            "not a single number.")
+                "not a single number.")
     
     @property
     def rotator(self):

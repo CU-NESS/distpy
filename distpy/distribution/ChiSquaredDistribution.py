@@ -29,10 +29,10 @@ class ChiSquaredDistribution(Distribution):
                 self.degrees_of_freedom = degrees_of_freedom
             else:
                 raise ValueError("degrees_of_freedom_given to " +\
-                                 "ChiSquaredDistribution was not positive.")
+                    "ChiSquaredDistribution was not positive.")
         else:
             raise ValueError("degrees_of_freedom given to " +\
-                             "ChiSquaredDistribution was not an integer.")
+                "ChiSquaredDistribution was not an integer.")
         self.const_lp_term = -(self.degrees_of_freedom * (np.log(2) / 2)) -\
             log_gamma(self.degrees_of_freedom / 2.)
     
@@ -72,7 +72,7 @@ class ChiSquaredDistribution(Distribution):
         Finds and returns the string representation of this
         ChiSquaredDistribution.
         """
-        return "ChiSquared(%i)" % (self.degrees_of_freedom,)
+        return "ChiSquared({})".format(self.degrees_of_freedom)
     
     def __eq__(self, other):
         """

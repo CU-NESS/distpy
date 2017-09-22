@@ -11,7 +11,7 @@ try:
 except:
     have_h5py = False
     no_h5py_error = NotImplementedError("Loading couldn't be completed " +\
-                                        "because h5py couldn't be imported.")
+        "because h5py couldn't be imported.")
 else:
     have_h5py = True
 
@@ -26,15 +26,15 @@ def load_distribution_set_from_hdf5_group(group):
     """
     ituple = 0
     distribution_tuples = []
-    while ('distribution_%i' % (ituple,)) in group:
-        subgroup = group['distribution_%i' % (ituple,)]
+    while ('distribution_{}'.format(ituple)) in group:
+        subgroup = group['distribution_{}'.format(ituple)]
         distribution = load_distribution_from_hdf5_group(subgroup)
         params = []
         transforms = []
         iparam = 0
         for iparam in range(distribution.numparams):
-            params.append(subgroup.attrs['parameter_%i' % (iparam,)])
-            subsubgroup = subgroup['transform_%i' % (iparam,)]
+            params.append(subgroup.attrs['parameter_{}'.format(iparam)])
+            subsubgroup = subgroup['transform_{}'.format(iparam)]
             transforms.append(load_transform_from_hdf5_group(subsubgroup))
         distribution_tuples.append((distribution, params, transforms))
         ituple += 1

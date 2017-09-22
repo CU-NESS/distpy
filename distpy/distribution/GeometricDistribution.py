@@ -26,10 +26,10 @@ class GeometricDistribution(Distribution):
                 self.common_ratio = common_ratio
             else:
                 raise ValueError("scale given to GeometricDistribution was " +\
-                                 "not between 0 and 1.")
+                    "not between 0 and 1.")
         else:
             raise ValueError("common_ratio given to GeometricDistribution " +\
-                             "was not a number.")
+                "was not a number.")
         self.const_lp_term = np.log(1 - self.common_ratio)
     
     @property
@@ -77,13 +77,13 @@ class GeometricDistribution(Distribution):
                 return -np.inf
         else:
             raise TypeError("point given to GeometricDistribution was not " +\
-                            "an integer.")
+                "an integer.")
 
     def to_string(self):
         """
         Finds and returns a string version of this GeometricDistribution.
         """
-        return "Geometric(%.4g)" % (self.common_ratio,)
+        return "Geometric({:.4g})".format(self.common_ratio)
     
     def __eq__(self, other):
         """
