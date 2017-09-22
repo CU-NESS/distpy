@@ -8,7 +8,7 @@ Description: File containing class representing an arbitrary dimensional
 """
 import numpy as np
 import numpy.random as rand
-from ..util import int_types, sequence_types
+from ..util import int_types, sequence_types, numerical_types
 from .Distribution import Distribution
 
 
@@ -124,22 +124,34 @@ class GriddedDistribution(Distribution):
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
         """
-        none_shape = (shape is None)
-        if none_shape:
-            shape = (1,)
-        elif type(shape) in int_types:
+        if shape is None:
+            shape = ()
+        if type(shape) in int_types:
             shape = (shape,)
-        rvals = rand.rand(*shape)
-        points = np.ndarray(shape + (self.numparams,))
-        for multi_index in np.ndindex(*shape):
-            inv_cdf_index =\
-                self._inverse_cdf_by_packed_index(rvals[multi_index])
-            points[multi_index] =\
-                self._point_from_packed_index(inv_cdf_index)
-        if none_shape:
-            return points[0]
+        return self.inverse_cdf(rand.rand(*shape))
+    
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function (only expected to work
+        for if self.numparams == 1 but works nonetheless in higher dimensions).
+        
+        cdf: value between 0 and 1
+        """
+        if type(cdf) in numerical_types:
+            inv_cdf_index = self._inverse_cdf_by_packed_index(cdf)
+            return self._point_from_packed_index(inv_cdf_index)
         else:
-            return points
+            cdf = np.array(cdf)
+            if self.numparams == 1:
+                return_val = np.ndarray(cdf.shape)
+            else:
+                return_val = np.ndarray(cdf.shape + (self.numparams,))
+            for multi_index in np.ndindex(*cdf.shape):
+                inv_cdf_index =\
+                    self._inverse_cdf_by_packed_index(cdf[multi_index])
+                return_val[multi_index] =\
+                    self._point_from_packed_index(inv_cdf_index)
+            return return_val
 
     def log_value(self, point):
         """

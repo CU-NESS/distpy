@@ -5,9 +5,10 @@ Date: 6 Aug 2017
 
 Description: File containing class representing a chi-squared distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
-from scipy.special import gammaln as log_gamma
+from scipy.special import gammaln, gammaincinv
 from ..util import int_types
 from .Distribution import Distribution
 
@@ -34,7 +35,7 @@ class ChiSquaredDistribution(Distribution):
             raise ValueError("degrees_of_freedom given to " +\
                 "ChiSquaredDistribution was not an integer.")
         self.const_lp_term = -(self.degrees_of_freedom * (np.log(2) / 2)) -\
-            log_gamma(self.degrees_of_freedom / 2.)
+            gammaln(self.degrees_of_freedom / 2.)
     
     @property
     def numparams(self):
@@ -83,6 +84,14 @@ class ChiSquaredDistribution(Distribution):
             return self.degrees_of_freedom == other.degrees_of_freedom
         else:
             return False
+    
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        return 2 * gammaincinv(self.degrees_of_freedom / 2, cdf)
     
     def fill_hdf5_group(self, group):
         """

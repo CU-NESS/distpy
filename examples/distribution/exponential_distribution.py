@@ -24,6 +24,10 @@ pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
 xs = np.arange(-10., 75., 0.01)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
+ylim = pl.ylim()
+for xval in distribution.left_confidence_interval(0.5):
+    pl.plot(2 * [xval], ylim, color='k')
+pl.ylim(ylim)
 pl.legend(fontsize='xx-large', loc='upper right')
 pl.title('Exponential distribution test (mean=5 and shift=-5)',\
     size='xx-large')

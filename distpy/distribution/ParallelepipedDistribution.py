@@ -233,6 +233,13 @@ class ParallelepipedDistribution(Distribution):
         else:
             return False
     
+    @property
+    def can_give_confidence_intervals(self):
+        """
+        Confidence intervals cannot be made with this distribution.
+        """
+        return False
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data from this distribution. The

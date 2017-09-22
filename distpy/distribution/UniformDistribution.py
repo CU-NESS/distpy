@@ -90,6 +90,14 @@ class UniformDistribution(Distribution):
         else:
             return False
     
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        return (self.low + ((self.high - self.low) * cdf))
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data from this distribution. All

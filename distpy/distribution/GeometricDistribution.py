@@ -96,6 +96,13 @@ class GeometricDistribution(Distribution):
         else:
             return False
     
+    @property
+    def can_give_confidence_intervals(self):
+        """
+        In distpy, discrete distributions do not support confidence intervals.
+        """
+        return False
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this distribution. The

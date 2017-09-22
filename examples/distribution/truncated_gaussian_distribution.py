@@ -24,6 +24,10 @@ pl.hist(sample, bins=100, linewidth=2, color='b', histtype='step',\
 xs = np.arange(-2.5, 2.501, 0.001)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
+ylim = pl.ylim()
+for xval in distribution.central_confidence_interval(0.5):
+    pl.plot(2 * [xval], ylim, color='k')
+pl.ylim(ylim)
 pl.title('Truncated Gaussian distribution test', size='xx-large')
 pl.xlabel('Value', size='xx-large')
 pl.ylabel('PDF', size='xx-large')

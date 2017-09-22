@@ -26,6 +26,10 @@ pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
 xs = np.arange(5., 20., 0.01)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_prior)')
+ylim = pl.ylim()
+for xval in distribution.central_confidence_interval(0.6827):
+    pl.plot(2 * [xval], ylim, color='k')
+pl.ylim(ylim)
 pl.title(('Univariate Gaussian distribution with mean={0!s} and ' +\
     'variance={1!s}').format(umean, uvar), size='xx-large')
 pl.xlabel('Value', size='xx-large')

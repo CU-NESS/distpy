@@ -9,6 +9,7 @@ Description: File containing class representing Gaussian distribution
 import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
+from scipy.special import erfinv
 from ..util import numerical_types, sequence_types
 from .Distribution import Distribution
 
@@ -261,6 +262,16 @@ class GaussianDistribution(Distribution):
             return mean_close and covariance_close
         else:
             return False
+    
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function. Only expected to make
+        sense if numparams == 1
+        
+        cdf: value between 0 and 1
+        """
+        return (self.mean.A[0,0] +\
+            (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
     
     def fill_hdf5_group(self, group):
         """

@@ -24,6 +24,10 @@ pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
 xs = np.arange(-9., 9., 0.01)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
+ylim = pl.ylim()
+for xval in distribution.central_confidence_interval(0.5):
+    pl.plot(2 * [xval], ylim, color='k')
+pl.ylim(ylim)
 pl.legend(fontsize='xx-large', loc='upper right')
 pl.title('Double-sided exponential distribution test', size='xx-large')
 pl.xlabel('Value', size='xx-large')

@@ -96,6 +96,14 @@ class ExponentialDistribution(Distribution):
         else:
             return False
     
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        return (self.shift - (np.log(1 - cdf) / self.rate))
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this distribution. The

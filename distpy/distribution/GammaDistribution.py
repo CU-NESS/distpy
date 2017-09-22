@@ -7,7 +7,7 @@ Description: File containing class representing a Gamma distribution.
 """
 import numpy as np
 import numpy.random as rand
-from scipy.special import gammaln as log_gamma
+from scipy.special import gammaln, gammaincinv
 from ..util import numerical_types
 from .Distribution import Distribution
 
@@ -60,7 +60,7 @@ class GammaDistribution(Distribution):
         """
         return (self._shape_min_one * np.log(point)) -\
                (self.shape * np.log(self.scale)) -\
-               (point / self.scale) - log_gamma(self.shape)
+               (point / self.scale) - gammaln(self.shape)
     
     def to_string(self):
         """
@@ -79,6 +79,14 @@ class GammaDistribution(Distribution):
                 [other.shape, other.scale], rtol=1e-9, atol=0)
         else:
             return False
+    
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        return self.scale * gammaincinv(self.shape, cdf)
     
     def fill_hdf5_group(self, group):
         """

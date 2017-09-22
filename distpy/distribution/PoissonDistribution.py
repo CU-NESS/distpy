@@ -86,6 +86,14 @@ class PoissonDistribution(Distribution):
         else:
             return False
     
+    @property
+    def can_give_confidence_intervals(self):
+        """
+        In distpy, confidence intervals are not supported with discrete
+        distributions.
+        """
+        return False
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this distribution. The

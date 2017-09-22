@@ -6,9 +6,10 @@ Date: 6 Aug 2017
 Description: File containing class representing double sided exponential
              distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
-from ..util import numerical_types
+from ..util import bool_types, numerical_types
 from .Distribution import Distribution
 
 class DoubleSidedExponentialDistribution(Distribution):
@@ -103,14 +104,34 @@ class DoubleSidedExponentialDistribution(Distribution):
         else:
             return False
     
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        twice_distances_from_mean_cdf = np.abs((2 * cdf) - 1)
+        distances_from_mean = ((-self.root_half_variance) *\
+            np.log(1 - twice_distances_from_mean_cdf))
+        on_right = ((2 * cdf) > 1)
+        if type(on_right) in bool_types:
+            # cdf is a single value here!
+            multiplicative_displacements = ((2 * int(on_right)) - 1)
+        else:
+            # cdf is an array here!
+            multiplicative_displacements = ((2 * on_right.astype(int)) - 1)
+        return\
+            (self.mean + (multiplicative_displacements * distances_from_mean))
+        
+        
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this distribution. The
-        only things to save are the class name, rate, and shift.
+        only things to save are the class name, mean, and variance.
         
         group: hdf5 file group to fill
         """
         group.attrs['class'] = 'DoubleSidedExponentialDistribution'
-        group.attrs['mean'] = self.rate
+        group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.variance
 

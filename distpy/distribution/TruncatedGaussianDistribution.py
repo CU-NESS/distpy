@@ -136,6 +136,15 @@ class TruncatedGaussianDistribution(Distribution):
         else:
             return False
     
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        erfinv_args = (self._lo_term + (cdf * (self._hi_term - self._lo_term)))
+        return (self.mean + (np.sqrt(2 * self.var) * erfinv(erfinv_args)))
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data from this distribution. The

@@ -61,6 +61,17 @@ class Distribution(Savable):
         """
         raise_cannot_instantiate_distribution_error()
     
+    def __call__(self, point):
+        """
+        Alias for log_value function.
+        
+        point: either single value (if distribution is 1D) or array of values
+        
+        returns: single number, logarithm of value of this distribution at the
+                 given point
+        """
+        return self.log_value(point)
+    
     @property
     def numparams(self):
         """
@@ -102,4 +113,60 @@ class Distribution(Savable):
         distribution objects a and b.
         """
         return (not self.__eq__(other))
+    
+    @property
+    def can_give_confidence_intervals(self):
+        """
+        Confidence intervals for most distributions can be generated as long as
+        this distribution describes only one dimension.
+        """
+        return (self.numparams == 1)
+    
+    def left_confidence_interval(self, probability_level):
+        """
+        Finds confidence interval furthest to the left.
+        
+        probability_level: the probability with which a random variable with
+                           this distribution will exist in returned interval
+        
+        returns: (low, high) interval
+        """
+        if self.can_give_confidence_intervals:
+            return (self.inverse_cdf(0), self.inverse_cdf(probability_level))
+        else:
+            raise ValueError("Confidence intervals cannot be found for " +\
+                "this distribution.")
+    
+    def central_confidence_interval(self, probability_level):
+        """
+        Finds confidence interval which has same probability of lying above or
+        below interval.
+        
+        probability_level: the probability with which a random variable with
+                           this distribution will exist in returned interval
+        
+        returns: (low, high) interval
+        """
+        if self.numparams == 1:
+            return (self.inverse_cdf((1 - probability_level) / 2),\
+                self.inverse_cdf((1 + probability_level) / 2))
+        else:
+            raise ValueError("Confidence intervals cannot be found for " +\
+                "this distribution.")
+    
+    def right_confidence_interval(self, probability_level):
+        """
+        Finds confidence interval furthest to the right.
+        
+        probability_level: the probability with which a random variable with
+                           this distribution will exist in returned interval
+        
+        returns: (low, high) interval
+        """
+        if self.numparams == 1:
+            return\
+                (self.inverse_cdf(1 - probability_level), self.inverse_cdf(1))
+        else:
+            raise ValueError("Confidence intervals cannot be found for " +\
+                "this distribution.")
 

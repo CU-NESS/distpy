@@ -5,6 +5,7 @@ Date: 6 Aug 2017
 
 Description: File containing a class representing a Weibull distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
 from ..util import numerical_types
@@ -94,6 +95,14 @@ class WeibullDistribution(Distribution):
                 [other.shape, other.scale], rtol=0, atol=1e-9)
         else:
             return False
+    
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function.
+        
+        cdf: value between 0 and 1
+        """
+        return (self.scale * np.power(-np.log(1 - cdf), 1 / self.shape))
     
     def fill_hdf5_group(self, group):
         """

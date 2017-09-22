@@ -8,6 +8,7 @@ Description: File containing class representing a beta distribution.
 import numpy as np
 import numpy.random as rand
 from scipy.special import beta as beta_func
+from scipy.special import betaincinv
 from ..util import numerical_types
 from .Distribution import Distribution
 
@@ -101,4 +102,13 @@ class BetaDistribution(Distribution):
         group.attrs['class'] = 'BetaDistribution'
         group.attrs['alpha'] = self.alpha
         group.attrs['beta'] = self.beta
+    
+    def inverse_cdf(self, cdf):
+        """
+        Inverse of the cumulative distribution function (cdf) of this
+        distribution.
+        
+        cdf: value between 0 and 1
+        """
+        return betaincinv(self.alpha, self.beta, cdf)
 
