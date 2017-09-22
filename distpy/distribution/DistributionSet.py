@@ -142,7 +142,7 @@ class DistributionSet(Savable):
             elif type(params) is str:
                 raise ValueError(("A single parameter was given even " +\
                    "though the distribution given is multivariate " +\
-                   "(numparams={}).").format(distribution.numparams)))
+                   "(numparams={}).").format(distribution.numparams))
             elif type(params) in sequence_types:
                 if (len(params) == distribution.numparams):
                     for name in params:
@@ -152,10 +152,9 @@ class DistributionSet(Savable):
                     self._data.append(data_tup)
                 else:
                     raise ValueError(("The number of parameters of the " +\
-                                     "given distribution ({0:d}) was not " +\
-                                     "equal to the number of parameters " +\
-                                     "given ({1:d}).").format(\
-                                     distribution.numparams, len(params))
+                        "given distribution ({0:d}) was not equal to the " +\
+                        "number of parameters given ({1:d}).").format(\
+                        distribution.numparams, len(params)))
             else:
                 raise ValueError("The params given to a DistributionSet " +\
                     "(along with a distribution) was not a string nor a " +\
