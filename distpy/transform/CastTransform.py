@@ -18,6 +18,12 @@ from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
 from .ArcsinTransform import ArcsinTransform
 from .LogisticTransform import LogisticTransform
+try:
+    # this runs with no issues in python 2 but raises error in python 3
+    basestring
+except:
+    # this try/except allows for python 2/3 compatible string type checking
+    basestring = str
 
 def cast_to_transform(key):
     """
@@ -30,7 +36,7 @@ def cast_to_transform(key):
     """
     if key is None:
         return NullTransform()
-    elif isinstance(key, str):
+    elif isinstance(key, basestring):
         lower_cased_key = key.lower()
         if lower_cased_key in ['null', 'none']:
             return NullTransform()

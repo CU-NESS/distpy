@@ -19,7 +19,13 @@ Description: A container which can hold an arbitrary number of distributions,
 import numpy as np
 from ..util import Savable, int_types, sequence_types
 from ..transform import NullTransform, cast_to_transform, castable_to_transform
-from .Distribution import Distribution        
+from .Distribution import Distribution
+try:
+    # this runs with no issues in python 2 but raises error in python 3
+    basestring
+except:
+    # this try/except allows for python 2/3 compatible string type checking
+    basestring = str
 
 class DistributionSet(Savable):
     """
@@ -139,7 +145,7 @@ class DistributionSet(Savable):
                 else:
                     raise ValueError("The type of the parameters given " +\
                         "to a DistributionSet was not recognized.")
-            elif type(params) is str:
+            elif isinstance(params, basestring):
                 raise ValueError(("A single parameter was given even " +\
                    "though the distribution given is multivariate " +\
                    "(numparams={}).").format(distribution.numparams))
@@ -367,7 +373,7 @@ class DistributionSet(Savable):
         # Checks the given name to see if it is already taken in the parameters
         # of the distributions in this DistributionSet.
         #
-        if not (type(name) is str):
+        if not isinstance(name, basestring):
             raise ValueError("A parameter provided to a DistributionSet " +\
                 "was not a string.")
         broken = False
