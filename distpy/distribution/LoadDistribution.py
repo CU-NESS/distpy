@@ -1,5 +1,6 @@
 from .UniformDistribution import UniformDistribution
 from .GammaDistribution import GammaDistribution
+from .ChiSquaredDistribution import ChiSquaredDistribution
 from .BetaDistribution import BetaDistribution
 from .PoissonDistribution import PoissonDistribution
 from .GeometricDistribution import GeometricDistribution
@@ -44,6 +45,10 @@ def load_distribution_from_hdf5_group(group):
         shape = group.attrs['shape']
         scale = group.attrs['scale']
         return GammaDistribution(shape, scale=scale)
+    elif class_name == 'ChiSquaredDistribution':
+        degrees_of_freedom = group.attrs['degrees_of_freedom']
+        reduced = group.attrs['reduced']
+        return ChiSquaredDistribution(degrees_of_freedom, reduced=reduced)
     elif class_name == 'BetaDistribution':
         alpha = group.attrs['alpha']
         beta = group.attrs['beta']

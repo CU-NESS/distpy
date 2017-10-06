@@ -9,7 +9,7 @@ from __future__ import division
 import numpy as np
 import numpy.random as rand
 from scipy.special import gammaln, gammaincinv
-from ..util import int_types
+from ..util import bool_types, int_types
 from .Distribution import Distribution
 
 class ChiSquaredDistribution(Distribution):
@@ -19,12 +19,13 @@ class ChiSquaredDistribution(Distribution):
     squared gaussian-distributed variables. Its only parameter is the number of
     degrees of freedom, a positive integer.
     """
-    def __init__(self, degrees_of_freedom):
+    def __init__(self, degrees_of_freedom, reduced=False):
         """
         Initializes a new chi-squared distribution with the given parameters.
         
         degrees_of_freedom: positive integer
         """
+        self.reduced = reduced
         if type(degrees_of_freedom) in int_types:
             if degrees_of_freedom > 0:
                 self.degrees_of_freedom = degrees_of_freedom
@@ -36,6 +37,33 @@ class ChiSquaredDistribution(Distribution):
                 "ChiSquaredDistribution was not an integer.")
         self.const_lp_term = -(self.degrees_of_freedom * (np.log(2) / 2)) -\
             gammaln(self.degrees_of_freedom / 2.)
+        if self.reduced:
+            self.const_lp_term =\
+                self.const_lp_term + np.log(self.degrees_of_freedom)
+    
+    @property
+    def reduced(self):
+        """
+        Property storing a boolean which determines whether this distribution
+        represents a reduced chi squared statistic or not.
+        """
+        if not hasattr(self, '_reduced'):
+            raise AttributeError("reduced referenced before it was set.")
+        return self._reduced
+    
+    @reduced.setter
+    def reduced(self, value):
+        """
+        Setter for the reduced property which determines whether this
+        distribution represents a reduced chi squared statistic or not.
+        
+        value: boolean determining whether this distribution represents a
+               reduced chi squared statistic or not.
+        """
+        if type(value) in bool_types:
+            self._reduced = value
+        else:
+            raise TypeError("reduced was set to a non-bool.")
     
     @property
     def numparams(self):
@@ -56,7 +84,11 @@ class ChiSquaredDistribution(Distribution):
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
         """
-        return rand.chisquare(self.degrees_of_freedom, size=shape)
+        sample = rand.chisquare(self.degrees_of_freedom, size=shape)
+        if self.reduced:
+            return sample / self.degrees_of_freedom
+        else:
+            return sample
 
     def log_value(self, point):
         """
@@ -65,6 +97,8 @@ class ChiSquaredDistribution(Distribution):
         
         point: numerical value of the variable
         """
+        if self.reduced:
+            point = point * self.degrees_of_freedom
         return self.const_lp_term - (point / 2) +\
             (((self.degrees_of_freedom / 2.) - 1) * np.log(point))
     
@@ -73,17 +107,19 @@ class ChiSquaredDistribution(Distribution):
         Finds and returns the string representation of this
         ChiSquaredDistribution.
         """
-        return "ChiSquared({})".format(self.degrees_of_freedom)
+        if self.reduced:
+            return "ChiSquared({})".format(self.degrees_of_freedom)
+        else:
+            return "ReducedChiSquared({})".format(self.degrees_of_freedom)
     
     def __eq__(self, other):
         """
         Checks for equality between other and this object. Returns True if
         if other is a ChiSquaredDistribution with the same degrees_of_freedom.
         """
-        if isinstance(other, ChiSquaredDistribution):
-            return self.degrees_of_freedom == other.degrees_of_freedom
-        else:
-            return False
+        return isinstance(other, ChiSquaredDistribution) and\
+            (self.degrees_of_freedom == other.degrees_of_freedom) and\
+            (self.reduced == other.reduced)
     
     def inverse_cdf(self, cdf):
         """
@@ -91,7 +127,10 @@ class ChiSquaredDistribution(Distribution):
         
         cdf: value between 0 and 1
         """
-        return 2 * gammaincinv(self.degrees_of_freedom / 2, cdf)
+        answer = 2 * gammaincinv(self.degrees_of_freedom / 2, cdf)
+        if self.reduced:
+            answer = answer / self.degrees_of_freedom
+        return answer
     
     def fill_hdf5_group(self, group):
         """
@@ -102,4 +141,5 @@ class ChiSquaredDistribution(Distribution):
         """
         group.attrs['class'] = 'ChiSquaredDistribution'
         group.attrs['degrees_of_freedom'] = self.degrees_of_freedom
+        group.attrs['reduced'] = self.reduced
 
