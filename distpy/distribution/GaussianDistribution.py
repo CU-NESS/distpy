@@ -10,7 +10,7 @@ import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
 from scipy.special import erfinv
-from ..util import numerical_types, sequence_types
+from ..util import numerical_types, sequence_types, create_hdf5_dataset
 from .Distribution import Distribution
 
 two_pi = 2 * np.pi
@@ -247,6 +247,20 @@ class GaussianDistribution(Distribution):
         else:
             return "{}-dim Normal".format(len(self.mean.A[0]))
     
+    def __getitem__(self, key):
+        """
+        Marginalizes this Gaussian over all of the parameters not described by
+        given key.
+        
+        key: key representing index (indices) to keep. It can be a slice, list,
+             numpy.ndarray, or integer.
+        
+        returns: marginalized GaussianDistribution
+        """
+        new_mean = self.mean.A[0][key]
+        new_covariance = self.covariance.A[:,key][key]
+        return GaussianDistribution(new_mean, new_covariance)
+    
     def __eq__(self, other):
         """
         Checks for equality of this distribution with other. Returns True if
@@ -273,7 +287,7 @@ class GaussianDistribution(Distribution):
         return (self.mean.A[0,0] +\
             (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None):
         """
         Fills the given hdf5 file group with data from this distribution. The
         fact that this is a GaussianDistribution is saved along with the mean
@@ -282,6 +296,7 @@ class GaussianDistribution(Distribution):
         group: hdf5 file group to fill
         """
         group.attrs['class'] = 'GaussianDistribution'
-        group.create_dataset('mean', data=self.mean.A[0])
-        group.create_dataset('covariance', data=self.covariance.A)
+        create_hdf5_dataset(group, 'mean', data=self.mean.A[0], link=mean_link)
+        create_hdf5_dataset(group, 'covariance', data=self.covariance.A,\
+            link=covariance_link)
 

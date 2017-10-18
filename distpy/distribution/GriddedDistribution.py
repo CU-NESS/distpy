@@ -8,7 +8,8 @@ Description: File containing class representing an arbitrary dimensional
 """
 import numpy as np
 import numpy.random as rand
-from ..util import int_types, sequence_types, numerical_types
+from ..util import int_types, sequence_types, numerical_types,\
+    create_hdf5_dataset
 from .Distribution import Distribution
 
 
@@ -316,7 +317,7 @@ class GriddedDistribution(Distribution):
         #
         return search_sorted(self.cdf, value)
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, pdf_link=None):
         """
         Fills the given hdf5 file group with data from this distribution. The
         class name, variables list, and pdf values.
@@ -327,5 +328,5 @@ class GriddedDistribution(Distribution):
         group.attrs['numparams'] = self.numparams
         for ivar in range(len(self.vars)):
             group.attrs['variable_{}'.format(ivar)] = self.vars[ivar]
-        group.create_dataset('pdf', data=self.pdf)
+        create_hdf5_dataset(group, 'pdf', data=self.pdf, link=self.pdf)
 

@@ -11,7 +11,7 @@ import numpy.random as rand
 import numpy.linalg as lalg
 import scipy.linalg as slalg
 from scipy.special import gammaln as log_gamma
-from ..util import int_types
+from ..util import int_types, create_hdf5_dataset
 from .Distribution import Distribution
 
 class EllipticalUniformDistribution(Distribution):
@@ -148,7 +148,7 @@ class EllipticalUniformDistribution(Distribution):
         else:
             return False
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None):
         """
         Fills the given hdf5 file group with data about this distribution. The
         data to be saved includes the class name, mean, and covariance of this
@@ -157,6 +157,7 @@ class EllipticalUniformDistribution(Distribution):
         group: hdf5 file group to fill
         """
         group.attrs['class'] = 'EllipticalUniformDistribution'
-        group.create_dataset('mean', data=self.mean)
-        group.create_dataset('covariance', data=self.cov)
+        create_hdf5_dataset(group, 'mean', data=self.mean, link=mean_link)
+        create_hdf5_dataset(group, 'covariance', data=self.cov,\
+            link=covariance_link)
 

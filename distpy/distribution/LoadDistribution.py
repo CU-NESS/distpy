@@ -1,3 +1,4 @@
+from ..util import get_hdf5_value
 from .UniformDistribution import UniformDistribution
 from .GammaDistribution import GammaDistribution
 from .ChiSquaredDistribution import ChiSquaredDistribution
@@ -72,8 +73,8 @@ def load_distribution_from_hdf5_group(group):
         variance = group.attrs['variance']
         return DoubleSidedExponentialDistribution(mean, variance)
     elif class_name == 'EllipticalUniformDistribution':
-        mean = group['mean'].value
-        covariance = group['covariance'].value
+        mean = get_hdf5_value(group['mean'])
+        covariance = get_hdf5_value(group['covariance'])
         return EllipticalUniformDistribution(mean, covariance)
     elif class_name == 'UniformDistribution':
         low = group.attrs['low']
@@ -91,13 +92,13 @@ def load_distribution_from_hdf5_group(group):
         return\
             TruncatedGaussianDistribution(mean, variance, low=low, high=high)
     elif class_name == 'GaussianDistribution':
-        mean = group['mean'].value
-        covariance = group['covariance'].value
+        mean = get_hdf5_value(group['mean'])
+        covariance = get_hdf5_value(group['covariance'])
         return GaussianDistribution(mean, covariance)
     elif class_name == 'ParallelepipedDistribution':
-        center = group['center'].value
-        face_directions = group['face_directions'].value
-        distances = group['distances'].value
+        center = get_hdf5_value(group['center'])
+        face_directions = get_hdf5_value(group['face_directions'])
+        distances = get_hdf5_value(group['distances'])
         return ParallelepipedDistribution(center, face_directions, distances)
     elif class_name == 'LinkedDistribution':
         numparams = group.attrs['numparams']
@@ -116,7 +117,7 @@ def load_distribution_from_hdf5_group(group):
         while ('variable_{}'.format(ivar)) in group.attrs:
             variables.append(group.attrs['variable_{}'.format(ivar)])
             ivar += 1
-        pdf = group['pdf'].value
+        pdf = get_hdf5_value(group['pdf'])
         return GriddedDistribution(variables=variables, pdf=pdf)
     elif class_name == 'UniformDirectionDistribution':
         pointing_center = tuple(group.attrs['pointing_center'])

@@ -9,7 +9,7 @@ Description: File containing class represening a uniform distribution over an
 import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
-from ..util import int_types, sequence_types
+from ..util import int_types, sequence_types, create_hdf5_dataset
 from .Distribution import Distribution
 
 def _normed(vec):
@@ -240,7 +240,8 @@ class ParallelepipedDistribution(Distribution):
         """
         return False
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, center_link=None,\
+        face_directions_link=None, distances_link=None):
         """
         Fills the given hdf5 file group with data from this distribution. The
         class name of the distribution is saved along with the center,
@@ -249,7 +250,9 @@ class ParallelepipedDistribution(Distribution):
         group: hdf5 file group to fill
         """
         group.attrs['class'] = 'ParallelepipedDistribution'
-        group.create_dataset('center', data=self.center)
-        group.create_dataset('face_directions', data=self.face_directions)
-        group.create_dataset('distances', data=self.distances)
+        create_hdf5_dataset('center', data=self.center, link=center_link)
+        create_hdf5_dataset('face_directions', data=self.face_directions,\
+            link=face_directions_link)
+        create_hdf5_dataset('distances', data=self.distances,\
+            link=distances_link)
 

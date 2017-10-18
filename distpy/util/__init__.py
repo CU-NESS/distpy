@@ -9,4 +9,6 @@ Description: Imports classes in this module so that any given class, CLASS, can
 from distpy.util.Savable import Savable
 from distpy.util.TypeCategories import bool_types, int_types, float_types,\
     numerical_types, sequence_types
+from distpy.util.h5py_extensions import create_hdf5_dataset, get_hdf5_value,\
+    HDF5Link
 
