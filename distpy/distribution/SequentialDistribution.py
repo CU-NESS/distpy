@@ -93,8 +93,7 @@ class SequentialDistribution(Distribution):
         """
         if type(point) in sequence_types:
             if len(point) == self.numparams:
-                if all([point[ip] <= point[ip+1]\
-                        for ip in range(len(point)-1)]):
+                if np.all(point[1:] >= point[:-1]):
                     result = log_gamma(self.numparams + 1)
                     for ipar in range(self.numparams):
                         result +=\
@@ -143,4 +142,56 @@ class SequentialDistribution(Distribution):
         group.attrs['numparams'] = self.numparams
         subgroup = group.create_group('shared_distribution')
         self.shared_distribution.fill_hdf5_group(subgroup)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return self.shared_distribution.gradient_computable
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivative of log_value(point) with respect to the
+        parameter.
+        
+        point: vector of values at which to evaluate derivatives
+        
+        returns: returns single number representing derivative of log value
+        """
+        if np.all(point[1:] >= point[:-1]):
+            answer = []
+            for parameter in point:
+                answer.append(\
+                    self.shared_distribution.gradient_of_log_value(parameter))
+            return np.array(answer)
+        else:
+            return np.zeros((self.numparams,))
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return self.shared_distribution.hessian_computable
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivative of log_value(point) with respect to the
+        parameter.
+        
+        point: vector of values at which to evaluate second derivatives
+        
+        returns: single number representing second derivative of log value
+        """
+        if np.all(point[1:] >= point[:-1]):
+            answer = []
+            for parameter in point:
+                answer.append(\
+                    self.shared_distribution.hessian_of_log_value(parameter))
+            return np.diag(answer)
+        else:
+            return np.zeros((self.numparams,) * 2)
 

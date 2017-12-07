@@ -1,17 +1,17 @@
 """
-File: distpy/transform/SquareTransform.py
+File: distpy/transform/ExponentialTransform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 6 Dec 2017
 
-Description: File containing class representing transforms which take the
-             square of the their inputs.
+Description: File containing class representing Transform which performs
+             exponentials of its inputs.
 """
 import numpy as np
 from .Transform import Transform
 
-class SquareTransform(Transform):
+class ExponentialTransform(Transform):
     """
-    Class representing a transform based on the square function.
+    Class representing a transform based on the exponential function.
     """
     def derivative(self, value):
         """
@@ -22,7 +22,7 @@ class SquareTransform(Transform):
         
         returns: value of derivative in same format as value
         """
-        return 2. * value
+        return np.exp(value)
     
     def second_derivative(self, value):
         """
@@ -33,7 +33,7 @@ class SquareTransform(Transform):
         
         returns: value of second derivative in same format as value
         """
-        return (0. * value) + 2.
+        return np.exp(value)
     
     def third_derivative(self, value):
         """
@@ -44,7 +44,7 @@ class SquareTransform(Transform):
         
         returns: value of third derivative in same format as value
         """
-        return 0. * value
+        return np.exp(value)
     
     def log_derivative(self, value):
         """
@@ -55,7 +55,7 @@ class SquareTransform(Transform):
         
         returns: value of log derivative in same format as value
         """
-        return np.log(2 * value)
+        return value
     
     def derivative_of_log_derivative(self, value):
         """
@@ -66,7 +66,7 @@ class SquareTransform(Transform):
         
         returns: value of derivative of log derivative in same format as value
         """
-        return (1. / value)
+        return (0. * value) + 1.
     
     def second_derivative_of_log_derivative(self, value):
         """
@@ -79,7 +79,7 @@ class SquareTransform(Transform):
         returns: value of second derivative of log derivative in same format as
                  value
         """
-        return -np.power(value, -2)
+        return 0. * value
     
     def apply(self, value):
         """
@@ -89,7 +89,7 @@ class SquareTransform(Transform):
         
         returns: value of function in same format as value
         """
-        return np.power(value, 2)
+        return np.exp(value)
     
     def apply_inverse(self, value):
         """
@@ -99,14 +99,14 @@ class SquareTransform(Transform):
         
         returns: value of inverse function in same format as value
         """
-        return np.sqrt(value)
+        return np.log(value)
     
     def __eq__(self, other):
         """
         Checks for equality with other. Returns True iff other is a
-        SquareTransform.
+        ExponentialTransform.
         """
-        return isinstance(other, SquareTransform)
+        return isinstance(other, ExponentialTransform)
     
     def to_string(self):
         """
@@ -114,7 +114,7 @@ class SquareTransform(Transform):
         
         returns: value which can be cast into this Transform
         """
-        return 'square'
+        return 'exp'
     
     def fill_hdf5_group(self, group):
         """
@@ -122,5 +122,5 @@ class SquareTransform(Transform):
         
         group: hdf5 file group to which to write data about this transform
         """
-        group.attrs['class'] = 'SquareTransform'
+        group.attrs['class'] = 'ExponentialTransform'
 

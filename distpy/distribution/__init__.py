@@ -33,6 +33,8 @@ from distpy.distribution.UniformDirectionDistribution import\
     UniformDirectionDistribution
 from distpy.distribution.GaussianDirectionDistribution import\
     GaussianDirectionDistribution
+from distpy.distribution.UniformTriangulationDistribution import\
+    UniformTriangulationDistribution
 from distpy.distribution.LoadDistribution import\
     load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
 from distpy.distribution.DistributionSet import DistributionSet

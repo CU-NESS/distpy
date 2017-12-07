@@ -5,12 +5,69 @@ Date: 10 Sep 2017
 
 Description: File containing base class for all built-in transformations.
 """
-from ..util import Savable
+import numpy as np
+from ..util import numerical_types
+from .Transform import Transform
 
-class Transform(Savable):
+class AffineTransform(Transform):
     """
-    Class representing a transformation.
+    Class representing an affine transformation.
     """
+    def __init__(self, scale_factor, translation):
+        """
+        Initializes a new affine transformation with the given scale factor (A)
+        and translation (b). The resulting transform will implement x -> Ax+b
+        
+        scale_factor: number by which to multiply inputs
+        translation: number to add to scaled inputs
+        """
+        self.scale_factor = scale_factor
+        self.translation = translation
+    
+    @property
+    def scale_factor(self):
+        """
+        Property storing the factor by which inputs are multiplied to generate
+        the final output.
+        """
+        if not hasattr(self, '_scale_factor'):
+            raise AttributeError("scale_factor referenced before it was set.")
+        return self._scale_factor
+    
+    @scale_factor.setter
+    def scale_factor(self, value):
+        """
+        Setter for the scale factor.
+        
+        value: must be a single real number
+        """
+        if type(value) in numerical_types:
+            self._scale_factor = value
+        else:
+            raise TypeError("Can only scale by a single real number.")
+    
+    @property
+    def translation(self):
+        """
+        Property storing the vector which is added to scaled input to generate
+        the final output.
+        """
+        if not hasattr(self, '_translation'):
+            raise AttributeError("translation referenced before it was set.")
+        return self._translation
+    
+    @translation.setter
+    def translation(self, value):
+        """
+        Setter for the translation.
+        
+        value: must be a single real number
+        """
+        if type(value) in numerical_types:
+            self._translation = value
+        else:
+            raise TypeError("Can only translate by a single real number.")
+    
     def derivative(self, value):
         """
         Computes the derivative of the function underlying this Transform at
@@ -20,7 +77,7 @@ class Transform(Savable):
         
         returns: value of derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return ((0. * value) + self.scale_factor)
     
     def second_derivative(self, value):
         """
@@ -31,7 +88,7 @@ class Transform(Savable):
         
         returns: value of second derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return (0. * value)
     
     def third_derivative(self, value):
         """
@@ -42,7 +99,7 @@ class Transform(Savable):
         
         returns: value of third derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return (0. * value)
     
     def log_derivative(self, value):
         """
@@ -53,7 +110,7 @@ class Transform(Savable):
         
         returns: value of log derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return ((0. * value) + np.log(self.scale_factor))
     
     def derivative_of_log_derivative(self, value):
         """
@@ -64,7 +121,7 @@ class Transform(Savable):
         
         returns: value of derivative of log derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return (0. * value)
     
     def second_derivative_of_log_derivative(self, value):
         """
@@ -77,7 +134,7 @@ class Transform(Savable):
         returns: value of second derivative of log derivative in same format as
                  value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return (0. * value)
     
     def apply(self, value):
         """
@@ -87,18 +144,7 @@ class Transform(Savable):
         
         returns: value of function in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
-    
-    def __call__(self, value):
-        """
-        Calling a transform object is simply an alias for the apply(value)
-        function.
-        
-        value: single number or numpy.ndarray of values
-        
-        returns: value of function in same format as value
-        """
-        return self.apply(value)
+        return ((self.scale_factor * value) + self.translation)
     
     def apply_inverse(self, value):
         """
@@ -108,17 +154,7 @@ class Transform(Savable):
         
         returns: value of inverse function in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
-    
-    def I(self, value):
-        """
-        This function is an alias for the apply_inverse function.
-        
-        value: number to which to apply inverse transformation
-        
-        returns: value which, when this transform is applied to it, gives value
-        """
-        return self.apply_inverse(value)
+        return ((value - self.translation) / self.scale_factor)
     
     def to_string(self):
         """
@@ -126,7 +162,8 @@ class Transform(Savable):
         
         returns: value which can be cast into this Transform
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return 'Affine({0:.2g},{1:.2g})'.format(self.scale_factor,\
+            self.translation)
     
     def fill_hdf5_group(self, group):
         """
@@ -134,7 +171,9 @@ class Transform(Savable):
         
         group: hdf5 file group to which to write data about this transform
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        group.attrs['class'] = 'AffineTransform'
+        group.attrs['scale_factor'] = self.scale_factor
+        group.attrs['translation'] = self.translation
     
     def __eq__(self, other):
         """
@@ -144,16 +183,14 @@ class Transform(Savable):
         
         returns True if both Transforms are the same
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
-
-    def __ne__(self, other):
-        """
-        Asserts that checks for equality are consistent with checks for
-        inequality.
-        
-        other: object to check for inequality
-        
-        returns: opposite of __eq__
-        """
-        return (not self.__eq__(other))
+        if isinstance(other, AffineTransform):
+            scale_factors_equal = np.isclose(self.scale_factor,\
+                other.scale_factor, rtol=0, atol=1e-9)
+            translations_equal = np.isclose(self.translation,\
+                other.translation, rtol=1e-9, atol=0)
+            return (scale_factors_equal and translations_equal)
+        elif isinstance(other, NullTransform):
+            return ((self.scale_factor == 1) and (self.translation == 0))
+        else:
+            return False
 

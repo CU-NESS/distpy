@@ -7,9 +7,11 @@ Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
 """
 from distpy.transform import Transform, NullTransform, LogTransform,\
-    Log10Transform, SquareTransform, ArcsinTransform, LogisticTransform,\
-    castable_to_transform, cast_to_transform, load_transform_from_hdf5_group,\
-    load_transform_from_hdf5_file
+    ExponentialTransform, Log10Transform, SquareTransform, ArcsinTransform,\
+    LogisticTransform, AffineTransform, ReciprocalTransform,\
+    ExponentiatedTransform, SumTransform, ProductTransform,\
+    CompositeTransform, castable_to_transform, cast_to_transform,\
+    load_transform_from_hdf5_group, load_transform_from_hdf5_file
 from distpy.distribution import Distribution, BetaDistribution,\
     BinomialDistribution, ChiSquaredDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
@@ -18,7 +20,8 @@ from distpy.distribution import Distribution, BetaDistribution,\
     PoissonDistribution, TruncatedGaussianDistribution, UniformDistribution,\
     WeibullDistribution, LinkedDistribution, SequentialDistribution,\
     DirectionDistribution, UniformDirectionDistribution,\
-    GaussianDirectionDistribution, load_distribution_from_hdf5_group,\
-    load_distribution_from_hdf5_file, DistributionSet,\
-    load_distribution_set_from_hdf5_group, load_distribution_set_from_hdf5_file
+    GaussianDirectionDistribution, UniformTriangulationDistribution,\
+    load_distribution_from_hdf5_group, load_distribution_from_hdf5_file,\
+    DistributionSet, load_distribution_set_from_hdf5_group,\
+    load_distribution_set_from_hdf5_file
 from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link

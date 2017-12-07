@@ -255,4 +255,42 @@ class ParallelepipedDistribution(Distribution):
             link=face_directions_link)
         create_hdf5_dataset('distances', data=self.distances,\
             link=distances_link)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivatives of log_value(point) with respect to the
+        parameters.
+        
+        point: vector at which to evaluate the derivatives
+        
+        returns: returns vector of derivatives of log value
+        """
+        return np.zeros((self.numparams,))
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivatives of log_value(point) with respect to the
+        parameters.
+        
+        point: vector at which to evaluate the derivatives
+        
+        returns: 2D square matrix of second derivatives of log value
+        """
+        return np.zeros((self.numparams,) * 2)
 

@@ -299,4 +299,59 @@ class GaussianDistribution(Distribution):
         create_hdf5_dataset(group, 'mean', data=self.mean.A[0], link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.covariance.A,\
             link=covariance_link)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivatives of log_value(point) with respect to the
+        parameters.
+        
+        point: either single value (if this Gaussian is 1D) or 1D vector (if
+               this Gaussian is ND) at which to evaluate the derivatives
+        
+        returns: if this Gaussian is 1D, returns single value of derivative
+                 else, returns 1D vector of values of derivatives
+        """
+        if type(point) in numerical_types:
+            mean_minus = self.mean - np.matrix([point])
+        elif type(point) in sequence_types:
+            mean_minus = self.mean - np.matrix(point)
+        else:
+            raise ValueError("The type of point provided to a " +\
+                "GaussianDistribution was not of a numerical type (should " +\
+                "be if distribution is univariate) or of a list type " +\
+                "(should be if distribution is multivariate).")
+        if self.numparams == 1:
+            return (mean_minus * self.invcov).A[0,0]
+        else:
+            return (mean_minus * self.invcov).A[0,:]
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivatives of log_value(point) with respect to the
+        parameters.
+        
+        point: vector at which to evaluate the derivatives
+        
+        returns: 2D square matrix of second derivatives of log value
+        """
+        if self.numparams == 1:
+            return -self.invcov.A[0,0]
+        else:
+            return -self.invcov.A
 

@@ -14,7 +14,7 @@ conditions =\
 [\
     np.isclose(transform(0.5), 0),\
     np.isclose(transform.I(0), 0.5),\
-    np.isclose(transform.log_value_addition(0.5), 2 * np.log(2))\
+    np.isclose(transform.log_derivative(0.5), 2 * np.log(2))\
 ]
 if not all(conditions):
     raise AssertionError("LogisticTransform test failed at least one " +\

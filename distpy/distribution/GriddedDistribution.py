@@ -329,4 +329,20 @@ class GriddedDistribution(Distribution):
         for ivar in range(len(self.vars)):
             group.attrs['variable_{}'.format(ivar)] = self.vars[ivar]
         create_hdf5_dataset(group, 'pdf', data=self.pdf, link=self.pdf)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. It has not been implemented, so it returns False.
+        """
+        return False 
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. It has not been implemented, so it returns False.
+        """
+        return False
 

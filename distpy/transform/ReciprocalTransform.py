@@ -1,16 +1,47 @@
 """
-File: distpy/transform/Transform.py
+File: distpy/transform/ReciprocalTransform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 5 Dec 2017
 
-Description: File containing base class for all built-in transformations.
+Description: File containing class describing the reciprocal of an arbitrary
+             transformation.
 """
-from ..util import Savable
+import numpy as np
+from .Transform import Transform
 
-class Transform(Savable):
+class ReciprocalTransform(Transform):
     """
-    Class representing a transformation.
+    Class representing the reciprocal of a transformation.
     """
+    def __init__(self, transform):
+        """
+        Initializes a new ReciprocalTransform of the given transform.
+        
+        transform: must be a Transform object
+        """
+        self.transform = transform
+    
+    @property
+    def transform(self):
+        """
+        Property storing the transform which this is the reciprocal of.
+        """
+        if not hasattr(self, '_transform'):
+            raise AttributeError("transform referenced before it was set.")
+        return self._transform
+    
+    @transform.setter
+    def transform(self, value):
+        """
+        Setter for the transform which this is the reciprocal of.
+        
+        value: must be a Transform object
+        """
+        if isinstance(value, Transform):
+            self._transform = value
+        else:
+            raise TypeError("transform was not a Transform object.")
+    
     def derivative(self, value):
         """
         Computes the derivative of the function underlying this Transform at
@@ -20,7 +51,9 @@ class Transform(Savable):
         
         returns: value of derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        func = self.transform(value)
+        func_deriv = self.transform.derivative(value)
+        return ((-func_deriv) / (func ** 2))
     
     def second_derivative(self, value):
         """
@@ -31,7 +64,10 @@ class Transform(Savable):
         
         returns: value of second derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        func = self.transform(value)
+        func_deriv = self.transform.derivative(value)
+        func_deriv2 = self.transform.second_derivative(value)
+        return (((2 * (func_deriv ** 2)) - (func * func_deriv2)) / (func ** 3))
     
     def third_derivative(self, value):
         """
@@ -42,7 +78,12 @@ class Transform(Savable):
         
         returns: value of third derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        func = self.transform(value)
+        func_deriv = self.transform.derivative(value)
+        func_deriv2 = self.transform.second_derivative(value)
+        func_deriv3 = self.transform.third_derivative(value)
+        return (((6 * (((func * func_deriv) * func_deriv2) -\
+            (func_deriv ** 3))) - ((func ** 2) * func_deriv3)) / (func ** 4))
     
     def log_derivative(self, value):
         """
@@ -53,7 +94,8 @@ class Transform(Savable):
         
         returns: value of log derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return (self.transform.log_derivative(value) -\
+            (2 * np.log(self.transform(value))))
     
     def derivative_of_log_derivative(self, value):
         """
@@ -64,7 +106,11 @@ class Transform(Savable):
         
         returns: value of derivative of log derivative in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        func = self.transform(value)
+        func_deriv = self.transform.derivative(value)
+        deriv_log_func_deriv =\
+            self.transform.derivative_of_log_derivative(value)
+        return (deriv_log_func_deriv - (2 * (func_deriv / func)))
     
     def second_derivative_of_log_derivative(self, value):
         """
@@ -77,7 +123,13 @@ class Transform(Savable):
         returns: value of second derivative of log derivative in same format as
                  value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        func = self.transform(value)
+        func_deriv = self.transform.derivative(value)
+        func_deriv2 = self.transform.second_derivative(value)
+        deriv2_log_func_deriv =\
+            self.transform.second_derivative_of_log_derivative(value)
+        return (deriv2_log_func_deriv +\
+            ((2 * ((func_deriv ** 2) - (func * func_deriv2))) / (func ** 2)))
     
     def apply(self, value):
         """
@@ -87,18 +139,7 @@ class Transform(Savable):
         
         returns: value of function in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
-    
-    def __call__(self, value):
-        """
-        Calling a transform object is simply an alias for the apply(value)
-        function.
-        
-        value: single number or numpy.ndarray of values
-        
-        returns: value of function in same format as value
-        """
-        return self.apply(value)
+        return (1. / self.transform(value))
     
     def apply_inverse(self, value):
         """
@@ -108,17 +149,7 @@ class Transform(Savable):
         
         returns: value of inverse function in same format as value
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
-    
-    def I(self, value):
-        """
-        This function is an alias for the apply_inverse function.
-        
-        value: number to which to apply inverse transformation
-        
-        returns: value which, when this transform is applied to it, gives value
-        """
-        return self.apply_inverse(value)
+        return self.transform.apply_inverse(1. / value)
     
     def to_string(self):
         """
@@ -126,7 +157,7 @@ class Transform(Savable):
         
         returns: value which can be cast into this Transform
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        return '1/{!s}'.format(self.transform.to_string())
     
     def fill_hdf5_group(self, group):
         """
@@ -134,7 +165,8 @@ class Transform(Savable):
         
         group: hdf5 file group to which to write data about this transform
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        group.attrs['class'] = 'ReciprocalTransform'
+        self.transform.fill_hdf5_group(group.create_group('transform'))
     
     def __eq__(self, other):
         """
@@ -144,16 +176,11 @@ class Transform(Savable):
         
         returns True if both Transforms are the same
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
-
-    def __ne__(self, other):
-        """
-        Asserts that checks for equality are consistent with checks for
-        inequality.
-        
-        other: object to check for inequality
-        
-        returns: opposite of __eq__
-        """
-        return (not self.__eq__(other))
+        if isinstance(other, ReciprocalTransform):
+            return self.transform == other.transform
+        elif isinstance(other, Transform) and\
+            isinstance(self.transform, ReciprocalTransform):
+            return self.transform.transform == other
+        else:
+            return False
 

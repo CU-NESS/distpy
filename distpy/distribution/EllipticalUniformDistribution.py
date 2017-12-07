@@ -160,4 +160,42 @@ class EllipticalUniformDistribution(Distribution):
         create_hdf5_dataset(group, 'mean', data=self.mean, link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.cov,\
             link=covariance_link)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivatives of log_value(point) with respect to the
+        parameters.
+        
+        point: vector at which to evaluate the derivatives
+        
+        returns: returns vector of derivatives of log value
+        """
+        return np.zeros((self.numparams,))
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivatives of log_value(point) with respect to the
+        parameters.
+        
+        point: vector at which to evaluate the derivatives
+        
+        returns: 2D square matrix of second derivatives of log value
+        """
+        return np.zeros((self.numparams,) * 2)
 

@@ -14,6 +14,7 @@ Description: File containing function (cast_to_transform) which cast
 from .Transform import Transform
 from .NullTransform import NullTransform
 from .LogTransform import LogTransform
+from .ExponentialTransform import ExponentialTransform
 from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
 from .ArcsinTransform import ArcsinTransform
@@ -50,6 +51,8 @@ def cast_to_transform(key):
             return ArcsinTransform()
         elif lower_cased_key == 'logistic':
             return LogisticTransform()
+        elif lower_cased_key == 'exp':
+            return ExponentialTransform()
         else:
             raise ValueError(("transform could not be reconstructed from " +\
                 "key, {!s}, as key was not understood.").format(key))

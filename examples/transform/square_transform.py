@@ -14,7 +14,7 @@ conditions =\
 [\
     np.isclose(transform(1), 1),\
     np.isclose(transform.I(1), 1),\
-    np.isclose(transform.log_value_addition(1), np.log(2))\
+    np.isclose(transform.log_derivative(1), np.log(2))\
 ]
 if not all(conditions):
     raise AssertionError("SquareTransform test failed at least one condition.")

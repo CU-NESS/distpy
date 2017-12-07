@@ -156,4 +156,42 @@ class TruncatedGaussianDistribution(Distribution):
         group.attrs['high'] = self.hi
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.var
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivative of log_value(point) with respect to the
+        parameter.
+        
+        point: single number at which to evaluate the derivative
+        
+        returns: returns single number representing derivative of log value
+        """
+        return (self.mean - point) / self.var
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivative of log_value(point) with respect to the
+        parameter.
+        
+        point: single value
+        
+        returns: single number representing second derivative of log value
+        """
+        return (-1.) / self.var
 

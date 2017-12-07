@@ -13,26 +13,83 @@ class ArcsinTransform(Transform):
     """
     Class representing a transform based on the inverse sine function.
     """
-    def log_value_addition(self, value):
+    def derivative(self, value):
         """
-        Finds the term which should be added to the log value of the
-        distribution due to this transform (pretty much the log of the
-        derivative of the transformed parameter with respect to the original
-        parameter evaluated at value).
+        Computes the derivative of the function underlying this Transform at
+        the given value(s).
         
-        value: numerical variable value at which to evaluate things
+        value: single number or numpy.ndarray of values
         
-        returns: single number to add to log value of distribution
+        returns: value of derivative in same format as value
         """
-        return -0.5 * np.log(1. - np.power(value, 2))
+        return np.power(1. - (value ** 2), -0.5)
+    
+    def second_derivative(self, value):
+        """
+        Computes the second derivative of the function underlying this
+        Transform at the given value(s).
+        
+        value: single number or numpy.ndarray of values
+        
+        returns: value of second derivative in same format as value
+        """
+        return value * np.power(1 - (value ** 2), -1.5)
+    
+    def third_derivative(self, value):
+        """
+        Computes the third derivative of the function underlying this Transform
+        at the given value(s).
+        
+        value: single number or numpy.ndarray of values
+        
+        returns: value of third derivative in same format as value
+        """
+        value2 = (value ** 2)
+        return ((2. * value2) + 1.) / np.power(1. - (value2), 2.5)
+    
+    def log_derivative(self, value):
+        """
+        Computes the natural logarithm of the derivative of the function
+        underlying this Transform at the given value(s).
+        
+        value: single number or numpy.ndarray of values
+        
+        returns: value of log derivative in same format as value
+        """
+        return -0.5 * np.log(1. - (value ** 2))
+    
+    def derivative_of_log_derivative(self, value):
+        """
+        Computes the derivative of the natural logarithm of the derivative of
+        the function underlying this Transform at the given value(s).
+        
+        value: single number or numpy.ndarray of values
+        
+        returns: value of derivative of log derivative in same format as value
+        """
+        return (value / (1. - (value ** 2)))
+    
+    def second_derivative_of_log_derivative(self, value):
+        """
+        Computes the second derivative of the natural logarithm of the
+        derivative of the function underlying this Transform at the given
+        value(s).
+        
+        value: single number or numpy.ndarray of values
+        
+        returns: value of second derivative of log derivative in same format as
+                 value
+        """
+        value2 = (value ** 2)
+        return ((1. + value2) / ((1. - value2) ** 2))
     
     def apply(self, value):
         """
         Applies this transform to the value and returns the result.
         
-        value: numerical variable value at which to evaluate things
+        value: single number or numpy.ndarray of values
         
-        returns: transformed value
+        returns: value of function in same format as value
         """
         return np.arcsin(value)
     
@@ -40,9 +97,9 @@ class ArcsinTransform(Transform):
         """
         Applies the inverse of this transform to the value.
         
-        value: numerical variable value at which to evaluate things
+        value: single number or numpy.ndarray of values
         
-        returns: value which, when this transform is applied to it, gives value
+        returns: value of inverse function in same format as value
         """
         return np.sin(value)
     

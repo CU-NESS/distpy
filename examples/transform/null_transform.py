@@ -13,7 +13,7 @@ conditions =\
 [\
     transform(1) == 1,\
     transform.I(1) == 1,\
-    transform.log_value_addition(1) == 0\
+    transform.log_derivative(1) == 0\
 ]
 if not all(conditions):
     raise AssertionError("NullTransform test failed at least one condition.")

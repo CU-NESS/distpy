@@ -103,4 +103,22 @@ class PoissonDistribution(Distribution):
         """
         group.attrs['class'] = 'PoissonDistribution'
         group.attrs['scale'] = self.scale
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since this is a discrete distribution, it returns
+        False.
+        """
+        return False 
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since this is a discrete distribution, it returns
+        False.
+        """
+        return False
 

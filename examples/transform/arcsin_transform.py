@@ -14,7 +14,7 @@ conditions =\
 [\
     np.isclose(transform(0), 0),\
     np.isclose(transform.I(0), 0),\
-    np.isclose(transform.log_value_addition(0), 0)\
+    np.isclose(transform.log_derivative(0), 0)\
 ]
 if not all(conditions):
     raise AssertionError("ArcsinTransform test failed at least one condition.")

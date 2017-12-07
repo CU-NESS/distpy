@@ -61,6 +61,57 @@ class Distribution(Savable):
         """
         raise_cannot_instantiate_distribution_error()
     
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented.
+        """
+        raise_cannot_instantiate_distribution_error()
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivative(s) of log_value(point) with respect to the
+        parameter(s).
+        
+        point: either single value (if distribution is 1D) or array of values
+        
+        returns: if distribution is 1D, returns single number representing
+                                        derivative of log value
+                 else, returns 1D numpy.ndarray containing the N derivatives of
+                       the log value with respect to each individual parameter
+        """
+        if not self.gradient_computable:
+            raise NotImplementedError("The gradient of the log value of " +\
+                "this Distribution object has not been implemented.")
+        raise_cannot_instantiate_distribution_error()
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented.
+        """
+        raise_cannot_instantiate_distribution_error()
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivative(s) of log_value(point) with respect to
+        the parameter(s).
+        
+        point: either single value (if distribution is 1D) or array of values
+        
+        returns: if distribution is 1D, returns single number representing
+                                        second derivative of log value
+                 else, returns 2D square numpy.ndarray with dimension length
+                       equal to the number of parameters representing the N^2
+                       different second derivatives of the log value
+        """
+        if not self.hessian_computable:
+            raise NotImplementedError("The hessian of the log value of " +\
+                "this Distribution object has not been implemented.")
+        raise_cannot_instantiate_distribution_error()
+    
     def __call__(self, point):
         """
         Alias for log_value function.

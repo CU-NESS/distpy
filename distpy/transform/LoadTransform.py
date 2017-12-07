@@ -1,9 +1,16 @@
 from .NullTransform import NullTransform
 from .LogTransform import LogTransform
+from .ExponentialTransform import ExponentialTransform
 from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
 from .ArcsinTransform import ArcsinTransform
 from .LogisticTransform import LogisticTransform
+from .AffineTransform import AffineTransform
+from .ReciprocalTransform import ReciprocalTransform
+from .ExponentiatedTransform import ExponentiatedTransform
+from .SumTransform import SumTransform
+from .ProductTransform import ProductTransform
+from .CompositeTransform import CompositeTransform
 
 try:
     import h5py
@@ -28,6 +35,10 @@ def load_transform_from_hdf5_group(group):
         raise ValueError("group does not appear to contain a transform.")
     if class_name == 'NullTransform':
         return NullTransform()
+    elif class_name == 'AffineTransform':
+        scale_factor = group.attrs['scale_factor']
+        translation = group.attrs['translation']
+        return AffineTransform(scale_factor, translation)
     elif class_name == 'LogTransform':
         return LogTransform()
     elif class_name == 'Log10Transform':
@@ -38,6 +49,28 @@ def load_transform_from_hdf5_group(group):
         return ArcsinTransform()
     elif class_name == 'LogisticTransform':
         return LogisticTransform()
+    elif class_name == 'ExponentialTransform':
+        return ExponentialTransform()
+    elif class_name == 'ReciprocalTransform':
+        transform = load_transform_from_hdf5_group(group['transform'])
+        return ReciprocalTransform(transform)
+    elif class_name == 'ExponentiatedTransform':
+        transform = load_transform_from_hdf5_group(group['transform'])
+        return ExponentiatedTransform(transform)
+    elif class_name == 'SumTransform':
+        transform_0 = load_transform_from_hdf5_group(group['transform_0'])
+        transform_1 = load_transform_from_hdf5_group(group['transform_1'])
+        return SumTransform(transform_0, transform_1)
+    elif class_name == 'ProductTransform':
+        transform_0 = load_transform_from_hdf5_group(group['transform_0'])
+        transform_1 = load_transform_from_hdf5_group(group['transform_1'])
+        return ProductTransform(transform_0, transform_1)
+    elif class_name == 'CompositeTransform':
+        inner_transform =\
+            load_transform_from_hdf5_group(group['inner_transform'])
+        outer_transform =\
+            load_transform_from_hdf5_group(group['outer_transform'])
+        return CompositeTransform(inner_transform, outer_transform)
     else:
         raise ValueError("class of transform not recognized.")
 

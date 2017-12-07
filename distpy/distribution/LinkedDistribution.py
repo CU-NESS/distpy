@@ -137,4 +137,20 @@ class LinkedDistribution(Distribution):
         group.attrs['numparams'] = self.numparams
         subgroup = group.create_group('shared_distribution')
         self.shared_distribution.fill_hdf5_group(subgroup)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. It has not been implemented, so it returns False.
+        """
+        return False 
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. It has not been implemented, so it returns False.
+        """
+        return False
 

@@ -181,8 +181,7 @@ class DistributionSet(Savable):
         returns a dictionary of random values indexed by parameter name
         """
         point = {}
-        for idistribution in range(len(self._data)):
-            (distribution, params, transforms) = self._data[idistribution]
+        for (distribution, params, transforms) in self._data:
             if (distribution.numparams == 1):
                 point[params[0]] = transforms[0].apply_inverse(\
                     distribution.draw(shape=shape))
@@ -209,20 +208,18 @@ class DistributionSet(Savable):
         returns: the total log_value coming from contributions from all
                  distributions
         """
-        if type(point) is dict:
+        if isinstance(point, dict):
             result = 0.
-            for idistribution in range(len(self._data)):
-                (distribution, params, transforms) = self._data[idistribution]
+            for (distribution, params, transforms) in self._data:
                 if (distribution.numparams == 1):
-                    result += distribution.log_value(\
-                        transforms[0].apply(point[params[0]]))
+                    subpoint = transforms[0].apply(point[params[0]])
+                    result += distribution.log_value(subpoint)
                 else:
-                    result += distribution.log_value(\
-                        [transforms[i].apply(point[params[i]])\
-                                                  for i in range(len(params))])
+                    subpoint = [transform.apply(point[param])\
+                        for (param, transform) in zip(params, transforms)]
+                    result += distribution.log_value(subpoint)
                 for i in range(len(params)):
-                    result +=\
-                        transforms[i].log_value_addition(point[params[i]])
+                    result += transforms[i].log_derivative(point[params[i]])
             return result
         else:
             raise ValueError("point given to log_value function of a " +\
@@ -238,11 +235,10 @@ class DistributionSet(Savable):
         parameter string name of parameter
         """
         found = False
-        for (this_distribution, these_params, these_transforms) in self._data:
-            for iparam in range(len(these_params)):
-                if parameter == these_params[iparam]:
-                    return\
-                        (this_distribution, iparam, these_transforms[iparam])
+        for (distribution, params, transforms) in self._data:
+            for (iparam, param) in enumerate(params):
+                if parameter == param:
+                    return (distribution, iparam, transforms[iparam])
         raise ValueError(("The parameter searched for ({!s}) in a " +\
             "DistributionSet was not found.").format(parameter))
     
@@ -260,16 +256,15 @@ class DistributionSet(Savable):
         throw_error: if True (default), an error is thrown if the parameter
                      is not found
         """
-        for idistribution in range(len(self._data)):
-            (this_distribution, these_params, these_transforms) =\
-                self._data[idistribution]
-            if parameter in these_params:
+        for (idistribution, distribution_tuple) in enumerate(self._data):
+            (distribution, params, transforms) = distribution_tuple
+            if parameter in params:
                 to_delete = idistribution
                 break
         try:
             for par in self._data[to_delete][1]:
                 self._params.remove(par)
-            self._data = self._data[:to_delete] + self._data[to_delete + 1:]
+            self._data = self._data[:to_delete] + self._data[to_delete+1:]
         except:
             if throw_error:
                 raise ValueError('The parameter given to ' +\
@@ -377,12 +372,9 @@ class DistributionSet(Savable):
             raise ValueError("A parameter provided to a DistributionSet " +\
                 "was not a string.")
         broken = False
-        for idistribution in range(len(self._data)):
-            for param in self._data[idistribution]:
-                if name == param:
-                    broken = True
-                    break
-            if broken:
+        for (distribution, params, transforms) in self._data:
+            if name in params:
+                broken = True
                 break
         if broken:
             raise ValueError("The name of a parameter provided to a " +\
@@ -395,8 +387,8 @@ class DistributionSet(Savable):
         
         group: the hdf5 file group to fill
         """
-        for (ituple, (distribution, params, transforms)) in\
-            enumerate(self._data):
+        for (ituple, distribution_tuple) in enumerate(self._data):
+            (distribution, params, transforms) = distribution_tuple
             subgroup = group.create_group('distribution_{}'.format(ituple))
             distribution.fill_hdf5_group(subgroup)
             for iparam in range(distribution.numparams):
@@ -404,4 +396,106 @@ class DistributionSet(Savable):
                 subsubgroup =\
                     subgroup.create_group('transform_{}'.format(iparam))
                 transforms[iparam].fill_hdf5_group(subsubgroup)
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented.
+        """
+        if not hasattr(self, '_gradient_computable'):
+            self._gradient_computable = True
+            for (distribution, params, transforms) in self._data:
+                self._gradient_computable = (self._gradient_computable and\
+                    distribution.gradient_computable)
+        return self._gradient_computable
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivative(s) of log_value(point) with respect to the
+        parameter(s).
+        
+        point: either single value (if distribution is 1D) or array of values
+        
+        returns: if distribution is 1D, returns single number representing
+                                        derivative of log value
+                 else, returns 1D numpy.ndarray containing the N derivatives of
+                       the log value with respect to each individual parameter
+        """
+        if isinstance(point, dict):
+            result = np.zeros((self.numparams,))
+            iparam = 0
+            for (idistribution, distribution_tuple) in enumerate(self._data):
+                (distribution, params, transforms) = distribution_tuple
+                next_iparam = iparam + len(params)
+                if (distribution.numparams == 1):
+                    result[iparam] += distribution.gradient_of_log_value(\
+                        transforms[0].apply(point[params[0]]))
+                else:
+                    subpoint = [transform.apply(point[param])\
+                        for (param, transform) in zip(params, transforms)]
+                    result[iparam:next_iparam] +=\
+                        distribution.gradient_of_log_value(subpoint)
+                for i in range(len(params)):
+                    result[iparam+i] +=\
+                        transforms[i].derivative_of_log_derivative(\
+                        point[params[i]])
+                iparam = next_iparam
+            return result
+        else:
+            raise ValueError("point given to gradient_of_log_value " +\
+                "function of a DistributionSet was not a dictionary of " +\
+                "values indexed by parameter names.")
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented.
+        """
+        if not hasattr(self, '_hessian_computable'):
+            self._hessian_computable = True
+            for (distribution, params, transforms) in self._data:
+                self._hessian_computable = (self._hessian_computable and\
+                    distribution.hessian_computable)
+        return self._hessian_computable
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivative(s) of log_value(point) with respect to
+        the parameter(s).
+        
+        point: either single value (if distribution is 1D) or array of values
+        
+        returns: if distribution is 1D, returns single number representing
+                                        second derivative of log value
+                 else, returns 2D square numpy.ndarray with dimension length
+                       equal to the number of parameters representing the N^2
+                       different second derivatives of the log value
+        """
+        if isinstance(point, dict):
+            result = np.zeros((self.numparams,) * 2)
+            iparam = 0
+            for (idistribution, distribution_tuple) in enumerate(self._data):
+                (distribution, params, transforms) = distribution_tuple
+                next_iparam = iparam + len(params)
+                if (distribution.numparams == 1):
+                    subpoint = transforms[0].apply(point[params[0]])
+                    result[iparam,iparam] +=\
+                        distribution.hessian_of_log_value(subpoint)
+                else:
+                    subpoint = [transform.apply(point[param])\
+                        for (param, transform) in zip(params, transforms)]
+                    result[iparam:next_iparam,iparam:next_iparam] +=\
+                        distribution.hessian_of_log_value(subpoint)
+                for i in range(len(params)):
+                    result[iparam+i,iparam+i] +=\
+                        transforms[i].second_derivative_of_log_derivative(\
+                        point[params[i]])
+                iparam = next_iparam
+            return result
+        else:
+            raise ValueError("point given to hessian_of_log_value " +\
+                "function of a DistributionSet was not a dictionary of " +\
+                "values indexed by parameter names.")
 

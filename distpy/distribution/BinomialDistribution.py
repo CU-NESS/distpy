@@ -124,4 +124,22 @@ class BinomialDistribution(Distribution):
         group.attrs['class'] = 'BinomialDistribution'
         group.attrs['number_of_trials'] = self.number_of_trials
         group.attrs['probability_of_success'] = self.probability_of_success
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since this is a discrete distribution, it returns
+        False.
+        """
+        return False 
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since this is a discrete distribution, it returns
+        False.
+        """
+        return False
 

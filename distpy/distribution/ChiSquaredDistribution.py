@@ -142,4 +142,45 @@ class ChiSquaredDistribution(Distribution):
         group.attrs['class'] = 'ChiSquaredDistribution'
         group.attrs['degrees_of_freedom'] = self.degrees_of_freedom
         group.attrs['reduced'] = self.reduced
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def gradient_of_log_value(self, point):
+        """
+        Computes the derivative of log_value(point) with respect to the
+        parameter.
+        
+        point: single number at which to evaluate the deravitve
+        
+        returns: returns single number representing derivative of log value
+        """
+        constant = 1.
+        if self.reduced:
+            constant /= self.degrees_of_freedom
+        return ((((self.degrees_of_freedom - 2) / point) - constant) / 2.)
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since it has been implemented, it returns True.
+        """
+        return True
+    
+    def hessian_of_log_value(self, point):
+        """
+        Computes the second derivative of log_value(point) with respect to the
+        parameter.
+        
+        point: single value
+        
+        returns: single number representing second derivative of log value
+        """
+        return ((2 - self.degrees_of_freedom) / (2. * (point ** 2)))
 

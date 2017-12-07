@@ -112,4 +112,22 @@ class GeometricDistribution(Distribution):
         """
         group.attrs['class'] = 'GeometricDistribution'
         group.attrs['common_ratio'] = self.common_ratio
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since this is a discrete distribution, it returns
+        False.
+        """
+        return False 
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since this is a discrete distribution, it returns
+        False.
+        """
+        return False
 

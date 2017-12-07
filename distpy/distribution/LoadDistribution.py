@@ -19,6 +19,7 @@ from .SequentialDistribution import SequentialDistribution
 from .GriddedDistribution import GriddedDistribution
 from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
+from .UniformTriangulationDistribution import UniformTriangulationDistribution
 
 try:
     import h5py
@@ -133,6 +134,9 @@ def load_distribution_from_hdf5_group(group):
         sigma = group.attrs['sigma']
         return GaussianDirectionDistribution(pointing_center=pointing_center,\
             sigma=sigma, degrees=False)
+    elif class_name == 'UniformTriangulationDistribution':
+        points = group['points'].value
+        return UniformTriangulationDistribution(points=points)
     else:
         raise ValueError("The class of the Distribution was not recognized.")
 

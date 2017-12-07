@@ -187,4 +187,22 @@ class DirectionDistribution(Distribution):
         """
         group.attrs['psi_center'] = self.psi_center
         group.attrs['pointing_center'] = self.pointing_center
+    
+    @property
+    def gradient_computable(self):
+        """
+        Property which stores whether the gradient of the given distribution
+        has been implemented. Since this is a distribution on the sphere, it
+        returns False.
+        """
+        return False 
+    
+    @property
+    def hessian_computable(self):
+        """
+        Property which stores whether the hessian of the given distribution
+        has been implemented. Since this is a distribution on the sphere, it
+        returns False.
+        """
+        return False
 

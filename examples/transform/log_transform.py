@@ -14,7 +14,7 @@ conditions =\
 [\
     np.isclose(transform(1), 0),\
     np.isclose(transform.I(1), np.e),\
-    np.isclose(transform.log_value_addition(1), 0)\
+    np.isclose(transform.log_derivative(1), 0)\
 ]
 if not all(conditions):
     raise AssertionError("LogTransform test failed at least one condition.")
