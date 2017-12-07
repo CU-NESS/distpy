@@ -225,3 +225,14 @@ And the following multivariate distributions are included:
 (mean) --- pointing_center
 
 (variance) --- no convenient expression
+
+
+(9) UniformTriangulationDistribution(points=None, triangulation=None)
+
+(pdf) --- f(theta,phi) = 1/V where V is the sum of the volumes of all simplices in the triangulation
+
+(support) --- convex hull of associated points
+
+(mean) --- no convenient expression
+
+(variance) --- no convenient expression
