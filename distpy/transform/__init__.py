@@ -17,6 +17,7 @@ from distpy.transform.LogisticTransform import LogisticTransform
 from distpy.transform.AffineTransform import AffineTransform
 from distpy.transform.ReciprocalTransform import ReciprocalTransform
 from distpy.transform.ExponentiatedTransform import ExponentiatedTransform
+from distpy.transform.LoggedTransform import LoggedTransform
 from distpy.transform.SumTransform import SumTransform
 from distpy.transform.ProductTransform import ProductTransform
 from distpy.transform.CompositeTransform import CompositeTransform

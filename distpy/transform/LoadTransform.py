@@ -8,6 +8,7 @@ from .LogisticTransform import LogisticTransform
 from .AffineTransform import AffineTransform
 from .ReciprocalTransform import ReciprocalTransform
 from .ExponentiatedTransform import ExponentiatedTransform
+from .LoggedTransform import LoggedTransform
 from .SumTransform import SumTransform
 from .ProductTransform import ProductTransform
 from .CompositeTransform import CompositeTransform
@@ -57,6 +58,9 @@ def load_transform_from_hdf5_group(group):
     elif class_name == 'ExponentiatedTransform':
         transform = load_transform_from_hdf5_group(group['transform'])
         return ExponentiatedTransform(transform)
+    elif class_name == 'LoggedTransform':
+        transform = load_transform_from_hdf5_group(group['transform'])
+        return LoggedTransform(transform)
     elif class_name == 'SumTransform':
         transform_0 = load_transform_from_hdf5_group(group['transform_0'])
         transform_1 = load_transform_from_hdf5_group(group['transform_1'])

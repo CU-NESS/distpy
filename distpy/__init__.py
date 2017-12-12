@@ -9,7 +9,7 @@ Description: Imports classes in this module so that any given class, CLASS, can
 from distpy.transform import Transform, NullTransform, LogTransform,\
     ExponentialTransform, Log10Transform, SquareTransform, ArcsinTransform,\
     LogisticTransform, AffineTransform, ReciprocalTransform,\
-    ExponentiatedTransform, SumTransform, ProductTransform,\
+    ExponentiatedTransform, LoggedTransform, SumTransform, ProductTransform,\
     CompositeTransform, castable_to_transform, cast_to_transform,\
     load_transform_from_hdf5_group, load_transform_from_hdf5_file
 from distpy.distribution import Distribution, BetaDistribution,\

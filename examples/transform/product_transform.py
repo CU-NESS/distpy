@@ -1,35 +1,23 @@
 """
 File: examples/transform/product_transform.py
 Author: Keith Tauscher
-Date: 6 Dec 2017
+Date: 11 Dec 2017
 
 Description: Example showing how to use the product transform.
 """
-import os
 import numpy as np
-from distpy import SquareTransform, NullTransform, ProductTransform,\
-    load_transform_from_hdf5_file
+from distpy import ProductTransform, NullTransform
+from test_transform import test_transform
 
-transforms = [NullTransform(), SquareTransform()]
-transform = ProductTransform(*transforms)
-conditions =\
-[\
-    transform(2) == 8,\
-    transform.log_derivative(2) == np.log(12)\
-]
-
-
-if not all(conditions):
-    raise AssertionError("ProductTransform test failed at least one condition.")
-
-file_name = 'product_transform_TEST.hdf5'
-transform.save(file_name)
-try:
-    assert transform == load_transform_from_hdf5_file(file_name)
-except:
-    os.remove(file_name)
-    raise
-else:
-    os.remove(file_name)
-
+transform = ProductTransform(NullTransform(), NullTransform())
+x_values = np.linspace(1, 10, 91)
+func = (lambda x : (x ** 2))
+deriv = (lambda x : (2 * x))
+log_deriv = (lambda x : (np.log(x) + np.log(2)))
+deriv2 = (lambda x : ((0 * x) + 2))
+deriv_log_deriv = (lambda x : (1 / x))
+deriv3 = (lambda x : (0 * x))
+deriv2_log_deriv = (lambda x : ((-1) / (x ** 2)))
+test_transform(transform, x_values, func, deriv, log_deriv, deriv2,\
+    deriv_log_deriv, deriv3, deriv2_log_deriv)
 

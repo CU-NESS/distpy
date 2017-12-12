@@ -1,32 +1,25 @@
 """
 File: examples/transform/log_transform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 11 Dec 2017
 
 Description: Example showing how to use the log transform.
 """
-import os
 import numpy as np
-from distpy import LogTransform, load_transform_from_hdf5_file
+from distpy import LogTransform
+from test_transform import test_transform
 
 transform = LogTransform()
-conditions =\
-[\
-    np.isclose(transform(1), 0),\
-    np.isclose(transform.I(1), np.e),\
-    np.isclose(transform.log_derivative(1), 0)\
-]
-if not all(conditions):
-    raise AssertionError("LogTransform test failed at least one condition.")
-
-file_name = 'log_transform_TEST.hdf5'
-transform.save(file_name)
-try:
-    assert transform == load_transform_from_hdf5_file(file_name)
-except:
-    os.remove(file_name)
-    raise
-else:
-    os.remove(file_name)
+x_values = np.linspace(1, 10, 91)
+func = (lambda x : (np.log(x)))
+inv = (lambda y : (np.exp(y)))
+deriv = (lambda x : (1 / x))
+log_deriv = (lambda x : (-np.log(x)))
+deriv2 = (lambda x : ((-1) / (x ** 2)))
+deriv_log_deriv = (lambda x : ((-1) / x))
+deriv3 = (lambda x : (2 / (x ** 3)))
+deriv2_log_deriv = (lambda x : (1 / (x ** 2)))
+test_transform(transform, x_values, func, deriv, log_deriv, deriv2,\
+    deriv_log_deriv, deriv3, deriv2_log_deriv, inverse_function=inv)
 
 

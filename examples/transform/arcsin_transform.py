@@ -1,31 +1,24 @@
 """
 File: examples/transform/arcsin_transform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 11 Dec 2017
 
 Description: Example showing how to use the arcsin transform.
 """
-import os
 import numpy as np
-from distpy import ArcsinTransform, load_transform_from_hdf5_file
+from distpy import ArcsinTransform
+from test_transform import test_transform
 
 transform = ArcsinTransform()
-conditions =\
-[\
-    np.isclose(transform(0), 0),\
-    np.isclose(transform.I(0), 0),\
-    np.isclose(transform.log_derivative(0), 0)\
-]
-if not all(conditions):
-    raise AssertionError("ArcsinTransform test failed at least one condition.")
-
-file_name = 'Arcsin_transform_TEST.hdf5'
-transform.save(file_name)
-try:
-    assert transform == load_transform_from_hdf5_file(file_name)
-except:
-    os.remove(file_name)
-    raise
-else:
-    os.remove(file_name)
+x_values = np.linspace(-0.99, 0.99, 100)
+func = (lambda x : np.arcsin(x))
+inv = (lambda y : np.sin(y))
+deriv = (lambda x : np.power(1 - (x ** 2), -0.5))
+log_deriv = (lambda x : (np.log(1 - (x ** 2)) / (-2.)))
+deriv2 = (lambda x : (x * np.power(1 - (x ** 2), -1.5)))
+deriv_log_deriv = (lambda x : (x / (1 - (x ** 2))))
+deriv3 = (lambda x : ((1 + (2 * (x ** 2))) * np.power(1 - (x ** 2), -2.5)))
+deriv2_log_deriv = (lambda x : ((1 + (x ** 2)) / ((1 - (x ** 2)) ** 2)))
+test_transform(transform, x_values, func, deriv, log_deriv, deriv2,\
+    deriv_log_deriv, deriv3, deriv2_log_deriv, inverse_function=inv)
 

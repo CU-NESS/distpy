@@ -6,11 +6,11 @@ Date: 11 Dec 2017
 Description: Example showing how to use the reciprocal transform.
 """
 import numpy as np
-from distpy import ReciprocalTransform, NullTransform
+from distpy import LoggedTransform, ExponentialTransform
 from test_transform import test_transform
 
-transform = ReciprocalTransform(ReciprocalTransform(NullTransform()))
-x_values = np.linspace(1, 10, 91)
+transform = LoggedTransform(ExponentialTransform())
+x_values = np.linspace(-1, 1, 100)
 func = (lambda x : x)
 inv = (lambda y : y)
 deriv = (lambda x : ((0 * x) + 1))

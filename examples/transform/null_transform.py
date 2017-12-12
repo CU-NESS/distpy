@@ -1,31 +1,25 @@
 """
 File: examples/transform/null_transform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 11 Dec 2017
 
 Description: Example showing how to use the null transform.
 """
-import os
-from distpy import NullTransform, load_transform_from_hdf5_file
+import numpy as np
+from distpy import NullTransform
+from test_transform import test_transform
 
 transform = NullTransform()
-conditions =\
-[\
-    transform(1) == 1,\
-    transform.I(1) == 1,\
-    transform.log_derivative(1) == 0\
-]
-if not all(conditions):
-    raise AssertionError("NullTransform test failed at least one condition.")
-
-file_name = 'null_transform_TEST.hdf5'
-transform.save(file_name)
-try:
-    assert transform == load_transform_from_hdf5_file(file_name)
-except:
-    os.remove(file_name)
-    raise
-else:
-    os.remove(file_name)
+x_values = np.linspace(-1, 1, 100)
+func = (lambda x : x)
+inv = (lambda y : y)
+deriv = (lambda x : ((0 * x) + 1))
+log_deriv = (lambda x : (0 * x))
+deriv2 = (lambda x : (0 * x))
+deriv_log_deriv = (lambda x : (0 * x))
+deriv3 = (lambda x : (0 * x))
+deriv2_log_deriv = (lambda x : (0 * x))
+test_transform(transform, x_values, func, deriv, log_deriv, deriv2,\
+    deriv_log_deriv, deriv3, deriv2_log_deriv, inverse_function=inv)
 
 
