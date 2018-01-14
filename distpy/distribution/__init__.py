@@ -22,8 +22,10 @@ from distpy.distribution.GriddedDistribution import GriddedDistribution
 from distpy.distribution.ParallelepipedDistribution import\
     ParallelepipedDistribution
 from distpy.distribution.PoissonDistribution import PoissonDistribution
-from distpy.distribution.TruncatedGaussianDistribution import\
-    TruncatedGaussianDistribution
+from distpy.distribution.KroneckerDeltaDistribution\
+    import KroneckerDeltaDistribution
+from distpy.distribution.TruncatedGaussianDistribution\
+    import TruncatedGaussianDistribution
 from distpy.distribution.UniformDistribution import UniformDistribution
 from distpy.distribution.WeibullDistribution import WeibullDistribution
 from distpy.distribution.LinkedDistribution import LinkedDistribution

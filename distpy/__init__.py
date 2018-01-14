@@ -17,11 +17,21 @@ from distpy.distribution import Distribution, BetaDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
     ExponentialDistribution, GammaDistribution, GaussianDistribution,\
     GeometricDistribution, GriddedDistribution, ParallelepipedDistribution,\
-    PoissonDistribution, TruncatedGaussianDistribution, UniformDistribution,\
-    WeibullDistribution, LinkedDistribution, SequentialDistribution,\
-    DirectionDistribution, UniformDirectionDistribution,\
-    GaussianDirectionDistribution, UniformTriangulationDistribution,\
-    load_distribution_from_hdf5_group, load_distribution_from_hdf5_file,\
-    DistributionSet, load_distribution_set_from_hdf5_group,\
-    load_distribution_set_from_hdf5_file
+    PoissonDistribution, KroneckerDeltaDistribution,\
+    TruncatedGaussianDistribution, UniformDistribution, WeibullDistribution,\
+    LinkedDistribution, SequentialDistribution, DirectionDistribution,\
+    UniformDirectionDistribution, GaussianDirectionDistribution,\
+    UniformTriangulationDistribution, load_distribution_from_hdf5_group,\
+    load_distribution_from_hdf5_file, DistributionSet,\
+    load_distribution_set_from_hdf5_group, load_distribution_set_from_hdf5_file
+from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
+    TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
+    BinomialJumpingDistribution, AdjacencyJumpingDistribution,\
+    SourceIndependentJumpingDistribution,\
+    LocaleIndependentJumpingDistribution, JumpingDistributionSet,\
+    load_jumping_distribution_from_hdf5_group,\
+    load_jumping_distribution_from_hdf5_file,\
+    load_jumping_distribution_set_from_hdf5_group,\
+    load_jumping_distribution_set_from_hdf5_file,\
+    MetropolisHastingsSampler
 from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link

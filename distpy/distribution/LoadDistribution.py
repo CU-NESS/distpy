@@ -60,7 +60,13 @@ def load_distribution_from_hdf5_group(group):
         return PoissonDistribution(scale)
     elif class_name == 'GeometricDistribution':
         common_ratio = group.attrs['common_ratio']
-        return GeometricDistribution(common_ratio)
+        minimum = group.attrs['minimum']
+        if 'maximum' in group.attrs:
+            maximum = group.attrs['maximum']
+        else:
+            maximum = None
+        return GeometricDistribution(common_ratio, minimum=minimum,\
+            maximum=maximum)
     elif class_name == 'BinomialDistribution':
         probability_of_success = group.attrs['probability_of_success']
         number_of_trials = group.attrs['number_of_trials']
@@ -137,6 +143,8 @@ def load_distribution_from_hdf5_group(group):
     elif class_name == 'UniformTriangulationDistribution':
         points = group['points'].value
         return UniformTriangulationDistribution(points=points)
+    elif class_name == 'KroneckerDeltaDistribution':
+        return KroneckerDeltaDistribution(group.attrs['value'])
     else:
         raise ValueError("The class of the Distribution was not recognized.")
 

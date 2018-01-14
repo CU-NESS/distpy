@@ -273,7 +273,9 @@ class GaussianDistribution(Distribution):
                     np.allclose(self.mean.A, other.mean.A, rtol=0, atol=1e-9)
                 covariance_close = np.allclose(self.covariance.A,\
                     other.covariance.A, rtol=1e-12, atol=0)
-            return mean_close and covariance_close
+                return mean_close and covariance_close
+            else:
+                return False
         else:
             return False
     

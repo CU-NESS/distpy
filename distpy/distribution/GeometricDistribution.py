@@ -15,22 +15,121 @@ class GeometricDistribution(Distribution):
     Distribution with support on the non-negative integers. It has only one
     parameter, the common ratio between successive probabilities.
     """
-    def __init__(self, common_ratio):
+    def __init__(self, common_ratio, minimum=0, maximum=None):
         """
         Initializes new GeometricDistribution with given scale.
         
         common_ratio: ratio between successive probabilities
         """
-        if type(common_ratio) in numerical_types:
-            if (common_ratio > 0.) and (common_ratio < 1.):
-                self.common_ratio = common_ratio
+        self.common_ratio = common_ratio
+        self.minimum = minimum
+        self.maximum = maximum
+    
+    @property
+    def common_ratio(self):
+        """
+        Property storing the common ration between the probability mass
+        function of successive integers. Always between 0 and 1 (exclusive)
+        """
+        if not hasattr(self, '_common_ratio'):
+            raise AttributeError("common_ration was referenced before it " +\
+                "was set.")
+        return self._common_ratio
+    
+    @common_ratio.setter
+    def common_ratio(self, value):
+        """
+        Setter for the common ratio between the probability mass function of
+        successive integers.
+        
+        value: must be a number between 0 and 1 (exclusive)
+        """
+        if type(value) in numerical_types:
+            if (value > 0.) and (value < 1.):
+                self._common_ratio = value
             else:
                 raise ValueError("scale given to GeometricDistribution was " +\
                     "not between 0 and 1.")
         else:
             raise ValueError("common_ratio given to GeometricDistribution " +\
                 "was not a number.")
-        self.const_lp_term = np.log(1 - self.common_ratio)
+    
+    @property
+    def minimum(self):
+        """
+        Property storing the lowest integer allowable to be returned by this
+        distribution.
+        """
+        if not hasattr(self, '_minimum'):
+            raise AttributeError("minimum referenced before it was set.")
+        return self._minimum
+    
+    @minimum.setter
+    def minimum(self, value):
+        """
+        Setter for the minimum allowable value returned by this distribution.
+        
+        value: an integer
+        """
+        if type(value) in int_types:
+            self._minimum = value
+        else:
+            raise TypeError("minimum was set to a non-int.")
+    
+    @property
+    def maximum(self):
+        """
+        Property storing either the upper limit of this distribution. Can be
+        None or an integer greater than minimum.
+        """
+        if not hasattr(self, '_maximum'):
+            raise AttributeError("maximum was referenced before it was set.")
+        return self._maximum
+    
+    @maximum.setter
+    def maximum(self, value):
+        """
+        Setter for the maximum allowable value returned by this distribution.
+        
+        value: if None, there is no maximum and drawn values can be arbitrarily
+                        large
+               otherwise, maximum should be an integer greater than minimum
+        """
+        if value is None:
+            self._maximum = None
+        elif type(value) in int_types:
+            if value >= self.minimum:
+                self._maximum = value
+            else:
+                raise ValueError("maximum was not greater than minimum.")
+        else:
+            raise TypeError("maximum wasn't set to None or an integer.")
+    
+    @property
+    def range(self):
+        """
+        Property storing the one greater than the distance between minimum and
+        maximum.
+        """
+        if not hasattr(self, '_range'):
+            if self.maximum is None:
+                self._range = None
+            else:
+                self._range = (self.maximum - self.minimum + 1)
+        return self._range
+    
+    @property
+    def constant_in_log_value(self):
+        """
+        Property storing the portion of the log value which does not depend on
+        the point at which the value is computed.
+        """
+        if not hasattr(self, '_constant_in_log_value'):
+            self._constant_in_log_value = np.log(1 - self.common_ratio)
+            if self.range is not None:
+                self._constant_in_log_value -=\
+                    np.log(1 - (self.common_ratio ** self.range))
+        return self._constant_in_log_value
     
     @property
     def numparams(self):
@@ -61,7 +160,14 @@ class GeometricDistribution(Distribution):
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
         """
-        return rand.geometric(1 - self.common_ratio, size=shape) - 1
+        uniforms = rand.uniform(size=shape)
+        if self.range is None:
+            log_argument = uniforms
+        else:
+            log_argument =\
+                (1 - (uniforms * (1 - (self.common_ratio ** self.range))))
+        return self.minimum +\
+            np.floor(np.log(log_argument) / self.log_common_ratio).astype(int)
     
     def log_value(self, point):
         """
@@ -71,8 +177,12 @@ class GeometricDistribution(Distribution):
         point: numerical value of the variable
         """
         if type(point) in int_types:
-            if point >= 0:
-                return self.const_lp_term + (point * self.log_common_ratio)
+            if point >= self.minimum:
+                if (self.maximum is not None) and (point > self.maximum):
+                    return -np.inf
+                else:
+                    return self.constant_in_log_value +\
+                        ((point - self.minimum) * self.log_common_ratio)
             else:
                 return -np.inf
         else:
@@ -90,11 +200,16 @@ class GeometricDistribution(Distribution):
         Checks for equality of this distribution with other. Returns True if
         other is a GeometricDistribution with the same scale.
         """
-        if isinstance(other, GeometricDistribution):
-            return np.isclose(self.common_ratio, other.common_ratio, rtol=0,\
-                atol=1e-6)
-        else:
+        if not isinstance(other, GeometricDistribution):
             return False
+        absolute_tolerance = 1e-6
+        if abs(self.common_ratio - other.common_ratio) > absolute_tolerance:
+            return False
+        if self.minimum != other.minimum:
+            return False
+        if self.maximum != other.maximum:
+            return False
+        return True
     
     @property
     def can_give_confidence_intervals(self):
@@ -112,6 +227,9 @@ class GeometricDistribution(Distribution):
         """
         group.attrs['class'] = 'GeometricDistribution'
         group.attrs['common_ratio'] = self.common_ratio
+        group.attrs['minimum'] = self.minimum
+        if self.maximum is not None:
+            group.attrs['maximum'] = self.maximum
     
     @property
     def gradient_computable(self):

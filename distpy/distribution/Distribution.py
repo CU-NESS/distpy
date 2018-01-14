@@ -149,7 +149,7 @@ class Distribution(Savable):
         """
         raise_cannot_instantiate_distribution_error()
     
-    def fill_hdf5_group(group):
+    def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this
         distribution. All subclasses must implement this function.

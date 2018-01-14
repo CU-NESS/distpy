@@ -183,19 +183,14 @@ class DistributionSet(Savable):
         point = {}
         for (distribution, params, transforms) in self._data:
             if (distribution.numparams == 1):
-                point[params[0]] = transforms[0].apply_inverse(\
+                (param, transform) = (params[0], transforms[0])
+                point[param] = transform.apply_inverse(\
                     distribution.draw(shape=shape))
             else:
                 this_draw = distribution.draw(shape=shape)
-                if shape is None:
-                    slices = ()
-                elif type(shape) in int_types:
-                    slices = (slice(None),)
-                else:
-                    slices = (slice(None),) * len(shape)
                 for iparam in range(len(params)):
                     point[params[iparam]] = transforms[iparam].apply_inverse(\
-                        this_draw[slices + (iparam,)])
+                        this_draw[...,iparam])
         return point
 
     def log_value(self, point):
@@ -218,8 +213,8 @@ class DistributionSet(Savable):
                     subpoint = [transform.apply(point[param])\
                         for (param, transform) in zip(params, transforms)]
                     result += distribution.log_value(subpoint)
-                for i in range(len(params)):
-                    result += transforms[i].log_derivative(point[params[i]])
+                for (param, transform) in zip(params, transforms):
+                    result += transform.log_derivative(point[param])
             return result
         else:
             raise ValueError("point given to log_value function of a " +\
@@ -234,7 +229,6 @@ class DistributionSet(Savable):
         
         parameter string name of parameter
         """
-        found = False
         for (distribution, params, transforms) in self._data:
             for (iparam, param) in enumerate(params):
                 if parameter == param:
@@ -294,6 +288,21 @@ class DistributionSet(Savable):
         string += distribution.to_string()
         return (string, transform.to_string())
     
+    @property
+    def summary_string(self):
+        """
+        Property which yields a string which summarizes the place of all
+        parameters in this DistributionSet, including the distributions they
+        belong to and the way they are transformed.
+        """
+        final_string = 'Parameter: distribution   transform'
+        for parameter in self.params:
+            (distribution_string, transform_string) =\
+                self.parameter_strings(parameter)
+            final_string = '{0!s}\n{1!s}: {2!s}  {3!s}'.format(final_string,\
+                parameter, distribution_string, transform_string)
+        return final_string
+    
     def __eq__(self, other):
         """
         Checks for equality of this DistributionSet with other. Returns True if
@@ -313,7 +322,7 @@ class DistributionSet(Savable):
                 for iparam in range(numparams):
                     if fparams[iparam] != sparams[iparam]:
                         return False
-                    if ftfms[iparam] != sparams[iparam]:
+                    if ftfms[iparam] != stfms[iparam]:
                         return False
                 return (fdistribution == sdistribution)
             else:
