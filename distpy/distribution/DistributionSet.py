@@ -92,43 +92,16 @@ class DistributionSet(Savable):
         DistributionSet.
         
         distribution: Distribution object describing the given parameters
-        params list of parameters described by the given distribution
-               (can be a single string if the distribution is univariate)
-        transforms list of transformations to apply to the parameters
-                   (can be a single string if the distribution is univariate)
+        params: list of parameters described by the given distribution
+                (can be a single string if the distribution is univariate)
+        transforms: TransformList object (or something castable to one, such as
+                    a sequence of strings which can be cast to Transform
+                    objects) which apply to the parameters (can be a single
+                    string if the distribution is univariate)
         """
         if isinstance(distribution, Distribution):
-            if transforms is None:
-                transforms = [NullTransform()] * distribution.numparams
-            elif castable_to_transform(transforms):
-                if (distribution.numparams == 1):
-                    transforms = [cast_to_transform(transforms)]
-                else:
-                    raise ValueError("The transforms variable applied to " +\
-                        "parameters of a DistributionSet was provided as a " +\
-                        "string even though the distribution being " +\
-                        "provided was multivariate.")
-            elif type(transforms) in sequence_types:
-                if len(transforms) == distribution.numparams:
-                    all_castable_to_transforms =\
-                        all([castable_to_transform(val) for val in transforms])
-                    if all_castable_to_transforms:
-                        transforms =\
-                            [cast_to_transform(val) for val in transforms]
-                    else:
-                        raise ValueError("Not all transforms given to " +\
-                            "add_distribution were understood.")
-                else:
-                    raise ValueError("The list of transforms applied to " +\
-                        "parameters in a DistributionSet was not the same " +\
-                        "length as the list of parameters of the " +\
-                        "distribution.")
-            else:
-                raise ValueError("The type of the transforms variable " +\
-                    "supplied to DistributionSet's add_distribution " +\
-                    "function was not recognized. It should be a single " +\
-                    "valid string (if distribution is univariate) or list " +\
-                    "of valid strings (if distribution is multivariate).")
+            transforms = cast_to_transform_list(transforms,\
+                num_transforms=distribution.numparams)
             if distribution.numparams == 1:
                 if type(params) is str:
                     self._check_name(params)
@@ -400,11 +373,9 @@ class DistributionSet(Savable):
             (distribution, params, transforms) = distribution_tuple
             subgroup = group.create_group('distribution_{}'.format(ituple))
             distribution.fill_hdf5_group(subgroup)
-            for iparam in range(distribution.numparams):
-                subgroup.attrs['parameter_{}'.format(iparam)] = params[iparam]
-                subsubgroup =\
-                    subgroup.create_group('transform_{}'.format(iparam))
-                transforms[iparam].fill_hdf5_group(subsubgroup)
+            transforms.fill_hdf5_group(subgroup)
+            for (iparam, param) in enumerate(params):
+                subgroup.attrs['parameter_{}'.format(iparam)] = param
     
     @property
     def gradient_computable(self):

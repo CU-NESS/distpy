@@ -1,7 +1,7 @@
 """
 File: distpy/transform/__init__.py
 Author: Keith Tauscher
-Date: 12 Aug 2017
+Date: 28 Jan 2018
 
 Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
@@ -25,4 +25,8 @@ from distpy.transform.CastTransform import cast_to_transform,\
     castable_to_transform
 from distpy.transform.LoadTransform import load_transform_from_hdf5_group,\
     load_transform_from_hdf5_file
-
+from distpy.transform.TransformList import TransformList
+from distpy.transform.CastTransformList import castable_to_transform_list,\
+    cast_to_transform_list
+from distpy.transform.LoadTransformList import\
+    load_transform_list_from_hdf5_group, load_transform_list_from_hdf5_file

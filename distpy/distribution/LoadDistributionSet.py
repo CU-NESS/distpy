@@ -2,7 +2,7 @@
 File: distpy/distribution/LoadDistributionSet.py
 Author: Keith Tauscher
 """
-from ..transform import load_transform_from_hdf5_group
+from ..transform import load_transform_list_from_hdf5_group
 from .DistributionSet import DistributionSet
 from .LoadDistribution import load_distribution_from_hdf5_group
 
@@ -29,14 +29,12 @@ def load_distribution_set_from_hdf5_group(group):
     while ('distribution_{}'.format(ituple)) in group:
         subgroup = group['distribution_{}'.format(ituple)]
         distribution = load_distribution_from_hdf5_group(subgroup)
+        transform_list = load_transform_list_from_hdf5_group(subgroup)
         params = []
-        transforms = []
         iparam = 0
         for iparam in range(distribution.numparams):
             params.append(subgroup.attrs['parameter_{}'.format(iparam)])
-            subsubgroup = subgroup['transform_{}'.format(iparam)]
-            transforms.append(load_transform_from_hdf5_group(subsubgroup))
-        distribution_tuples.append((distribution, params, transforms))
+        distribution_tuples.append((distribution, params, transform_list))
         ituple += 1
     return DistributionSet(distribution_tuples=distribution_tuples)
 

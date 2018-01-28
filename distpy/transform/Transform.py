@@ -156,4 +156,14 @@ class Transform(Savable):
         returns: opposite of __eq__
         """
         return (not self.__eq__(other))
+    
+    def __bool__(self):
+        """
+        This method makes it so that if-statements can be performed with
+        variables storing Transforms as their expressions. If the variable
+        contains a non-None Transform, it will return False.
+        
+        returns: True
+        """
+        return True
 

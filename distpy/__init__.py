@@ -1,7 +1,7 @@
 """
 File: distpy/__init__.py
 Author: Keith Tauscher
-Date: 12 Aug 2017
+Update date: 27 Jan 2018
 
 Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
@@ -11,7 +11,9 @@ from distpy.transform import Transform, NullTransform, LogTransform,\
     LogisticTransform, AffineTransform, ReciprocalTransform,\
     ExponentiatedTransform, LoggedTransform, SumTransform, ProductTransform,\
     CompositeTransform, castable_to_transform, cast_to_transform,\
-    load_transform_from_hdf5_group, load_transform_from_hdf5_file
+    load_transform_from_hdf5_group, load_transform_from_hdf5_file,\
+    TransformList, castable_to_transform_list, cast_to_transform_list,\
+    load_transform_list_from_hdf5_group, load_transform_list_from_hdf5_file
 from distpy.distribution import Distribution, BetaDistribution,\
     BinomialDistribution, ChiSquaredDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
@@ -35,3 +37,4 @@ from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     load_jumping_distribution_set_from_hdf5_file,\
     MetropolisHastingsSampler
 from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link
+
