@@ -18,7 +18,7 @@ Description: A container which can hold an arbitrary number of distributions,
 """
 import numpy as np
 from ..util import Savable, int_types, sequence_types
-from ..transform import NullTransform, cast_to_transform, castable_to_transform
+from ..transform import cast_to_transform_list
 from .Distribution import Distribution
 try:
     # this runs with no issues in python 2 but raises error in python 3
