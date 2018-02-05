@@ -221,3 +221,13 @@ class Distribution(Savable):
             raise ValueError("Confidence intervals cannot be found for " +\
                 "this distribution.")
 
+    @property
+    def metadata(self):
+        if not hasattr(self, '_metadata'):
+            raise AttributeError('Must set Distribution metadata by hand!')
+        return self._metadata
+        
+    @metadata.setter
+    def metadata(self, value):
+        self._metadata = value
+        
