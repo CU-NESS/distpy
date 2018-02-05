@@ -10,6 +10,7 @@ from .ExponentialDistribution import ExponentialDistribution
 from .DoubleSidedExponentialDistribution import\
     DoubleSidedExponentialDistribution
 from .WeibullDistribution import WeibullDistribution
+from .InfiniteUniformDistribution import InfiniteUniformDistribution
 from .EllipticalUniformDistribution import EllipticalUniformDistribution
 from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
 from .GaussianDistribution import GaussianDistribution
@@ -145,6 +146,8 @@ def load_distribution_from_hdf5_group(group):
         return UniformTriangulationDistribution(points=points)
     elif class_name == 'KroneckerDeltaDistribution':
         return KroneckerDeltaDistribution(group.attrs['value'])
+    elif class_name == 'InfiniteUniformDistribution':
+        return InfiniteUniformDistribution()
     else:
         raise ValueError("The class of the Distribution was not recognized.")
 

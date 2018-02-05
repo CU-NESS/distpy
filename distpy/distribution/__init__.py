@@ -28,6 +28,8 @@ from distpy.distribution.TruncatedGaussianDistribution\
     import TruncatedGaussianDistribution
 from distpy.distribution.UniformDistribution import UniformDistribution
 from distpy.distribution.WeibullDistribution import WeibullDistribution
+from distpy.distribution.InfiniteUniformDistribution import\
+    InfiniteUniformDistribution
 from distpy.distribution.LinkedDistribution import LinkedDistribution
 from distpy.distribution.SequentialDistribution import SequentialDistribution
 from distpy.distribution.DirectionDistribution import DirectionDistribution
