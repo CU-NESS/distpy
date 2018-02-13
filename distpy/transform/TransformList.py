@@ -328,6 +328,14 @@ class TransformList(Savable, Loadable):
         self._iteration = 0
         return self
     
+    def __next__(self):
+        """
+        Finds the next element in the iteration over this TransformList.
+        
+        returns: next Transform object in this TransformList
+        """
+        return self.next()
+    
     def next(self):
         """
         Finds the next element in the iteration over this TransformList.

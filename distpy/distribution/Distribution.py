@@ -9,6 +9,13 @@ import numpy as np
 from ..util import Savable, Loadable, save_dictionary, load_dictionary,\
     numerical_types, bool_types, sequence_types
 
+try:
+    # this runs with no issues in python 2 but raises error in python 3
+    basestring
+except:
+    # this try/except allows for python 2/3 compatible string type checking
+    basestring = str
+
 cannot_instantiate_distribution_error = NotImplementedError("Some part of " +\
     "Distribution class was not implemented by subclass or Distribution is " +\
     "being directly instantiated.")
