@@ -147,18 +147,24 @@ class TruncatedGaussianDistribution(Distribution):
         erfinv_args = (self._lo_term + (cdf * (self._hi_term - self._lo_term)))
         return (self.mean + (np.sqrt(2 * self.var) * erfinv(erfinv_args)))
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The
         low, high, mean, and variance values need to be saved along with the
         class name.
+        
+        group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'TruncatedGaussianDistribution'
         group.attrs['low'] = self.lo
         group.attrs['high'] = self.hi
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.var
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

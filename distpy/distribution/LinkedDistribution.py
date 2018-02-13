@@ -128,19 +128,24 @@ class LinkedDistribution(Distribution):
                 metadata_equal])
         return False
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The
         class name is saved alongside the component distribution and the number
         of parameters.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'LinkedDistribution'
         group.attrs['numparams'] = self.numparams
         subgroup = group.create_group('shared_distribution')
-        self.shared_distribution.fill_hdf5_group(subgroup)
-        self.save_metadata(group)
+        self.shared_distribution.fill_hdf5_group(subgroup,\
+            save_metadata=save_metadata)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group, shared_distribution_class, *args,\

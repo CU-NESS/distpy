@@ -137,17 +137,21 @@ class ChiSquaredDistribution(Distribution):
             answer = answer / self.degrees_of_freedom
         return answer
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. Only
         thing to save is the number of degrees of freedom.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'ChiSquaredDistribution'
         group.attrs['degrees_of_freedom'] = self.degrees_of_freedom
         group.attrs['reduced'] = self.reduced
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

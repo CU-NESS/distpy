@@ -129,17 +129,21 @@ class DoubleSidedExponentialDistribution(Distribution):
             (self.mean + (multiplicative_displacements * distances_from_mean))
         
         
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this distribution. The
         only things to save are the class name, mean, and variance.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DoubleSidedExponentialDistribution'
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.variance
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

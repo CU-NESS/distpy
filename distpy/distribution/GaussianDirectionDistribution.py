@@ -147,14 +147,18 @@ class GaussianDirectionDistribution(DirectionDistribution):
         else:
             return False
 
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this distribution.
         
         group: hdf5 file group to file with data about this distribution
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GaussianDirectionDistribution'
-        DirectionDistribution.fill_hdf5_group(self, group)
+        DirectionDistribution.fill_hdf5_group(self, group,\
+            save_metadata=save_metadata)
         group.attrs['sigma'] = self.sigma
     
     @staticmethod

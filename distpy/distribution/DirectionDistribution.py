@@ -178,15 +178,19 @@ class DirectionDistribution(Distribution):
                 self._rotator = NullRotator()
         return self._rotator
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this distribution.
         
         group: hdf5 file group to which to write data about this distribution
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['psi_center'] = self.psi_center
         group.attrs['pointing_center'] = self.pointing_center
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_generic_properties(group):

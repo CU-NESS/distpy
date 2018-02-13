@@ -246,13 +246,16 @@ class ParallelepipedDistribution(Distribution):
         return False
     
     def fill_hdf5_group(self, group, center_link=None,\
-        face_directions_link=None, distances_link=None):
+        face_directions_link=None, distances_link=None, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The
         class name of the distribution is saved along with the center,
         face_directions, and distances.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'ParallelepipedDistribution'
         create_hdf5_dataset(group, 'center', data=self.center,\
@@ -261,7 +264,8 @@ class ParallelepipedDistribution(Distribution):
             data=self.face_directions, link=face_directions_link)
         create_hdf5_dataset(group, 'distances', data=self.distances,\
             link=distances_link)
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

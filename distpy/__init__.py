@@ -7,7 +7,9 @@ Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
 """
 from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
-    save_dictionary, load_dictionary, Savable, Loadable
+    save_dictionary, load_dictionary, Savable, Loadable, bool_types,\
+    int_types, float_types, real_numerical_types, complex_numerical_types,\
+    numerical_types, sequence_types
 from distpy.transform import Transform, NullTransform, LogTransform,\
     ExponentialTransform, Log10Transform, SquareTransform, ArcsinTransform,\
     LogisticTransform, AffineTransform, ReciprocalTransform,\

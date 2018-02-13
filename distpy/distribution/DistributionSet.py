@@ -363,17 +363,20 @@ class DistributionSet(Savable, Loadable):
             raise ValueError("The name of a parameter provided to a " +\
                 "DistributionSet is already taken.")
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this DistributionSet.
         Each distribution tuple is saved as a subgroup in the hdf5 file.
         
         group: the hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution set and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         for (ituple, distribution_tuple) in enumerate(self._data):
             (distribution, params, transforms) = distribution_tuple
             subgroup = group.create_group('distribution_{}'.format(ituple))
-            distribution.fill_hdf5_group(subgroup)
+            distribution.fill_hdf5_group(subgroup, save_metadata=save_metadata)
             transforms.fill_hdf5_group(subgroup)
             for (iparam, param) in enumerate(params):
                 subgroup.attrs['parameter_{}'.format(iparam)] = param

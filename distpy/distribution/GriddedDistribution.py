@@ -319,19 +319,23 @@ class GriddedDistribution(Distribution):
         #
         return search_sorted(self.cdf, value)
     
-    def fill_hdf5_group(self, group, pdf_link=None):
+    def fill_hdf5_group(self, group, pdf_link=None, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The
         class name, variables list, and pdf values.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GriddedDistribution'
         group.attrs['numparams'] = self.numparams
         for ivar in range(len(self.vars)):
             group.attrs['variable_{}'.format(ivar)] = self.vars[ivar]
         create_hdf5_dataset(group, 'pdf', data=self.pdf, link=pdf_link)
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

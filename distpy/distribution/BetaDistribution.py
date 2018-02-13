@@ -96,17 +96,21 @@ class BetaDistribution(Distribution):
         else:
             return False
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 group with data from this distribution. All that
         is to be saved is the class name, alpha, and beta.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'BetaDistribution'
         group.attrs['alpha'] = self.alpha
         group.attrs['beta'] = self.beta
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

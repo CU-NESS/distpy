@@ -151,19 +151,24 @@ class EllipticalUniformDistribution(Distribution):
         else:
             return False
     
-    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None):
+    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None,\
+        save_metadata=True):
         """
         Fills the given hdf5 file group with data about this distribution. The
         data to be saved includes the class name, mean, and covariance of this
         distribution.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'EllipticalUniformDistribution'
         create_hdf5_dataset(group, 'mean', data=self.mean, link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.cov,\
             link=covariance_link)
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):

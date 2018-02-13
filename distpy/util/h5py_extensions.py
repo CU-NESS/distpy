@@ -52,7 +52,6 @@ class HDF5Link(object):
             self.slices = (slices,)
         else:
             self.slices = slices
-        
 
 def create_hdf5_dataset(group, name, data=None, link=None):
     """
@@ -146,6 +145,11 @@ def get_hdf5_value(obj):
 
 def save_dictionary(dictionary, group):
     """
+    Saves the given dictionary to the given hdf5 file group.
+    
+    dictionary: dictionary of numbers, bools, numpy.ndarrays, and Savable
+                objects
+    group: hdf5 file group in which to save the given dictionary
     """
     group.attrs['__isdictionary__'] = True
     for key in dictionary:
@@ -170,9 +174,14 @@ def save_dictionary(dictionary, group):
 
 def load_dictionary(group, **classes_to_load):
     """
+    Loads a dictionary of numbers, bools, numpy.ndarrays, and Savable objects
+    from the given hdf5 file group.
+    
     group: the hdf5 file group from which to load the dictionary.
     classes: dictionary of class objects whose keys correspond to the name of
              the variable with that class
+    
+    returns: dictionary loaded from the given hdf5 file group
     """
     dictionary = {}
     try:

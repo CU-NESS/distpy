@@ -158,12 +158,15 @@ class Distribution(Savable, Loadable):
         """
         raise cannot_instantiate_distribution_error
     
-    def fill_hdf5_group(self, group):
+    def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with information about this
         distribution. All subclasses must implement this function.
         
         group: hdf5 file group to fill with information about this distribution
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         raise cannot_instantiate_distribution_error
     

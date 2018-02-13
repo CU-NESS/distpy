@@ -292,19 +292,24 @@ class GaussianDistribution(Distribution):
         return (self.mean.A[0,0] +\
             (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
     
-    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None):
+    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None,\
+        save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The
         fact that this is a GaussianDistribution is saved along with the mean
         and covariance.
         
         group: hdf5 file group to fill
+        save_metadata: if True, attempts to save metadata alongside
+                                distribution and throws error if it fails
+                       if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GaussianDistribution'
         create_hdf5_dataset(group, 'mean', data=self.mean.A[0], link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.covariance.A,\
             link=covariance_link)
-        self.save_metadata(group)
+        if save_metadata:
+            self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):
