@@ -18,7 +18,8 @@ class BinomialDistribution(Distribution):
     trials. When probability of success is 1/2, this is the distribution of the
     number of heads flipped in the number of trials given.
     """
-    def __init__(self, probability_of_success, number_of_trials):
+    def __init__(self, probability_of_success, number_of_trials,\
+        metadata=None):
         """
         Initializes new BinomialDistribution with given scale.
         
@@ -43,6 +44,7 @@ class BinomialDistribution(Distribution):
         else:
             raise ValueError("number_of_trials given to " +\
                 "BinomialDistribution was not a number.")
+        self.metadata = metadata
     
     @property
     def numparams(self):
@@ -103,7 +105,8 @@ class BinomialDistribution(Distribution):
             p_close = np.isclose(self.probability_of_success,\
                 other.probability_of_success, rtol=0, atol=1e-6)
             n_equal = (self.number_of_trials == other.number_of_trials)
-            return p_close and n_equal
+            metadata_equal = self.metadata_equal(other)
+            return all([p_close, n_equal, metadata_equal])
         else:
             return False
     
@@ -124,6 +127,29 @@ class BinomialDistribution(Distribution):
         group.attrs['class'] = 'BinomialDistribution'
         group.attrs['number_of_trials'] = self.number_of_trials
         group.attrs['probability_of_success'] = self.probability_of_success
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a BinomialDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a BinomialDistribution object created from the information in
+                 the given group
+        """
+        try:
+            assert group.attrs['class'] == 'BinomialDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "BinomialDistribution.")
+        metadata = Distribution.load_metadata(group)
+        probability_of_success = group.attrs['probability_of_success']
+        number_of_trials = group.attrs['number_of_trials']
+        return BinomialDistribution(probability_of_success, number_of_trials,\
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

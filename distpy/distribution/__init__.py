@@ -42,6 +42,4 @@ from distpy.distribution.UniformTriangulationDistribution import\
 from distpy.distribution.LoadDistribution import\
     load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
 from distpy.distribution.DistributionSet import DistributionSet
-from distpy.distribution.LoadDistributionSet import\
-    load_distribution_set_from_hdf5_group, load_distribution_set_from_hdf5_file
 

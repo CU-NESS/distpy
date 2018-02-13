@@ -1,5 +1,5 @@
 """
-File: distpy/Savable.py
+File: distpy/Loadable.py
 Author: Keith Tauscher
 Date: 12 August 2017
 
@@ -16,23 +16,14 @@ except:
 else:
     have_h5py = True
 
-class Savable(object):
+class Loadable(object):
     """
-    Class representing an object which can be saved in an hdf5 file group
-    because it has a function with signature savable.fill_hdf5_group(group).
+    Class representing an object which can be loaded from an hdf5 group or file
+    directly through the class. This is distinct from the Savable class because
+    there are some (specifically, self-nest-able) objects which cannot be
+    loaded conveniently through methods of this form. These objects require an
+    outside method of the form "load_XXXXX_from_hdf5_group" functions.
     """
-    def fill_hdf5_group(self, group):
-        """
-        A function which fills the given hdf5 file group with information about
-        this Savable object. This function raises an error unless it is
-        implemented by all subclasses of Savable.
-        
-        group: hdf5 file group to fill with information about this object
-        """
-        raise NotImplementedError("This method should be implemented by " +\
-            "every subclass of Savable and Savable should never be " +\
-            "instantiated directly.")
-    
     @staticmethod
     def load_from_hdf5_group(group):
         """
@@ -64,20 +55,6 @@ class Savable(object):
             to_return = cls.load_from_hdf5_group(hdf5_file, *args, **kwargs)
             hdf5_file.close()
             return to_return
-        else:
-            raise no_h5py_error
-    
-    def save(self, file_name, *args, **kwargs):
-        """
-        Saves this object in hdf5 file using the fill_hdf5_file group
-        function. Raises an error if h5py cannot be imported.
-        
-        file_name: name of hdf5 file to write
-        """
-        if have_h5py:
-            hdf5_file = h5py.File(file_name, 'w')
-            self.fill_hdf5_group(hdf5_file, *args, **kwargs)
-            hdf5_file.close()
         else:
             raise no_h5py_error
 

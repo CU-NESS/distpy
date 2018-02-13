@@ -6,6 +6,7 @@ Date: 10 Aug 2017
 Description: File containing example of using the GaussianDirectionDistribution
              class.
 """
+import os
 import numpy as np
 import matplotlib.pyplot as pl
 import healpy as hp
@@ -18,6 +19,17 @@ npix = hp.pixelfunc.nside2npix(nside)
 pointing_center = (0, 0)
 distribution = GaussianDirectionDistribution(pointing_center=pointing_center,\
     sigma=10, degrees=True)
+
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == GaussianDirectionDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
+
 ndraws = int(1e6)
 draws = distribution.draw(ndraws)
 lons = draws[:,1]

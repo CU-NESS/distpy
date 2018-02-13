@@ -16,7 +16,8 @@ class GaussianDirectionDistribution(DirectionDistribution):
     """
     Class representing Gaussian distribution on the surface of the sphere.
     """
-    def __init__(self, pointing_center=(90, 0), sigma=1, degrees=True):
+    def __init__(self, pointing_center=(90, 0), sigma=1, degrees=True,\
+        metadata=None):
         """
         Generates a new GaussianPointingPrior centered at the given pointing
         and with the given angular scale.
@@ -34,6 +35,7 @@ class GaussianDirectionDistribution(DirectionDistribution):
             self.sigma = np.radians(sigma)
         else:
             self.sigma = sigma
+        self.metadata = metadata
     
     @property
     def psi_distribution(self):
@@ -133,11 +135,15 @@ class GaussianDirectionDistribution(DirectionDistribution):
         theta_center, phi_center, and sigma are all equal.
         """
         if isinstance(other, GaussianDirectionDistribution):
-            these_properties = [self.theta_center, self.phi_center, self.sigma]
-            other_properties =\
-                [other.theta_center, other.phi_center, other.sigma]
-            return np.allclose(these_properties, other_properties, rtol=0,\
-                atol=1e-9)
+            tol_kwargs = {'rtol': 0., 'atol': 1e-9}
+            theta_center_equal =\
+                np.isclose(self.theta_center, other.theta_center, **tol_kwargs)
+            phi_center_equal =\
+                np.isclose(self.phi_center, other.phi_center, **tol_kwargs)
+            sigma_equal = np.isclose(self.sigma, other.sigma, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([theta_center_equal, phi_center_equal, sigma_equal,\
+                metadata_equal])
         else:
             return False
 
@@ -150,4 +156,26 @@ class GaussianDirectionDistribution(DirectionDistribution):
         group.attrs['class'] = 'GaussianDirectionDistribution'
         DirectionDistribution.fill_hdf5_group(self, group)
         group.attrs['sigma'] = self.sigma
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a GaussianDirectionDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a GaussianDirectionDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'GaussianDirectionDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "GaussianDirectionDistribution.")
+        (metadata, psi_center, pointing_center) =\
+            DirectionDistribution.load_generic_properties(group)
+        sigma = group.attrs['sigma']
+        return GaussianDirectionDistribution(pointing_center=pointing_center,\
+            sigma=sigma, degrees=False, metadata=metadata)
 

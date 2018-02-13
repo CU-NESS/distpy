@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: Example of using the WeibullDistribution class.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import WeibullDistribution
@@ -13,6 +13,15 @@ from distpy import WeibullDistribution
 sample_size = int(1e5)
 
 distribution = WeibullDistribution(5)
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == WeibullDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 assert distribution.numparams == 1
 t0 = time.time()
 sample = distribution.draw(sample_size)

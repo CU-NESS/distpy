@@ -11,7 +11,7 @@ import numpy.random as rand
 import numpy.linalg as lalg
 import scipy.linalg as slalg
 from scipy.special import gammaln as log_gamma
-from ..util import int_types, create_hdf5_dataset
+from ..util import int_types, create_hdf5_dataset, get_hdf5_value
 from .Distribution import Distribution
 
 class EllipticalUniformDistribution(Distribution):
@@ -20,7 +20,7 @@ class EllipticalUniformDistribution(Distribution):
     to be at any point within an ellipsoid (defined by mean and cov). It is a
     uniform distribution over an arbitrary ellipsoid.
     """
-    def __init__(self, mean, cov):
+    def __init__(self, mean, cov, metadata=None):
         """
         Initializes this EllipticalUniformDistribution using properties of the
         ellipsoid defining it.
@@ -59,7 +59,8 @@ class EllipticalUniformDistribution(Distribution):
             (half_rank * (np.log(np.pi) + np.log(self.numparams + 2))) -\
             (lalg.slogdet(self.cov)[1] / 2.)
         self.sqrtcov = slalg.sqrtm(self.cov)
-
+        self.metadata = metadata
+    
     @property
     def numparams(self):
         """
@@ -141,8 +142,10 @@ class EllipticalUniformDistribution(Distribution):
             if self.numparams == other.numparams:
                 mean_close =\
                     np.allclose(self.mean, other.mean, rtol=0, atol=1e-9)
-                cov_close = np.allclose(self.cov, other.cov, rtol=1e-12, atol=0)
-                return mean_close and cov_close
+                cov_close =\
+                    np.allclose(self.cov, other.cov, rtol=1e-12, atol=0)
+                metadata_equal = self.metadata_equal(other)
+                return all([mean_close, cov_close, metadata_equal])
             else:
                 return False
         else:
@@ -160,6 +163,29 @@ class EllipticalUniformDistribution(Distribution):
         create_hdf5_dataset(group, 'mean', data=self.mean, link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.cov,\
             link=covariance_link)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads an EllipticalUniformDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a EllipticalUniformDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'EllipticalUniformDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "EllipticalUniformDistribution.")
+        metadata = Distribution.load_metadata(group)
+        mean = get_hdf5_value(group['mean'])
+        covariance = get_hdf5_value(group['covariance'])
+        return EllipticalUniformDistribution(mean, covariance,\
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

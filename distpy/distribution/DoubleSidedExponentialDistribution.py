@@ -17,7 +17,7 @@ class DoubleSidedExponentialDistribution(Distribution):
     Distribution with a double-sided exponential distribution. Double sided
     exponential distributions are "peak"ier than Gaussians.
     """
-    def __init__(self, mean, variance):
+    def __init__(self, mean, variance, metadata=None):
         """
         Initializes a new DoubleSidedExponentialDistribution with the given
         parameters.
@@ -42,6 +42,7 @@ class DoubleSidedExponentialDistribution(Distribution):
                 "DoubleSidedExponentialDistribution was not of a numerical " +\
                 "type.")
         self._const_lp_term = (np.log(2) + np.log(self.variance)) / (-2)
+        self.metadata = metadata
     
     @property
     def numparams(self):
@@ -99,8 +100,12 @@ class DoubleSidedExponentialDistribution(Distribution):
         sigma and False otherwise.
         """
         if isinstance(other, DoubleSidedExponentialDistribution):
-            return np.allclose([self.mean, self.variance],\
-                [other.mean, other.variance], rtol=1e-6, atol=1e-9)
+            tol_kwargs = {'rtol': 1e-6, 'atol': 1e-9}
+            mean_equal = np.isclose(self.mean, other.mean, **tol_kwargs)
+            variance_equal =\
+                np.isclose(self.variance, other.variance, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([mean_equal, variance_equal, metadata_equal])
         else:
             return False
     
@@ -134,6 +139,30 @@ class DoubleSidedExponentialDistribution(Distribution):
         group.attrs['class'] = 'DoubleSidedExponentialDistribution'
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.variance
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a DoubleSidedExponentialDistribution from the given hdf5 file
+        group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a ExponentialDistribution object created from the information
+                 in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'DoubleSidedExponentialDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "DoubleSidedExponentialDistribution.")
+        metadata = Distribution.load_metadata(group)
+        mean = group.attrs['mean']
+        variance = group.attrs['variance']
+        return DoubleSidedExponentialDistribution(mean, variance,\
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

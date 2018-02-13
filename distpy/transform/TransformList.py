@@ -5,12 +5,13 @@ Date: 27 Jan 2018
 
 Description: File containing a class representing a list of Transform objects.
 """
-from ..util import sequence_types, Savable
+from ..util import sequence_types, Savable, Loadable
 from .NullTransform import NullTransform
 from .CompositeTransform import CompositeTransform
 from .CastTransform import cast_to_transform, castable_to_transform
+from .LoadTransform import load_transform_from_hdf5_group
 
-class TransformList(Savable):
+class TransformList(Savable, Loadable):
     """
     Class representing a list of Transform objects.
     """
@@ -303,6 +304,21 @@ class TransformList(Savable):
             subgroup = group.create_group('transform_{}'.format(itransform))
             transform.fill_hdf5_group(subgroup)
     
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a TransformList object from the given hdf5 file group.
+        
+        group: the hdf5 file group from which to load a TransformList
+        
+        returns: a TransformList object derived from the give hdf5 file group
+        """
+        transforms = []
+        while 'transform_{}'.format(len(transforms)) in group:
+            subgroup = group['transform_{}'.format(len(transforms))]
+            transforms.append(load_transform_from_hdf5_group(subgroup))
+        return TransformList(*transforms)
+    
     def __iter__(self):
         """
         Returns an iterator over this TransformList. Since TransformList
@@ -433,4 +449,34 @@ class TransformList(Savable):
         returns: a Transform object
         """
         return self.transforms[index]
+    
+    def __eq__(self, other):
+        """
+        Checks if other is a TransformList with the same Transforms as this
+        one.
+        
+        other: object to check for equality
+        
+        returns: True iff other is TransformList with same Transforms
+        """
+        if isinstance(other, TransformList):
+            if len(self) == len(other):
+                for (stransform, otransform) in zip(self, other):
+                    if stransform != otransform:
+                        return False
+                return True
+            else:
+                return False
+        else:
+            return False
+    
+    def __ne__(self, other):
+        """
+        Ensures that (a!=b) == (not (a==b)).
+        
+        other: object to check for inequality
+        
+        returns: False iff other is TransformList with same Transforms
+        """
+        return (not self.__eq__(other))
 

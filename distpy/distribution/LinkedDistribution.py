@@ -18,7 +18,7 @@ class LinkedDistribution(Distribution):
     while ensuring that the variables linked by this distribution must be
     identical.
     """
-    def __init__(self, shared_distribution, numpars):
+    def __init__(self, shared_distribution, numpars, metadata=None):
         """
         Initializes a new LinkedDistribution with the given
         shared_distribution and number of parameters.
@@ -47,6 +47,7 @@ class LinkedDistribution(Distribution):
         else:
             raise ValueError("The type of the number of parameters given " +\
                 "given to a LinkedDistribution was not numerical.")
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -122,7 +123,9 @@ class LinkedDistribution(Distribution):
             numparams_equal = (self.numparams == other.numparams)
             shared_distribution_equal =\
                 (self.shared_distribution == other.shared_distribution)
-            return numparams_equal and shared_distribution_equal
+            metadata_equal = self.metadata_equal(other)
+            return all([numparams_equal, shared_distribution_equal,\
+                metadata_equal])
         return False
     
     def fill_hdf5_group(self, group):
@@ -137,6 +140,37 @@ class LinkedDistribution(Distribution):
         group.attrs['numparams'] = self.numparams
         subgroup = group.create_group('shared_distribution')
         self.shared_distribution.fill_hdf5_group(subgroup)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group, shared_distribution_class, *args,\
+        **kwargs):
+        """
+        Loads a LinkedDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        shared_distribution_class: the class of the distribution shared by the
+                                   parameters of this distribution
+        args: positional arguments to pass on to the load_from_hdf5_group
+              method of the shared_distribution_class
+        kwargs: keyword arguments to pass on to the load_from_hdf5_group
+              method of the shared_distribution_class
+        
+        returns: LinkedDistribution object created from the information in the
+                 given group
+        """
+        try:
+            assert group.attrs['class'] == 'LinkedDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "LinkedDistribution.")
+        metadata = Distribution.load_metadata(group)
+        shared_distribution = shared_distribution_class.load_from_hdf5_group(\
+            group['shared_distribution'], *args, **kwargs)
+        numparams = group.attrs['numparams']
+        return LinkedDistribution(shared_distribution, numparams,\
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

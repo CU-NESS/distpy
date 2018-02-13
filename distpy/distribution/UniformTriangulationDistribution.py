@@ -17,7 +17,7 @@ class UniformTriangulationDistribution(Distribution):
     Class representing a uniform distribution over the convex hull of given
     points.
     """
-    def __init__(self, triangulation=None, points=None):
+    def __init__(self, triangulation=None, points=None, metadata=None):
         """
         Creates a new UniformTriangulationDistribution with the given
         triangulation.
@@ -36,6 +36,7 @@ class UniformTriangulationDistribution(Distribution):
                 self.triangulation = Delaunay(points)
         else:
             self.triangulation = triangulation
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -69,6 +70,8 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def simplex_volumes(self):
         """
+        Property storing the volumes of the simplices in the Triangulation at
+        the heart of this Distribution.
         """
         if not hasattr(self, '_simplex_volumes'):
             parallelotope_volumes = np.ndarray((self.nsimplices,))
@@ -195,9 +198,13 @@ class UniformTriangulationDistribution(Distribution):
         level) and False otherwise.
         """
         if isinstance(other, UniformTriangulationDistribution):
-            return np.allclose(self.triangulation.points,\
-                other.triangulation.points) and np.allclose(\
-                self.triangulation.simplices, other.triangulation.simplices)
+            tol_kwargs = {'rtol': 1e-6, 'atol': 1e-6}
+            points_close = np.allclose(self.triangulation.points,\
+                other.triangulation.points, **tol_kwargs)
+            simplices_close = np.allclose(self.triangulation.simplices,\
+                other.triangulation.simplices)
+            metadata_equal = self.metadata_equal(other)
+            return all([points_close, simplices_close, metadata_equal])
         else:
             return False
     
@@ -210,6 +217,29 @@ class UniformTriangulationDistribution(Distribution):
         """
         group.attrs['class'] = 'UniformTriangulationDistribution'
         group.create_dataset('points', data=self.triangulation.points)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a UniformTriangulationDistribution from the given hdf5 file
+        group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a UniformTriangulationDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'UniformTriangulationDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "UniformTriangulationDistribution.")
+        metadata = Distribution.load_metadata(group)
+        points = group['points'].value
+        return\
+            UniformTriangulationDistribution(points=points, metadata=metadata)
     
     @property
     def gradient_computable(self):

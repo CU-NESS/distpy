@@ -41,46 +41,11 @@ def load_jumping_distribution_from_hdf5_group(group):
     except KeyError:
         raise ValueError("group given does not appear to contain a jumping " +\
             "distribution.")
-    if class_name == 'GaussianJumpingDistribution':
-        return GaussianJumpingDistribution(get_hdf5_value(group['covariance']))
-    elif class_name == 'TruncatedGaussianJumpingDistribution':
-        variance = group.attrs['variance']
-        if 'low' in group.attrs:
-            low = group.attrs['low']
-        else:
-            low = None
-        if 'high' in group.attrs:
-            high = group.attrs['high']
-        else:
-            high = None
-        return\
-            TruncatedGaussianJumpingDistribution(variance, low=low, high=high)
-    elif class_name == 'UniformJumpingDistribution':
-        return UniformJumpingDistribution(get_hdf5_value(group['covariance']))
-    elif class_name == 'BinomialJumpingDistribution':
-        minimum = group.attrs['minimum']
-        maximum = group.attrs['maximum']
-        return BinomialJumpingDistribution(minimum, maximum)
-    elif class_name == 'AdjacencyJumpingDistribution':
-        jumping_probability = group.attrs['jumping_probability']
-        if 'minimum' in group.attrs:
-            minimum = group.attrs['minimum']
-        else:
-            minimum = None
-        if 'maximum' in group.attrs:
-            maximum = group.attrs['maximum']
-        else:
-            maximum = None
-        return\
-            AdjacencyJumpingDistribution(jumping_probability, minimum, maximum)
-    elif class_name == 'LocaleIndependentJumpingDistribution':
-        distribution = load_distribution_from_hdf5_group(group['distribution'])
-        return LocaleIndependentJumpingDistribution(distribution)
-    elif class_name == 'SourceIndependentJumpingDistribution':
-        distribution = load_distribution_from_hdf5_group(group['distribution'])
-        return SourceIndependentJumpingDistribution(distribution)
-    else:
+    try:
+        cls = eval(class_name)
+    except:
         raise ValueError("The class of the Distribution was not recognized.")
+    return cls.load_from_hdf5_group(group)
 
 def load_jumping_distribution_from_hdf5_file(file_name):
     """

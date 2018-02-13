@@ -204,4 +204,24 @@ class BinomialJumpingDistribution(JumpingDistribution):
         group.attrs['class'] = 'BinomialJumpingDistribution'
         group.attrs['minimum'] = self.minimum
         group.attrs['maximum'] = self.maximum
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a BinomialJumpingDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this BinomialJumpingDistribution was saved
+        
+        returns: a BinomialJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'BinomialJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain a " +\
+                "BinomialJumpingDistribution.")
+        minimum = group.attrs['minimum']
+        maximum = group.attrs['maximum']
+        return BinomialJumpingDistribution(minimum, maximum)
 

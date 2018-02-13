@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: Example of using the DoubleSidedExponentialDistribution class.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import DoubleSidedExponentialDistribution
@@ -14,6 +14,16 @@ sample_size = int(1e5)
 
 distribution = DoubleSidedExponentialDistribution(0., 1.)
 assert distribution.numparams == 1
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert\
+        distribution == DoubleSidedExponentialDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a double-sided ' +\

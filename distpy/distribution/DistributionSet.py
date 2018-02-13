@@ -17,9 +17,10 @@ Description: A container which can hold an arbitrary number of distributions,
              functions for further details.
 """
 import numpy as np
-from ..util import Savable, int_types, sequence_types
-from ..transform import cast_to_transform_list
+from ..util import Savable, Loadable, int_types, sequence_types
+from ..transform import cast_to_transform_list, TransformList
 from .Distribution import Distribution
+from .LoadDistribution import load_distribution_from_hdf5_group
 try:
     # this runs with no issues in python 2 but raises error in python 3
     basestring
@@ -27,7 +28,7 @@ except:
     # this try/except allows for python 2/3 compatible string type checking
     basestring = str
 
-class DistributionSet(Savable):
+class DistributionSet(Savable, Loadable):
     """
     An object which keeps track of many distributions which can be univariate
     or multivariate. It provides methods like log_value, which calls log_value
@@ -376,6 +377,29 @@ class DistributionSet(Savable):
             transforms.fill_hdf5_group(subgroup)
             for (iparam, param) in enumerate(params):
                 subgroup.attrs['parameter_{}'.format(iparam)] = param
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a DistributionSet object from the given group.
+        
+        group: the group which was included in self.fill_hdf5_group(group)
+        
+        returns: DistributionSet object
+        """
+        ituple = 0
+        distribution_tuples = []
+        while ('distribution_{}'.format(ituple)) in group:
+            subgroup = group['distribution_{}'.format(ituple)]
+            distribution = load_distribution_from_hdf5_group(subgroup)
+            transform_list = TransformList.load_from_hdf5_group(subgroup)
+            params = []
+            iparam = 0
+            for iparam in range(distribution.numparams):
+                params.append(subgroup.attrs['parameter_{}'.format(iparam)])
+            distribution_tuples.append((distribution, params, transform_list))
+            ituple += 1
+        return DistributionSet(distribution_tuples=distribution_tuples)
     
     @property
     def gradient_computable(self):

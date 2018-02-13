@@ -19,7 +19,7 @@ class ChiSquaredDistribution(Distribution):
     squared gaussian-distributed variables. Its only parameter is the number of
     degrees of freedom, a positive integer.
     """
-    def __init__(self, degrees_of_freedom, reduced=False):
+    def __init__(self, degrees_of_freedom, reduced=False, metadata=None):
         """
         Initializes a new chi-squared distribution with the given parameters.
         
@@ -40,6 +40,7 @@ class ChiSquaredDistribution(Distribution):
         if self.reduced:
             self.const_lp_term =\
                 self.const_lp_term + np.log(self.degrees_of_freedom)
+        self.metadata = metadata
     
     @property
     def reduced(self):
@@ -117,9 +118,13 @@ class ChiSquaredDistribution(Distribution):
         Checks for equality between other and this object. Returns True if
         if other is a ChiSquaredDistribution with the same degrees_of_freedom.
         """
-        return isinstance(other, ChiSquaredDistribution) and\
-            (self.degrees_of_freedom == other.degrees_of_freedom) and\
-            (self.reduced == other.reduced)
+        if isinstance(other, ChiSquaredDistribution):
+            dof_equal = (self.degrees_of_freedom == other.degrees_of_freedom)
+            reduced_equal = (self.reduced == other.reduced)
+            metadata_equal = self.metadata_equal(other)
+            return all([dof_equal, reduced_equal, metadata_equal])
+        else:
+            return False
     
     def inverse_cdf(self, cdf):
         """
@@ -142,6 +147,29 @@ class ChiSquaredDistribution(Distribution):
         group.attrs['class'] = 'ChiSquaredDistribution'
         group.attrs['degrees_of_freedom'] = self.degrees_of_freedom
         group.attrs['reduced'] = self.reduced
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a ChiSquaredDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a ChiSquaredDistribution object created from the information
+                 in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'ChiSquaredDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "ChiSquaredDistribution.")
+        metadata = Distribution.load_metadata(group)
+        degrees_of_freedom = group.attrs['degrees_of_freedom']
+        reduced = group.attrs['reduced']
+        return ChiSquaredDistribution(degrees_of_freedom, reduced=reduced,\
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

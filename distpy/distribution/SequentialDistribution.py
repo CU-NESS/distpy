@@ -10,27 +10,22 @@ import numpy as np
 from scipy.special import gammaln as log_gamma
 from ..util import int_types, numerical_types, sequence_types
 from .Distribution import Distribution
-from .UniformDistribution import UniformDistribution
-
 
 class SequentialDistribution(Distribution):
     """
     Class representing a distribution on parameters which must be in a specific
     order.
     """
-    def __init__(self, shared_distribution=None, numpars=2):
+    def __init__(self, shared_distribution, numpars=2, metadata=None):
         """
         Initializes a new SequentialDistribution.
         
         shared_distribution: the distribution from which values will be drawn
                              before they are sorted (must be univariate)
-                             (defaults to Unif(0,1))
         numpars: number of parameters which this SequentialDistribution
                  describes
         """
-        if shared_distribution is None:
-            self.shared_distribution = UniformDistribution(0., 1.)
-        elif isinstance(shared_distribution, Distribution):
+        if isinstance(shared_distribution, Distribution):
             if shared_distribution.numparams == 1:
                 self.shared_distribution = shared_distribution
             else:
@@ -50,7 +45,8 @@ class SequentialDistribution(Distribution):
         else:
             raise ValueError("The type of the number of parameters given " +\
                 "to a SequentialDistribution was not numerical.")
-
+        self.metadata = metadata
+    
     @property
     def numparams(self):
         """
@@ -126,7 +122,9 @@ class SequentialDistribution(Distribution):
             numparams_equal = (self.numparams == other.numparams)
             shared_distribution_equal =\
                 (self.shared_distribution == other.shared_distribution)
-            return numparams_equal and shared_distribution_equal
+            metadata_equal = self.metadata_equal(other)
+            return all([numparams_equal, shared_distribution_equal,\
+                metadata_equal])
         else:
             return False
     
@@ -142,6 +140,37 @@ class SequentialDistribution(Distribution):
         group.attrs['numparams'] = self.numparams
         subgroup = group.create_group('shared_distribution')
         self.shared_distribution.fill_hdf5_group(subgroup)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group, shared_distribution_class, *args,\
+        **kwargs):
+        """
+        Loads a SequentialDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        shared_distribution_class: the Distribution subclass which should be
+                                   loaded from this Distribution
+        args: positional arguments to pass on to load_from_hdf5_group method of
+              shared_distribution_class
+        kwargs: keyword arguments to pass on to load_from_hdf5_group method of
+                shared_distribution_class
+        
+        returns: a SequentialDistribution object created from the information
+                 in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'SequentialDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "SequentialDistribution.")
+        metadata = Distribution.load_metadata(group)
+        numparams = group.attrs['numparams']
+        shared_distribution = shared_distribution_class.load_from_hdf5_group(\
+            group['shared_distribution'], *args, **kwargs)
+        return SequentialDistribution(shared_distribution=shared_distribution,\
+            numpars=numparams, metadata=metadata)
     
     @property
     def gradient_computable(self):

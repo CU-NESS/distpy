@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: Example of using the UniformDistribution.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import UniformDistribution
@@ -14,8 +14,17 @@ low = -27.
 high = 19.
 sample_size = int(1e5)
 
-distribution = UniformDistribution(high, low)
+distribution = UniformDistribution(high, low, metadata=1)
 distribution2 = UniformDistribution(low, high)
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert (distribution == UniformDistribution.load(hdf5_file_name))
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 assert distribution.numparams == 1
 assert (distribution.low == distribution2.low) and\
     (distribution.high == distribution2.high)
@@ -40,4 +49,6 @@ pl.ylabel('PDF', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)
 pl.legend(fontsize='xx-large', loc='lower center')
 pl.show()
+
+
 

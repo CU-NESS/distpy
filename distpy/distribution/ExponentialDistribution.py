@@ -16,7 +16,7 @@ class ExponentialDistribution(Distribution):
     ideal for parameters which are naturally non-negative (or, if shift is
     used, are naturally above some certain lower cutoff)
     """
-    def __init__(self, rate, shift=0.):
+    def __init__(self, rate, shift=0., metadata=None):
         """
         Initializes a new ExponentialDistribution with the given parameters.
         
@@ -38,6 +38,7 @@ class ExponentialDistribution(Distribution):
         else:
             raise ValueError('The shift given to an ' +\
                 'ExponentialDistribution was not of numerical type.')
+        self.metadata = metadata
     
     @property
     def numparams(self):
@@ -92,7 +93,8 @@ class ExponentialDistribution(Distribution):
             rate_close = np.isclose(self.rate, other.rate, rtol=1e-9, atol=0)
             shift_close =\
                 np.isclose(self.shift, other.shift, rtol=0, atol=1e-9)
-            return rate_close and shift_close
+            metadata_equal = self.metadata_equal(other)
+            return all([rate_close, shift_close, metadata_equal])
         else:
             return False
     
@@ -114,6 +116,28 @@ class ExponentialDistribution(Distribution):
         group.attrs['class'] = 'ExponentialDistribution'
         group.attrs['rate'] = self.rate
         group.attrs['shift'] = self.shift
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads an ExponentialDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: an ExponentialDistribution object created from the information
+                 in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'ExponentialDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "ExponentialDistribution.")
+        metadata = Distribution.load_metadata(group)
+        rate = group.attrs['rate']
+        shift = group.attrs['shift']
+        return ExponentialDistribution(rate, shift=shift, metadata=metadata)
     
     @property
     def gradient_computable(self):

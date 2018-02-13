@@ -11,7 +11,7 @@ import numpy.linalg as npla
 import scipy.linalg as scila
 from scipy.special import gammaln as log_gamma
 from ..util import int_types, numerical_types, sequence_types,\
-    create_hdf5_dataset
+    create_hdf5_dataset, get_hdf5_value
 from .JumpingDistribution import JumpingDistribution
 
 class UniformJumpingDistribution(JumpingDistribution):
@@ -204,4 +204,22 @@ class UniformJumpingDistribution(JumpingDistribution):
         group.attrs['class'] = 'UniformJumpingDistribution'
         create_hdf5_dataset(group, 'covariance', data=self.covariance,\
             link=covariance_link)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a UniformJumpingDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this UniformJumpingDistribution was saved
+        
+        returns: a UniformJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'UniformJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain a " +\
+                "UniformJumpingDistribution.")
+        return UniformJumpingDistribution(get_hdf5_value(group['covariance']))
 

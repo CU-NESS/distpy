@@ -7,7 +7,7 @@ Description: File containing a class which represents a degenerate sort of
              jumping distribution: one whose value is independent of the source
              of the jump.
 """
-from ..distribution import Distribution
+from ..distribution import Distribution, load_distribution_from_hdf5_group
 from .JumpingDistribution import JumpingDistribution
 
 class SourceIndependentJumpingDistribution(JumpingDistribution):
@@ -127,4 +127,25 @@ class SourceIndependentJumpingDistribution(JumpingDistribution):
         """
         group.attrs['class'] = 'SourceIndependentJumpingDistribution'
         self.distribution.fill_hdf5_group(group.create_group('distribution'))
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a SourceIndependentJumpingDistribution from the given hdf5 file
+        group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this SourceIndependentJumpingDistribution was saved
+        
+        returns: a SourceIndependentJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert\
+                group.attrs['class'] == 'SourceIndependentJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain a " +\
+                "SourceIndependentJumpingDistribution.")
+        distribution = load_distribution_from_hdf5_group(group['distribution'])
+        return SourceIndependentJumpingDistribution(distribution)
 

@@ -6,7 +6,7 @@ Date: 8 January 2018
 Description: Example of using the GeometricDistribution class including the
              minimum and maximum.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import GeometricDistribution
@@ -16,9 +16,20 @@ sample_size = int(1e5)
 common_ratio = 0.95
 minimum = 3
 maximum = 20
-distribution =\
-    GeometricDistribution(common_ratio, minimum=minimum, maximum=maximum)
+metadata = {'a': "This is pretty complicated", 'b': 1,\
+    'c': True, 'd': "metadata don't you think?"}
+distribution = GeometricDistribution(common_ratio, minimum=minimum,\
+    maximum=maximum, metadata=metadata)
 assert distribution.numparams == 1
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == GeometricDistribution.load(hdf5_file_name)
+except:
+    #	os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a geometric ' +\

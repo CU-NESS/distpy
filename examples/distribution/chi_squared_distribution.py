@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: Example of using the ChiSquaredDistribution class.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import ChiSquaredDistribution
@@ -14,6 +14,15 @@ sample_size = int(1e5)
 
 distribution = ChiSquaredDistribution(5)
 assert distribution.numparams == 1
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == ChiSquaredDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a chisquared ' +\
@@ -25,7 +34,7 @@ xs = np.arange(0.01, 30., 0.01)
 pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
     linewidth=2, color='r', label='e^(log_value)')
 ylim = pl.ylim()
-for xval in distribution.left_confidence_interval(0.5):
+for xval in distribution.central_confidence_interval(0.5):
     pl.plot(2 * [xval], ylim, color='k')
 pl.ylim(ylim)
 pl.title('Chi-squared distribution test', size='xx-large')

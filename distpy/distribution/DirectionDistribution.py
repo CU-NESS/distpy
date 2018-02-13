@@ -176,7 +176,6 @@ class DirectionDistribution(Distribution):
                 self._rotator = rot_zprime * rot_yprime * rot_z
             else:
                 self._rotator = NullRotator()
-                
         return self._rotator
     
     def fill_hdf5_group(self, group):
@@ -187,6 +186,21 @@ class DirectionDistribution(Distribution):
         """
         group.attrs['psi_center'] = self.psi_center
         group.attrs['pointing_center'] = self.pointing_center
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_generic_properties(group):
+        """
+        Loads the properties that all DirectionDistribution instances share.
+        
+        group: the hdf5 file group on which fill_hdf5_group was called
+        
+        returns: tuple of form (metadata, psi_center, pointing_center)
+        """
+        metadata = Distribution.load_metadata(group)
+        psi_center = group.attrs['psi_center']
+        pointing_center = tuple(group.attrs['pointing_center'])
+        return (metadata, psi_center, pointing_center)
     
     @property
     def gradient_computable(self):

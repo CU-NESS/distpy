@@ -10,7 +10,8 @@ import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
 from scipy.special import erfinv
-from ..util import numerical_types, sequence_types, create_hdf5_dataset
+from ..util import numerical_types, sequence_types, create_hdf5_dataset,\
+    get_hdf5_value
 from .Distribution import Distribution
 
 two_pi = 2 * np.pi
@@ -21,7 +22,7 @@ class GaussianDistribution(Distribution):
     when some knowledge of the parameters exists and those parameters can be
     any real number.
     """
-    def __init__(self, mean, covariance):
+    def __init__(self, mean, covariance, metadata=None):
         """
         Initializes either a univariate or a multivariate GaussianDistribution.
 
@@ -63,6 +64,7 @@ class GaussianDistribution(Distribution):
                 "a recognizable type.")
         self.invcov = lalg.inv(self.covariance)
         self.logdetcov = lalg.slogdet(self.covariance)[1]
+        self.metadata = metadata
     
     def _check_covariance_when_mean_has_size_1(self, true_mean, covariance):
         #
@@ -273,7 +275,8 @@ class GaussianDistribution(Distribution):
                     np.allclose(self.mean.A, other.mean.A, rtol=0, atol=1e-9)
                 covariance_close = np.allclose(self.covariance.A,\
                     other.covariance.A, rtol=1e-12, atol=0)
-                return mean_close and covariance_close
+                metadata_equal = self.metadata_equal(other)
+                return all([mean_close, covariance_close, metadata_equal])
             else:
                 return False
         else:
@@ -301,6 +304,28 @@ class GaussianDistribution(Distribution):
         create_hdf5_dataset(group, 'mean', data=self.mean.A[0], link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.covariance.A,\
             link=covariance_link)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a GaussianDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a GaussianDistribution object created from the information in
+                 the given group
+        """
+        try:
+            assert group.attrs['class'] == 'GaussianDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "GaussianDistribution.")
+        metadata = Distribution.load_metadata(group)
+        mean = get_hdf5_value(group['mean'])
+        covariance = get_hdf5_value(group['covariance'])
+        return GaussianDistribution(mean, covariance, metadata=metadata)
     
     @property
     def gradient_computable(self):

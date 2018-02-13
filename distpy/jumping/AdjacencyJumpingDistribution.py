@@ -295,4 +295,32 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
             group.attrs['minimum'] = self.minimum
         if self.maximum is not None:
             group.attrs['maximum'] = self.maximum
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads an AdjacencyJumpingDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this AdjacencyJumpingDistribution was saved
+        
+        returns: an AdjacencyJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'AdjacencyJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain an " +\
+                "AdjacencyJumpingDistribution.")
+        jumping_probability = group.attrs['jumping_probability']
+        if 'minimum' in group.attrs:
+            minimum = group.attrs['minimum']
+        else:
+            minimum = None
+        if 'maximum' in group.attrs:
+            maximum = group.attrs['maximum']
+        else:
+            maximum = None
+        return\
+            AdjacencyJumpingDistribution(jumping_probability, minimum, maximum)
 

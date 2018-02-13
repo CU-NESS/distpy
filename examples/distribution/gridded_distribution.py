@@ -6,7 +6,7 @@ Date: 7 Aug 2017
 Description: Example of using the GriddedDistribution class to use pdf's
              defined on grids.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import matplotlib.cm as cm
@@ -30,7 +30,16 @@ pdf = np.ndarray((len(xs), len(ys)))
 for ix in range(len(xs)):
     for iy in range(len(ys)):
         pdf[ix,iy] = pdf_func(xs[ix], ys[iy])
-distribution = GriddedDistribution([xs, ys], pdf=pdf)
+distribution = GriddedDistribution([xs, ys], pdf=pdf, metadata=True)
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == GriddedDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+else:
+    os.remove(hdf5_file_name)
+    raise
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(("It took {0:.5f} s to draw {1} points from a user-defined " +\

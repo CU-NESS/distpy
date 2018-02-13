@@ -6,7 +6,7 @@ Date: 10 Sep 2017
 Description: Example showcasing use of GaussianDistribution for
              multidimensional random variates.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import matplotlib.cm as cm
@@ -18,6 +18,15 @@ sample_size = int(1e5)
 mmean = [-7., 20.]
 mcov = [[125., 75.], [75., 125.]]
 distribution = GaussianDistribution(mmean, mcov)
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == GaussianDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 assert distribution.numparams == 2
 t0 = time.time()
 sample = distribution.draw(sample_size)

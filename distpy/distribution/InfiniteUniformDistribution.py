@@ -32,13 +32,14 @@ class InfiniteUniformDistribution(Distribution):
     single number for a univariate distribution or a numpy.ndarray for a
     multivariate distribution.
     """
-    def __init__(self, ndim):
+    def __init__(self, ndim, metadata=None):
         """
         Initializes a new InfiniteUniformDistribution
         
         ndim: the dimension of this distribution
         """
         self.numparams = ndim
+        self.metadata = metadata
     
     def draw(self, shape=None):
         """
@@ -148,7 +149,10 @@ class InfiniteUniformDistribution(Distribution):
         
         returns: True or False
         """
-        return isinstance(other, InfiniteUniformDistribution)
+        if isinstance(other, InfiniteUniformDistribution):
+            return self.metadata_equal(other)
+        else:
+            return False
     
     def fill_hdf5_group(self, group):
         """
@@ -158,6 +162,28 @@ class InfiniteUniformDistribution(Distribution):
         group: hdf5 file group to fill with information about this distribution
         """
         group.attrs['class'] = 'InfiniteUniformDistribution'
+        group.attrs['ndim'] = self.numparams
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads an InfiniteUniformDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: an InfiniteUniformDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'InfiniteUniformDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "InfiniteUniformDistribution.")
+        metadata = Distribution.load_metadata(group)
+        ndim = group.attrs['ndim']
+        return InfiniteUniformDistribution(ndim, metadata=metadata)
     
     @property
     def can_give_confidence_intervals(self):

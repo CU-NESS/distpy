@@ -5,13 +5,13 @@ Date: 20 Dec 2017
 
 Description: File containing base class for all jumping distributions.
 """
-from ..util import Savable
+from ..util import Savable, Loadable
 
-def raise_cannot_instantiate_jumping_distribution_error():
-    raise NotImplementedError("Some part of JumpingDistribution class was " +\
-        "not implemented by subclass or Distribution is being instantiated.")
+cannot_instantiate_jumping_distribution_error = NotImplementedError("Some " +\
+    "part of JumpingDistribution class was not implemented by subclass or " +\
+    "Distribution is being instantiated.")
 
-class JumpingDistribution(Savable):
+class JumpingDistribution(Savable, Loadable):
     """
     This class exists for error catching. Since it exists as
     a superclass of all the jumping distributions, one can call
@@ -45,7 +45,7 @@ class JumpingDistribution(Savable):
         
         returns: either single value (if distribution is 1D) or array of values
         """
-        raise_cannot_instantiate_jumping_distribution_error()
+        raise cannot_instantiate_jumping_distribution_error
     
     def log_value(self, source, destination):
         """
@@ -57,7 +57,7 @@ class JumpingDistribution(Savable):
         returns: single number, logarithm of value of this distribution at the
                  given point
         """
-        raise_cannot_instantiate_jumping_distribution_error()
+        raise cannot_instantiate_jumping_distribution_error
     
     def log_value_difference(self, source, destination):
         """
@@ -77,7 +77,7 @@ class JumpingDistribution(Savable):
         Property storing the integer number of parameters described by this
         distribution. It must be implemented by all subclasses.
         """
-        raise_cannot_instantiate_jumping_distribution_error()
+        raise cannot_instantiate_jumping_distribution_error
     
     def __eq__(self, other):
         """
@@ -88,7 +88,7 @@ class JumpingDistribution(Savable):
         
         returns: True or False
         """
-        raise_cannot_instantiate_jumping_distribution_error()
+        raise cannot_instantiate_jumping_distribution_error
     
     def fill_hdf5_group(self, group):
         """
@@ -98,7 +98,22 @@ class JumpingDistribution(Savable):
         group: hdf5 file group to fill with information about this jumping
                distribution
         """
-        raise_cannot_instantiate_jumping_distribution_error()
+        raise cannot_instantiate_jumping_distribution_error
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a JumpingDistribution from the given hdf5 file group. All
+        JumpingDistribution subclasses must implement this method if things are
+        to be saved in hdf5 files.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this JumpingDistribution was saved
+        
+        returns: a JumpingDistribution object created from the information in
+                 the given group
+        """
+        raise cannot_instantiate_jumping_distribution_error
     
     def __call__(self, source, destination):
         """

@@ -5,13 +5,15 @@ Date: 6 Aug 2017
 
 Description: File containing base class for all distributions.
 """
-from ..util import Savable
+import numpy as np
+from ..util import Savable, Loadable, save_dictionary, load_dictionary,\
+    numerical_types, bool_types, sequence_types
 
-def raise_cannot_instantiate_distribution_error():
-    raise NotImplementedError("Some part of Distribution class was not " +\
-        "implemented by subclass or Distribution is being instantiated.")
+cannot_instantiate_distribution_error = NotImplementedError("Some part of " +\
+    "Distribution class was not implemented by subclass or Distribution is " +\
+    "being directly instantiated.")
 
-class Distribution(Savable):
+class Distribution(Savable, Loadable):
     """
     This class exists for error catching. Since it exists as
     a superclass of all the distributions, one can call
@@ -47,7 +49,7 @@ class Distribution(Savable):
         
         returns: either single value (if distribution is 1D) or array of values
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def log_value(self, point):
         """
@@ -59,7 +61,7 @@ class Distribution(Savable):
         returns: single number, logarithm of value of this distribution at the
                  given point
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     @property
     def gradient_computable(self):
@@ -67,7 +69,7 @@ class Distribution(Savable):
         Property which stores whether the gradient of the given distribution
         has been implemented.
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def gradient_of_log_value(self, point):
         """
@@ -84,7 +86,7 @@ class Distribution(Savable):
         if not self.gradient_computable:
             raise NotImplementedError("The gradient of the log value of " +\
                 "this Distribution object has not been implemented.")
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     @property
     def hessian_computable(self):
@@ -92,7 +94,7 @@ class Distribution(Savable):
         Property which stores whether the hessian of the given distribution
         has been implemented.
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def hessian_of_log_value(self, point):
         """
@@ -110,7 +112,7 @@ class Distribution(Savable):
         if not self.hessian_computable:
             raise NotImplementedError("The hessian of the log value of " +\
                 "this Distribution object has not been implemented.")
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def __call__(self, point):
         """
@@ -129,14 +131,14 @@ class Distribution(Savable):
         Property storing the integer number of parameters described by this
         distribution. It must be implemented by all subclasses.
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def to_string(self):
         """
         Returns a string representation of this distribution. It must be
         implemented by all subclasses.
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def __eq__(self, other):
         """
@@ -147,7 +149,7 @@ class Distribution(Savable):
         
         returns: True or False
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
     
     def fill_hdf5_group(self, group):
         """
@@ -156,7 +158,51 @@ class Distribution(Savable):
         
         group: hdf5 file group to fill with information about this distribution
         """
-        raise_cannot_instantiate_distribution_error()
+        raise cannot_instantiate_distribution_error
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a Distribution from the given hdf5 file group. All Distribution
+        subclasses must implement this method if things are to be saved in hdf5
+        files.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a Distribution object created from the information in the
+                 given group
+        """
+        raise cannot_instantiate_distribution_error
+    
+    def save_metadata(self, group):
+        """
+        Saves the metadata from this distribution.
+        
+        group: the same group with which fill_hdf5_group is being called on a
+               Distribution subclass
+        """
+        if self.metadata is not None:
+            save_dictionary({'metadata': self.metadata},\
+                group.create_group('metadata'))
+    
+    @staticmethod
+    def load_metadata(group):
+        """
+        Loads the metadata saved with the save_metadata() function if any (if
+        there is no metadata, this function returns None).
+        
+        group: the group with which fill_hdf5_group was called on a
+               Distribution subclass
+        
+        returns: None (if no metadata was saved) or the metadata saved when
+                 fill_hdf5_group method of a Distribution subclass was called
+        """
+        if 'metadata' in group:
+            metadata_container = load_dictionary(group['metadata'])
+            return metadata_container['metadata']
+        else:
+            return None
     
     def __ne__(self, other):
         """
@@ -223,11 +269,55 @@ class Distribution(Savable):
 
     @property
     def metadata(self):
+        """
+        Property storing any piece of data which one may want to keep with this
+        Distribution object. Keep in mind that this can only be saved to an
+        hdf5 file if it is a dictionary whose keys are Savable objects (see
+        distpy.util.Savable.py; i.e. it must implement a function with the
+        following signature: self.fill_hdf5_group(group)) or arrays.
+        """
         if not hasattr(self, '_metadata'):
-            raise AttributeError('Must set Distribution metadata by hand!')
+            raise AttributeError("metadata referenced before it was set.")
         return self._metadata
         
     @metadata.setter
     def metadata(self, value):
-        self._metadata = value
+        """
+        Setter for metadata to store with this Disribution. Keep in mind that
+        the metadata can only be saved in an hdf5 file group if it is a number,
+        bool, string, numpy.ndarray of numbers, a Savable object, or a
+        dictionary of such objects.
         
+        value: any object, but if saving to hdf5 file is desired check
+               description above for acceptable types
+        """
+        if value is not None:
+            is_string = isinstance(value, basestring)
+            is_number = (type(value) in numerical_types)
+            is_bool = (type(value) in bool_types)
+            is_dictionary = isinstance(value, dict)
+            is_array = isinstance(value, np.ndarray)
+            is_savable = isinstance(value, Savable)
+            if not any([is_string, is_number, is_bool, is_dictionary,\
+                is_array, is_savable]):
+                print("Even though metadata will be stored in memory, an " +\
+                    "error will be thrown if fill_hdf5_group is called " +\
+                    "because it is unknown how to save this metadata to " +\
+                    "disk (i.e. it is not hdf5-able).")
+        self._metadata = value
+    
+    def metadata_equal(self, other):
+        """
+        Checks to see if other's metadata is the same as self's.
+        
+        other: a Distribution object
+        
+        returns: True if metadata is the same in both Distributions,
+                 False otherwise
+        """
+        try:
+            return np.all(self.metadata == other.metadata)
+        except:
+            return False
+    
+

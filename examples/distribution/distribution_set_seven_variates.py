@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: File containing example of a seven-variate DistributionSet.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import matplotlib.cm as cm
@@ -24,6 +24,15 @@ distribution_set.add_distribution(\
 distribution_set.add_distribution(ParallelepipedDistribution([69., 156.],\
                                   [[1.,-1.], [1.,1.]], [1., 1.]),\
                                   ['f', 'g'])
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution_set.save(hdf5_file_name)
+try:
+    assert distribution_set == DistributionSet.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution_set.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a mixed distribution ' +\

@@ -16,7 +16,7 @@ class GammaDistribution(Distribution):
     A class representing a gamma distribution. This is useful for variables
     which are naturally non-negative.
     """
-    def __init__(self, shape, scale=1.):
+    def __init__(self, shape, scale=1., metadata=None):
         """
         Initializes a new gamma distribution with the given parameters.
         
@@ -29,6 +29,7 @@ class GammaDistribution(Distribution):
         self.shape = (shape * 1.)
         self._shape_min_one = self.shape - 1.
         self.scale = (scale * 1.)
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -75,8 +76,11 @@ class GammaDistribution(Distribution):
         (up to dynamic range of 10^9) and False otherwise.
         """
         if isinstance(other, GammaDistribution):
-            return np.allclose([self.shape, self.scale],\
-                [other.shape, other.scale], rtol=1e-9, atol=0)
+            tol_kwargs = {'rtol': 1e-9, 'atol': 0}
+            shape_equal = np.isclose(self.shape, other.shape, **tol_kwargs)
+            scale_equal = np.isclose(self.scale, other.scale, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([shape_equal, scale_equal, metadata_equal])
         else:
             return False
     
@@ -98,6 +102,28 @@ class GammaDistribution(Distribution):
         group.attrs['class'] = 'GammaDistribution'
         group.attrs['shape'] = self.shape
         group.attrs['scale'] = self.scale
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a GammaDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a GammaDistribution object created from the information in the
+                 given group
+        """
+        try:
+            assert group.attrs['class'] == 'GammaDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "GammaDistribution.")
+        metadata = Distribution.load_metadata(group)
+        shape = group.attrs['shape']
+        scale = group.attrs['scale']
+        return GammaDistribution(shape, scale=scale, metadata=metadata)
 
     def _check_if_greater_than_zero(self, value, name):
         #

@@ -28,5 +28,3 @@ from distpy.transform.LoadTransform import load_transform_from_hdf5_group,\
 from distpy.transform.TransformList import TransformList
 from distpy.transform.CastTransformList import castable_to_transform_list,\
     cast_to_transform_list
-from distpy.transform.LoadTransformList import\
-    load_transform_list_from_hdf5_group, load_transform_list_from_hdf5_file

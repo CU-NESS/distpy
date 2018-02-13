@@ -16,7 +16,7 @@ class PoissonDistribution(Distribution):
     Distribution with support on the nonnegative integers. It has only one
     parameter, the scale, which is both its mean and its variance.
     """
-    def __init__(self, scale):
+    def __init__(self, scale, metadata=None):
         """
         Initializes new PoissonDistribution with given scale.
         
@@ -31,6 +31,7 @@ class PoissonDistribution(Distribution):
         else:
             raise ValueError("scale given to PoissonDistribution was not a " +\
                 "number.")
+        self.metadata = metadata
     
     @property
     def numparams(self):
@@ -82,7 +83,10 @@ class PoissonDistribution(Distribution):
         other is a PoissonDistribution with the same scale.
         """
         if isinstance(other, PoissonDistribution):
-            return np.isclose(self.scale, other.scale, rtol=1e-6, atol=1e-6)
+            scale_close =\
+                np.isclose(self.scale, other.scale, rtol=1e-6, atol=1e-6)
+            metadata_equal = self.metadata_equal(other)
+            return (scale_close and metadata_equal)
         else:
             return False
     
@@ -103,6 +107,27 @@ class PoissonDistribution(Distribution):
         """
         group.attrs['class'] = 'PoissonDistribution'
         group.attrs['scale'] = self.scale
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a PoissonDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: PoissonDistribution object created from the information in the
+                 given group
+        """
+        try:
+            assert group.attrs['class'] == 'PoissonDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "PoissonDistribution.")
+        metadata = Distribution.load_metadata(group)
+        scale = group.attrs['scale']
+        return PoissonDistribution(scale, metadata=metadata)
     
     @property
     def gradient_computable(self):

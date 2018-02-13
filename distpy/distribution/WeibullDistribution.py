@@ -15,7 +15,7 @@ class WeibullDistribution(Distribution):
     """
     Class representing a Weibull distribution.
     """
-    def __init__(self, shape=1, scale=1.):
+    def __init__(self, shape=1, scale=1., metadata=None):
         """
         Creates a new WeibullDistribution with the given shape and scale.
         
@@ -42,7 +42,7 @@ class WeibullDistribution(Distribution):
                 "not a number.")
         self.const_lp_term = np.log(self.shape) -\
             (self.shape * np.log(self.scale))
-        
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -91,8 +91,11 @@ class WeibullDistribution(Distribution):
          otherwise.
         """
         if isinstance(other, WeibullDistribution):
-            return np.allclose([self.shape, self.scale],\
-                [other.shape, other.scale], rtol=0, atol=1e-9)
+            tol_kwargs = {'rtol': 0., 'atol': 1e-9}
+            shape_close = np.isclose(self.shape, other.shape, **tol_kwargs)
+            scale_close = np.isclose(self.scale, other.scale, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([shape_close, scale_close, metadata_equal])
         else:
             return False
     
@@ -114,6 +117,28 @@ class WeibullDistribution(Distribution):
         group.attrs['class'] = 'WeibullDistribution'
         group.attrs['shape'] = self.shape
         group.attrs['scale'] = self.scale
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a WeibullDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: WeibullDistribution object created from the information in the
+                 given group
+        """
+        try:
+            assert group.attrs['class'] == 'WeibullDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "WeibullDistribution.")
+        metadata = Distribution.load_metadata(group)
+        shape = group.attrs['shape']
+        scale = group.attrs['scale']
+        return WeibullDistribution(shape=shape, scale=scale, metadata=metadata)
     
     @property
     def gradient_computable(self):

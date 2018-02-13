@@ -11,13 +11,14 @@ class KroneckerDeltaDistribution(Distribution):
     """
     Distribution which always returns the same discrete value.
     """
-    def __init__(self, value):
+    def __init__(self, value, metadata=None):
         """
         Initializes a KroneckerDeltaDistribution class
         
         value: value which is always returned by this distribution
         """
         self.value = value
+        self.metadata = metadata
     
     @property
     def value(self):
@@ -146,7 +147,9 @@ class KroneckerDeltaDistribution(Distribution):
         returns: True or False
         """
         if isinstance(other, KroneckerDeltaDistribution):
-            return self.value == other.value
+            value_equal = (self.value == other.value)
+            metadata_equal = self.metadata_equal(other)
+            return (value_equal and metadata)
         else:
             return False
     
@@ -159,10 +162,35 @@ class KroneckerDeltaDistribution(Distribution):
         """
         group.attrs['class'] = 'KroneckerDeltaDistribution'
         group.attrs['value'] = self.value
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a KroneckerDeltaDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a KroneckerDeltaDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'KroneckerDeltaDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "KroneckerDeltaDistribution.")
+        metadata = Distribution.load_metadata(group)
+        value = group.attrs['value']
+        return KroneckerDeltaDistribution(value, metadata=metadata)
     
     @property
     def confidence_interval(self):
         """
+        All confidence intervals of the KroneckerDelta distribution are
+        infinitely small and centered on the value of the distribution.
+        
+        returns: (value, value) where value is the peak of this distribution
         """
         return (self.value, self.value)
     

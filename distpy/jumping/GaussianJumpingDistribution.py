@@ -8,7 +8,8 @@ Description: File containing a jumping distribution which is Gaussian centered
 """
 import numpy as np
 import numpy.linalg as la
-from ..util import create_hdf5_dataset, numerical_types, sequence_types
+from ..util import create_hdf5_dataset, get_hdf5_value, numerical_types,\
+    sequence_types
 from .JumpingDistribution import JumpingDistribution
 
 class GaussianJumpingDistribution(JumpingDistribution):
@@ -189,4 +190,22 @@ class GaussianJumpingDistribution(JumpingDistribution):
         group.attrs['class'] = 'GaussianJumpingDistribution'
         create_hdf5_dataset(group, 'covariance', data=self.covariance,\
             link=covariance_link)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a GaussianJumpingDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this GaussianJumpingDistribution was saved
+        
+        returns: a GaussianJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'GaussianJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain a " +\
+                "GaussianJumpingDistribution.")
+        return GaussianJumpingDistribution(get_hdf5_value(group['covariance']))
 

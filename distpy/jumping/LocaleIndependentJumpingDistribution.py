@@ -9,7 +9,7 @@ Description: File containing a class which represents a jumping distribution
 """
 import numpy as np
 from ..util import int_types
-from ..distribution import Distribution
+from ..distribution import Distribution, load_distribution_from_hdf5_group
 from .JumpingDistribution import JumpingDistribution
 
 class LocaleIndependentJumpingDistribution(JumpingDistribution):
@@ -139,4 +139,25 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
         """
         group.attrs['class'] = 'LocaleIndependentJumpingDistribution'
         self.distribution.fill_hdf5_group(group.create_group('distribution'))
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a LocaleIndependentJumpingDistribution from the given hdf5 file
+        group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this LocaleIndependentJumpingDistribution was saved
+        
+        returns: a LocaleIndependentJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert\
+                group.attrs['class'] == 'LocaleIndependentJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain a " +\
+                "LocaleIndependentJumpingDistribution.")
+        distribution = load_distribution_from_hdf5_group(group['distribution'])
+        return LocaleIndependentJumpingDistribution(distribution)
 

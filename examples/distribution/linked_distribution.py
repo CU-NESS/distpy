@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: Example of using the LinkedDescription class.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import matplotlib.cm as cm
@@ -15,6 +15,16 @@ def_cm = cm.bone
 sample_size = int(1e5)
 
 distribution = LinkedDistribution(GaussianDistribution(0., 1.), 2)
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution ==\
+        LinkedDistribution.load(hdf5_file_name, GaussianDistribution)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(("It took {0:.5f} s to draw {1} vectors from a LinkedDistribution " +\

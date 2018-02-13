@@ -15,7 +15,7 @@ class GeometricDistribution(Distribution):
     Distribution with support on the non-negative integers. It has only one
     parameter, the common ratio between successive probabilities.
     """
-    def __init__(self, common_ratio, minimum=0, maximum=None):
+    def __init__(self, common_ratio, minimum=0, maximum=None, metadata=None):
         """
         Initializes new GeometricDistribution with given scale.
         
@@ -24,6 +24,7 @@ class GeometricDistribution(Distribution):
         self.common_ratio = common_ratio
         self.minimum = minimum
         self.maximum = maximum
+        self.metadata = metadata
     
     @property
     def common_ratio(self):
@@ -200,16 +201,15 @@ class GeometricDistribution(Distribution):
         Checks for equality of this distribution with other. Returns True if
         other is a GeometricDistribution with the same scale.
         """
-        if not isinstance(other, GeometricDistribution):
+        if isinstance(other, GeometricDistribution):
+            ratios_close =\
+                np.isclose(self.common_ratio, other.common_ratio, atol=1e-6)
+            minima_equal = (self.minimum == other.minimum)
+            maxima_equal = (self.maximum == other.maximum)
+            metadata_equal = self.metadata_equal(other)
+            return all([ratios_close, minima_equal, maxima_equal, metadata_equal])
+        else:
             return False
-        absolute_tolerance = 1e-6
-        if abs(self.common_ratio - other.common_ratio) > absolute_tolerance:
-            return False
-        if self.minimum != other.minimum:
-            return False
-        if self.maximum != other.maximum:
-            return False
-        return True
     
     @property
     def can_give_confidence_intervals(self):
@@ -230,6 +230,33 @@ class GeometricDistribution(Distribution):
         group.attrs['minimum'] = self.minimum
         if self.maximum is not None:
             group.attrs['maximum'] = self.maximum
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a GeometricDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a GeometricDistribution object created from the information in
+                 the given group
+        """
+        try:
+            assert group.attrs['class'] == 'GeometricDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "GeometricDistribution.")
+        metadata = Distribution.load_metadata(group)
+        common_ratio = group.attrs['common_ratio']
+        minimum = group.attrs['minimum']
+        if 'maximum' in group.attrs:
+            maximum = group.attrs['maximum']
+        else:
+            maximum = None
+        return GeometricDistribution(common_ratio, minimum=minimum,\
+            maximum=maximum, metadata=metadata)
     
     @property
     def gradient_computable(self):

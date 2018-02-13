@@ -264,4 +264,34 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
             group.attrs['low'] = self.low
         if self.high != np.inf:
             group.attrs['high'] = self.high
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a TruncatedGaussianJumpingDistribution from the given hdf5 file
+        group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this TruncatedGaussianJumpingDistribution was saved
+        
+        returns: a TruncatedGaussianJumpingDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert\
+                group.attrs['class'] == 'TruncatedGaussianJumpingDistribution'
+        except:
+            raise ValueError("The given group does not seem to contain a " +\
+                "TruncatedGaussianJumpingDistribution.")
+        variance = group.attrs['variance']
+        if 'low' in group.attrs:
+            low = group.attrs['low']
+        else:
+            low = None
+        if 'high' in group.attrs:
+            high = group.attrs['high']
+        else:
+            high = None
+        return\
+            TruncatedGaussianJumpingDistribution(variance, low=low, high=high)
 

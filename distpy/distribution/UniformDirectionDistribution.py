@@ -16,7 +16,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     Class representing a uniform distribution on the surface of a sphere.
     """
     def __init__(self, low_theta=0, high_theta=np.pi, low_phi=0,\
-        high_phi=2*np.pi, pointing_center=(90, 0), psi_center=0):
+        high_phi=2*np.pi, pointing_center=(90, 0), psi_center=0,\
+        metadata=None):
         """
         Initializes a new UniformDirectionDistribution with the given
         parameters.
@@ -38,6 +39,7 @@ class UniformDirectionDistribution(DirectionDistribution):
         self.high_theta = high_theta
         self.low_phi = low_phi
         self.high_phi = high_phi
+        self.metadata = metadata
     
     @property
     def low_theta(self):
@@ -278,12 +280,18 @@ class UniformDirectionDistribution(DirectionDistribution):
         other is a UniformDirectionDistribution with the same bounds.
         """
         if isinstance(other, UniformDirectionDistribution):
-            these_properties = [self.low_theta, self.high_theta, self.low_phi,\
-                self.high_phi]
-            other_properties = [other.low_theta, other.high_theta,\
-                other.low_phi, other.high_phi]
-            return np.allclose(these_properties, other_properties, rtol=0,\
-                atol=1e-9)
+            tol_kwargs = {'rtol': 0., 'atol': 1e-9}
+            low_theta_equal =\
+                np.isclose(self.low_theta, other.low_theta, **tol_kwargs)
+            high_theta_equal =\
+                np.isclose(self.high_theta, other.high_theta, **tol_kwargs)
+            low_phi_equal =\
+                np.isclose(self.low_phi, other.low_phi, **tol_kwargs)
+            high_phi_equal =\
+                np.isclose(self.high_phi, other.high_phi, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([low_theta_equal, high_theta_equal, low_phi_equal,\
+                high_phi_equal, metadata_equal])
         else:
             return False
 
@@ -299,4 +307,31 @@ class UniformDirectionDistribution(DirectionDistribution):
         group.attrs['high_theta'] = self.high_theta
         group.attrs['low_phi'] = self.low_phi
         group.attrs['high_phi'] = self.high_phi
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a UniformDirectionDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a UniformDirectionDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'UniformDirectionDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "UniformDirectionDistribution.")
+        (metadata, psi_center, pointing_center) =\
+            DirectionDistribution.load_generic_properties(group)
+        low_theta = group.attrs['low_theta']
+        high_theta = group.attrs['high_theta']
+        low_phi = group.attrs['low_phi']
+        high_phi = group.attrs['high_phi']
+        return UniformDirectionDistribution(low_theta=low_theta,\
+            high_theta=high_theta, low_phi=low_phi, high_phi=high_phi,\
+            pointing_center=pointing_center, psi_center=psi_center,\
+            metadata=metadata)
 

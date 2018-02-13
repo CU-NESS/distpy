@@ -19,7 +19,7 @@ class BetaDistribution(Distribution):
     probability of success in a binary experiment where alpha successes and
     beta failures have been observed.
     """
-    def __init__(self, alpha, beta):
+    def __init__(self, alpha, beta, metadata=None):
         """
         Initializes a new BetaDistribution.
         
@@ -40,6 +40,7 @@ class BetaDistribution(Distribution):
             raise ValueError('The alpha or beta parameter given to a Beta ' +\
                 'were not of a numerical type.')
         self.const_lp_term = -np.log(beta_func(self.alpha, self.beta))
+        self.metadata = metadata
     
     @property
     def numparams(self):
@@ -87,8 +88,11 @@ class BetaDistribution(Distribution):
         level) and False otherwise.
         """
         if isinstance(other, BetaDistribution):
-            return np.isclose([self.alpha, self.beta],\
-                [other.alpha, other.beta], rtol=0, atol=1e-9)
+            tol_kwargs = {'rtol': 0., 'atol': 1e-9}
+            alpha_equal = np.isclose(self.alpha, other.alpha, **tol_kwargs)
+            beta_equal = np.isclose(self.beta, other.beta, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([alpha_equal, beta_equal, metadata_equal])
         else:
             return False
     
@@ -102,6 +106,28 @@ class BetaDistribution(Distribution):
         group.attrs['class'] = 'BetaDistribution'
         group.attrs['alpha'] = self.alpha
         group.attrs['beta'] = self.beta
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a BetaDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a BetaDistribution object created from the information in the
+                 given group
+        """
+        try:
+            assert group.attrs['class'] == 'BetaDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "BetaDistribution.")
+        metadata = Distribution.load_metadata(group)
+        alpha = group.attrs['alpha']
+        beta = group.attrs['beta']
+        return BetaDistribution(alpha, beta, metadata=metadata)
     
     def inverse_cdf(self, cdf):
         """

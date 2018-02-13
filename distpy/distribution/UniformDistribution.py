@@ -16,7 +16,7 @@ class UniformDistribution(Distribution):
     the least informative possible distributions (on a given
     support) and are thus ideal when ignorance abound.
     """
-    def __init__(self, low=0., high=1.):
+    def __init__(self, low=0., high=1., metadata=None):
         """
         Creates a new UniformDistribution with the given range.
         
@@ -37,6 +37,7 @@ class UniformDistribution(Distribution):
             raise ValueError('Either the low or high endpoint of a ' +\
                 'UniformDistribution was not of a numerical type.')
         self._log_P = - np.log(self.high - self.low)
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -85,8 +86,11 @@ class UniformDistribution(Distribution):
         level) and False otherwise.
         """
         if isinstance(other, UniformDistribution):
-            return np.allclose([self.low, self.high], [other.low, other.high],\
-                rtol=0, atol=1e-9)
+            tol_kwargs = {'rtol': 0., 'atol': 1e-9}
+            low_close = np.isclose(self.low, other.low, **tol_kwargs)
+            high_close = np.isclose(self.high, other.high, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([low_close, high_close, metadata_equal])
         else:
             return False
     
@@ -108,6 +112,28 @@ class UniformDistribution(Distribution):
         group.attrs['class'] = 'UniformDistribution'
         group.attrs['low'] = self.low
         group.attrs['high'] = self.high
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a UniformDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: UniformDistribution object created from the information in the
+                 given group
+        """
+        try:
+            assert group.attrs['class'] == 'UniformDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "UniformDistribution.")
+        metadata = Distribution.load_metadata(group)
+        low = group.attrs['low']
+        high = group.attrs['high']
+        return UniformDistribution(low=low, high=high, metadata=metadata)
     
     @property
     def gradient_computable(self):

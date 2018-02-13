@@ -7,7 +7,8 @@ Description: File containing functions which extend the ability to link to
              extant datasets. Using the functions here, slices of extant
              datasets can be stored indirectly (and, thus, efficiently).
 """
-from .TypeCategories import sequence_types
+import numpy as np
+from .TypeCategories import sequence_types, numerical_types, bool_types
 try:
     # this runs with no issues in python 2 but raises error in python 3
     basestring
@@ -142,4 +143,59 @@ def get_hdf5_value(obj):
             return obj.file[refpath][tuple(slices)]
         else:
             raise
+
+def save_dictionary(dictionary, group):
+    """
+    """
+    group.attrs['__isdictionary__'] = True
+    for key in dictionary:
+        if isinstance(key, basestring):
+            value = dictionary[key]
+            if isinstance(value, basestring) or\
+                (type(value) in (numerical_types + bool_types)):
+                group.attrs[key] = value
+            elif isinstance(value, np.ndarray):
+                group.create_dataset(key, data=value)
+            elif isinstance(value, dict):
+                save_dictionary(value, group.create_group(key))
+            elif isinstance(value, Savable):
+                value.fill_hdf5_group(group.create_group(key))
+            else:
+                raise TypeError("One of the values in the given dictionary " +\
+                    "to be saved was not savable (it should be a string, " +\
+                    "number, numpy.ndarray, or dictionary of such objects.")
+        else:
+            raise TypeError("All keys of dictionary to save in hdf5 file " +\
+                "group must be strings.")
+
+def load_dictionary(group, **classes_to_load):
+    """
+    group: the hdf5 file group from which to load the dictionary.
+    classes: dictionary of class objects whose keys correspond to the name of
+             the variable with that class
+    """
+    dictionary = {}
+    try:
+        assert group.attrs['__isdictionary__']
+    except:
+        raise ValueError("The given hdf5 file group does not appear to " +\
+            "contain a dictionary as saved by the " +\
+            "distpy.util.h5py_extensions.save_dictionary function.")
+    for key in group.attrs:
+        if key != '__isdictionary__':
+            dictionary[key] = group.attrs[key]
+    for key in group:
+        value = group[key]
+        if isinstance(value, h5py.Dataset):
+            dictionary[key] = value.value
+        elif isinstance(value, h5py.Group):
+            if '__isdictionary__' in value.attrs:
+                dictionary[key] = load_dictionary(value)
+            elif key in classes_to_load:
+                dictionary[key] =\
+                    classes_to_load[key].load_from_hdf5_group(value)
+        else:
+            raise TypeError("Element of hdf5 group was neither a " +\
+                "h5py.Dataset object nor a h5py.Group object.")
+    return dictionary
 

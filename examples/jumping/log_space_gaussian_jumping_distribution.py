@@ -9,8 +9,7 @@ Description: Example showing how to use the JumpingDistributionSet to define
 """
 import os, time
 import matplotlib.pyplot as pl
-from distpy import GaussianJumpingDistribution, JumpingDistributionSet,\
-    load_jumping_distribution_set_from_hdf5_file
+from distpy import GaussianJumpingDistribution, JumpingDistributionSet
 
 jumping_distribution = GaussianJumpingDistribution(1.)
 distribution_set = JumpingDistributionSet()
@@ -19,8 +18,7 @@ distribution_set.add_distribution(jumping_distribution, 'x', 'log')
 try:
     file_name = 'TEMPORARY_TEST_DELETE_IF_EXISTS.hdf5'
     distribution_set.save(file_name)
-    loaded_distribution_set =\
-        load_jumping_distribution_set_from_hdf5_file(file_name)
+    loaded_distribution_set = JumpingDistributionSet.load(file_name)
     assert loaded_distribution_set == distribution_set
 except:
     os.remove(file_name)

@@ -18,9 +18,11 @@ Description: A container which can hold an arbitrary number of jumping
              individual functions for further details.
 """
 import numpy as np
-from ..util import Savable, int_types, sequence_types
-from ..transform import NullTransform, cast_to_transform, castable_to_transform
+from ..util import Savable, Loadable, int_types, sequence_types
+from ..transform import NullTransform, cast_to_transform,\
+    castable_to_transform, load_transform_from_hdf5_group
 from .JumpingDistribution import JumpingDistribution
+from .LoadJumpingDistribution import load_jumping_distribution_from_hdf5_group
 try:
     # this runs with no issues in python 2 but raises error in python 3
     basestring
@@ -28,7 +30,7 @@ except:
     # this try/except allows for python 2/3 compatible string type checking
     basestring = str
 
-class JumpingDistributionSet(Savable):
+class JumpingDistributionSet(Savable, Loadable):
     """
     An object which keeps track of many jumping distributions which can be
     univariate or multivariate. It provides methods like log_value, which calls
@@ -451,4 +453,31 @@ class JumpingDistributionSet(Savable):
                 subsubgroup =\
                     subgroup.create_group('transform_{}'.format(iparam))
                 transforms[iparam].fill_hdf5_group(subsubgroup)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a JumpingDistributionSet from the given hdf5 file group.
+        
+        group: the group from which to load a JumpingDistributionSet
+        
+        returns: a JumpingDistributionSet object derived from the given group
+        """
+        ituple = 0
+        jumping_distribution_tuples = []
+        while ('distribution_{}'.format(ituple)) in group:
+            subgroup = group['distribution_{}'.format(ituple)]
+            distribution = load_jumping_distribution_from_hdf5_group(subgroup)
+            params = []
+            transforms = []
+            iparam = 0
+            for iparam in range(distribution.numparams):
+                params.append(subgroup.attrs['parameter_{}'.format(iparam)])
+                subsubgroup = subgroup['transform_{}'.format(iparam)]
+                transforms.append(load_transform_from_hdf5_group(subsubgroup))
+                jumping_distribution_tuples.append(\
+                    (distribution, params, transforms))
+            ituple += 1
+        return JumpingDistributionSet(\
+            jumping_distribution_tuples=jumping_distribution_tuples)
 

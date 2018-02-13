@@ -62,7 +62,7 @@ class GriddedDistribution(Distribution):
     A class representing an arbitrary dimensional (well, up to 32 dimensions)
     probability distribution (of finite support!).
     """
-    def __init__(self, variables, pdf=None):
+    def __init__(self, variables, pdf=None, metadata=None):
         """
         Initializes a new GriddedDistribution using the given variables.
         
@@ -104,6 +104,7 @@ class GriddedDistribution(Distribution):
                 "variable ranges.")
         self.pdf = self.pdf.flatten()
         self._make_cdf()
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -188,7 +189,8 @@ class GriddedDistribution(Distribution):
                         np.allclose(self.vars, other.vars, rtol=0, atol=1e-9)
                     pdf_close =\
                         np.allclose(self.pdf, other.pdf, rtol=0, atol=1e-12)
-                    return vars_close and pdf_close
+                    metadata_equal = self.metadata_equal(other)
+                    return all([vars_close, pdf_close, metadata_equal])
                 else:
                     return False
             else:
@@ -328,7 +330,34 @@ class GriddedDistribution(Distribution):
         group.attrs['numparams'] = self.numparams
         for ivar in range(len(self.vars)):
             group.attrs['variable_{}'.format(ivar)] = self.vars[ivar]
-        create_hdf5_dataset(group, 'pdf', data=self.pdf, link=self.pdf)
+        create_hdf5_dataset(group, 'pdf', data=self.pdf, link=pdf_link)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a GriddedDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a GriddedDistribution object created from the information in
+                 the given group
+        """
+        try:
+            assert group.attrs['class'] == 'GriddedDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "GriddedDistribution.")
+        metadata = Distribution.load_metadata(group)
+        variables = []
+        ivar = 0
+        while ('variable_{}'.format(ivar)) in group.attrs:
+            variables.append(group.attrs['variable_{}'.format(ivar)])
+            ivar += 1
+        pdf = get_hdf5_value(group['pdf'])
+        return GriddedDistribution(variables=variables, pdf=pdf,\
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

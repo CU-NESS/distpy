@@ -9,7 +9,8 @@ Description: File containing class represening a uniform distribution over an
 import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
-from ..util import int_types, sequence_types, create_hdf5_dataset
+from ..util import int_types, sequence_types, create_hdf5_dataset,\
+    get_hdf5_value
 from .Distribution import Distribution
 
 def _normed(vec):
@@ -27,7 +28,8 @@ class ParallelepipedDistribution(Distribution):
     region. The region is defined by constraints on linear combinations of the
     variables. See __init__ for more details.
     """
-    def __init__(self, center, face_directions, distances, norm_dirs=True):
+    def __init__(self, center, face_directions, distances, norm_dirs=True,\
+        metadata=None):
         """
         Initializes a new ParallelepipedDistribution.
         
@@ -83,6 +85,7 @@ class ParallelepipedDistribution(Distribution):
                     'ParallelepipedDistribution are either of the wrong ' +\
                     'dimension or the wrong length.')
         self.inv_face_directions = lalg.inv(self.face_directions)
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -223,13 +226,15 @@ class ParallelepipedDistribution(Distribution):
         otherwise.
         """
         if isinstance(other, ParallelepipedDistribution):
-            center_close =\
-                np.allclose(self.center, other.center, rtol=1e-9, atol=0)
+            tol_kwargs = {'rtol': 1e-9, 'atol': 0.}
+            center_close = np.allclose(self.center, other.center, **tol_kwargs)
             face_directions_close = np.allclose(self.face_directions.A,\
-                other.face_directions.A, rtol=1e-9, atol=0)
+                other.face_directions.A, **tol_kwargs)
             distances_close =\
-                np.allclose(self.distances, other.distances, rtol=1e-9, atol=0)
-            return center_close and face_directions_close and distances_close
+                np.allclose(self.distances, other.distances, **tol_kwargs)
+            metadata_equal = self.metadata_equal(other)
+            return all([center_close, face_directions_close, distances_close,\
+                metadata_equal])
         else:
             return False
     
@@ -250,11 +255,36 @@ class ParallelepipedDistribution(Distribution):
         group: hdf5 file group to fill
         """
         group.attrs['class'] = 'ParallelepipedDistribution'
-        create_hdf5_dataset('center', data=self.center, link=center_link)
-        create_hdf5_dataset('face_directions', data=self.face_directions,\
-            link=face_directions_link)
-        create_hdf5_dataset('distances', data=self.distances,\
+        create_hdf5_dataset(group, 'center', data=self.center,\
+            link=center_link)
+        create_hdf5_dataset(group, 'face_directions',\
+            data=self.face_directions, link=face_directions_link)
+        create_hdf5_dataset(group, 'distances', data=self.distances,\
             link=distances_link)
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a ParallelepipedDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a ParallelepipedDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'ParallelepipedDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "ParallelepipedDistribution.")
+        metadata = Distribution.load_metadata(group)
+        center = get_hdf5_value(group['center'])
+        face_directions = get_hdf5_value(group['face_directions'])
+        distances = get_hdf5_value(group['distances'])
+        return ParallelepipedDistribution(center, face_directions, distances,\
+            norm_dirs=False, metadata=metadata)
     
     @property
     def gradient_computable(self):

@@ -5,7 +5,7 @@ Date: 7 Aug 2017
 
 Description: Example of using the EllipticalUniformDistribution class.
 """
-import time
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import matplotlib.cm as cm
@@ -16,7 +16,17 @@ sample_size = int(1e5)
 
 ellmean = [4.76, -12.64]
 ellcov = [[1, -0.5], [-0.5, 1]]
-distribution = EllipticalUniformDistribution(ellmean, ellcov)
+distribution =\
+    EllipticalUniformDistribution(ellmean, ellcov, metadata={'a': 1})
+hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
+distribution.save(hdf5_file_name)
+try:
+    assert distribution == EllipticalUniformDistribution.load(hdf5_file_name)
+except:
+    os.remove(hdf5_file_name)
+    raise
+else:
+    os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(("It took {0:.5f} s for a sample of size {1} to be drawn from a " +\

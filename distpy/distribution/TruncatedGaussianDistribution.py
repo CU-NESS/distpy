@@ -18,7 +18,7 @@ class TruncatedGaussianDistribution(Distribution):
     one has some knowledge of the actual value of the parameter but also needs
     it to lie outside a given region.
     """
-    def __init__(self, mean, var, low=None, high=None):
+    def __init__(self, mean, var, low=None, high=None, metadata=None):
         """
         Initializes a new TruncatedGaussianDistribution using the given
         parameters.
@@ -30,7 +30,6 @@ class TruncatedGaussianDistribution(Distribution):
         """
         self.mean = float(mean)
         self.var = float(var)
-        
         if low is None:
             self.lo = None
             self._lo_term = -1.
@@ -47,6 +46,7 @@ class TruncatedGaussianDistribution(Distribution):
 
         self._cons_lp_term = -(np.log(np.pi * self.var / 2) / 2)
         self._cons_lp_term -= np.log(self._hi_term - self._lo_term)
+        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -132,7 +132,9 @@ class TruncatedGaussianDistribution(Distribution):
                 lo_close = np.isclose(self.lo, other.lo, rtol=0, atol=1e-9)
             else:
                 return False
-            return mean_close and var_close and hi_close and lo_close
+            metadata_equal = self.metadata_equal(other)
+            return all([mean_close, var_close, hi_close, lo_close,\
+                metadata_equal])
         else:
             return False
     
@@ -156,6 +158,31 @@ class TruncatedGaussianDistribution(Distribution):
         group.attrs['high'] = self.hi
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.var
+        self.save_metadata(group)
+    
+    @staticmethod
+    def load_from_hdf5_group(group):
+        """
+        Loads a TruncatedGaussianDistribution from the given hdf5 file group.
+        
+        group: the same hdf5 file group which fill_hdf5_group was called on
+               when this Distribution was saved
+        
+        returns: a TruncatedGaussianDistribution object created from the
+                 information in the given group
+        """
+        try:
+            assert group.attrs['class'] == 'TruncatedGaussianDistribution'
+        except:
+            raise TypeError("The given hdf5 file doesn't seem to contain a " +\
+                "TruncatedGaussianDistribution.")
+        metadata = Distribution.load_metadata(group)
+        mean = group.attrs['mean']
+        variance = group.attrs['variance']
+        low = group.attrs['low']
+        high = group.attrs['high']
+        return TruncatedGaussianDistribution(mean, variance, low=low,\
+            high=high, metadata=metadata)
     
     @property
     def gradient_computable(self):
