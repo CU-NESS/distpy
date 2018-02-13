@@ -1,3 +1,11 @@
+"""
+File: distpy/transform/LoadTransform.py
+Author: Keith Tauscher
+Date: 12 Feb 2018
+
+Description: File containing functions which load Transform objects from hdf5
+             files or hdf5 file groups.
+"""
 from .NullTransform import NullTransform
 from .LogTransform import LogTransform
 from .ExponentialTransform import ExponentialTransform

@@ -1,7 +1,7 @@
 """
-File: distpy/GriddedDistribution.py
+File: distpy/distribution/GriddedDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing an arbitrary dimensional
              distribution given by a rectangular array-defined pdf.

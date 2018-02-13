@@ -1,7 +1,7 @@
 """
 File: distpy/transform/TransformList.py
 Author: Keith Tauscher
-Date: 27 Jan 2018
+Date: 12 Feb 2018
 
 Description: File containing a class representing a list of Transform objects.
 """

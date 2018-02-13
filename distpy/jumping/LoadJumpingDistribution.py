@@ -1,7 +1,7 @@
 """
 File: distpy/jumping/LoadJumpingDistribution.py
 Author: Keith Tauscher
-Date: 20 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing functions which load JumpingDistribution objects
              from hdf5 groups and hdf5 files.

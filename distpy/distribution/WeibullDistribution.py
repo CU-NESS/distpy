@@ -1,7 +1,7 @@
 """
-File: distpy/UniformDistribution.py
+File: distpy/distribution/UniformDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing a class representing a Weibull distribution.
 """

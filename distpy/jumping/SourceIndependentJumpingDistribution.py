@@ -1,7 +1,7 @@
 """
 File: distpy/jumping/SourceIndependentJumpingDistribution.py
 Author: Keith Tauscher
-Date: 21 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing a class which represents a degenerate sort of
              jumping distribution: one whose value is independent of the source

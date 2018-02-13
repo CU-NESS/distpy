@@ -1,7 +1,7 @@
 """
-File: distpy/UniformDirectionDistribution.py
+File: distpy/distribution/UniformDirectionDistribution.py
 Author: Keith Tauscher
-Date: 9 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing uniform distribution on the
              (2D) surface of the sphere.

@@ -1,7 +1,7 @@
 """
 File: distpy/jumping/LocaleIndependentJumpingDistribution.py
 Author: Keith Tauscher
-Date: 21 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing a class which represents a jumping distribution
              whose value is dependent only on the displacement between the

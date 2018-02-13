@@ -1,7 +1,7 @@
 """
-File: distpy/UniformTriangulationDistribution.py
+File: distpy/distribution/UniformTriangulationDistribution.py
 Author: Keith Tauscher
-Date: 3 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing a class representing a uniform distribution over a
              set of simplices (usually a Delaunay triangulation).

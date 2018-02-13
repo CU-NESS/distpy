@@ -1,7 +1,7 @@
 """
 File: distpy/transform/CastTransformList.py
 Author: Keith Tauscher
-Date: 28 Jan 2018
+Date: 12 Feb 2018
 
 Description: File containing functions which allow for objects to be cast to
              TransformList objects.

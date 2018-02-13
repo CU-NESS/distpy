@@ -1,7 +1,7 @@
 """
 File: distpy/transform/ExponentiatedTransform.py
 Author: Keith Tauscher
-Date: 6 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing class describing the exponential of an arbitrary
              transformation.

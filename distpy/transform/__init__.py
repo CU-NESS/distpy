@@ -1,7 +1,7 @@
 """
 File: distpy/transform/__init__.py
 Author: Keith Tauscher
-Date: 28 Jan 2018
+Date: 12 Feb 2018
 
 Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"

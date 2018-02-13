@@ -1,7 +1,7 @@
 """
 File: distpy/transform/Transform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 12 Feb 2018
 
 Description: File containing base class for all built-in transformations.
 """

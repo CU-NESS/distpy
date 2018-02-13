@@ -1,7 +1,7 @@
 """
 File: distpy/jumping/JumpingDistributionSet.py
 Author: Keith Tauscher
-Date: 21 Dec 2017
+Date: 12 Feb 2018
 
 Description: A container which can hold an arbitrary number of jumping
              distributions, each of which can have any number of parameters

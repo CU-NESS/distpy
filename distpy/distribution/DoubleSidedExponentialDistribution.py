@@ -1,7 +1,7 @@
 """
-File: distpy/DoubleSidedExponentialDistribution.py
+File: distpy/distribution/DoubleSidedExponentialDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing double sided exponential
              distribution.

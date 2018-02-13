@@ -1,7 +1,7 @@
 """
-File: distpy/TruncatedGaussianDistribution.py
+File: distpy/distribution/TruncatedGaussianDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing a truncated 1-dimensional
              gaussian distribution.

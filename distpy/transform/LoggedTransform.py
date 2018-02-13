@@ -1,7 +1,7 @@
 """
 File: distpy/transform/LoggedTransform.py
 Author: Keith Tauscher
-Date: 8 Dec 2017
+Date: 12 Feb 2017
 
 Description: File containing class describing the natural logarithm of an
              arbitrary transformation.

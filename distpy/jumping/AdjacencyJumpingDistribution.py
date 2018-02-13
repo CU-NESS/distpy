@@ -1,7 +1,7 @@
 """
 File: distpy/jumping/AdjacencyJumpingDistribution.py
 Author: Keith Tauscher
-Date: 20 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing a JumpingDistribution defined
              on the integers (which may or may not have minima and/or maxima)

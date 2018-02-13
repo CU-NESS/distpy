@@ -1,9 +1,10 @@
 """
-File: distpy/transform/Transform.py
+File: distpy/transform/AffineTransform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 12 Feb 2018
 
-Description: File containing base class for all built-in transformations.
+Description: File containing class representing an affine transformation
+             (linear transformations and translations).
 """
 import numpy as np
 from ..util import numerical_types
@@ -11,7 +12,8 @@ from .Transform import Transform
 
 class AffineTransform(Transform):
     """
-    Class representing an affine transformation.
+    Class representing an affine transformation (linear transformations and
+    translations).
     """
     def __init__(self, scale_factor, translation):
         """

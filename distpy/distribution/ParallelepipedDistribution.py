@@ -1,7 +1,7 @@
 """
-File: distpy/ParallelepipedDistribution.py
+File: distpy/distribution/ParallelepipedDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class represening a uniform distribution over an
              arbitrary parallelepiped (in arbitrary number of dimensions).

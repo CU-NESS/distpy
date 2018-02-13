@@ -1,7 +1,7 @@
 """
-File: distpy/DirectionDistribution.py
+File: distpy/distribution/DirectionDistribution.py
 Author: Keith Tauscher
-Date: 12 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing subclass of Distributions whose support lies on
              the surface of a sphere.

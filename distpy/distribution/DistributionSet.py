@@ -1,7 +1,7 @@
 """
-File: distpy/DistributionSet.py
+File: distpy/distribution/DistributionSet.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: A container which can hold an arbitrary number of distributions,
              each of which can have any number of parameters which it describes

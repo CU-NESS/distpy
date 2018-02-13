@@ -1,7 +1,7 @@
 """
 File: distpy/transform/CastTransform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 12 Feb 2018
 
 Description: File containing function (cast_to_transform) which cast
              strings/objects to Transform objects. This casting is loose. For

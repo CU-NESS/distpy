@@ -1,7 +1,7 @@
 """
 File: distpy/transform/Transform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing a transform composed of two
              separate transformations, an inner one (applied first) and an
@@ -18,6 +18,10 @@ class CompositeTransform(Transform):
     """
     def __init__(self, inner_transform, outer_transform):
         """
+        Initializes a new CompositeTransform, h(x).
+        
+        inner_transform: if h(x)=f(g(x)), inner_transform is g
+        outer_transform: if h(x)=f(g(x)), outer_transform is f
         """
         self.inner_transform = inner_transform
         self.outer_transform = outer_transform

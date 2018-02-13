@@ -1,7 +1,7 @@
 """
-File: distpy/GaussianDistribution.py
+File: distpy/distribution/GaussianDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: Feb 12 2018
 
 Description: File containing class representing Gaussian distribution
              (univariate or multivariate).

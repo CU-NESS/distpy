@@ -1,7 +1,7 @@
 """
 File: distpy/transform/ProductTransform.py
 Author: Keith Tauscher
-Date: 5 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing class describing the product of arbitrary
              transformations.

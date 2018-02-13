@@ -1,7 +1,7 @@
 """
 File: distpy/transform/LogisticTransform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 12 Feb 2018
 
 Description: File containing class which transforms its inputs through a
              logistic transformation.

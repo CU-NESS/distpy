@@ -1,7 +1,7 @@
 """
-File: distpy/ChiSquaredDistribution.py
+File: distpy/distribution/ChiSquaredDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: Feb 12 2017
 
 Description: File containing class representing a chi-squared distribution.
 """

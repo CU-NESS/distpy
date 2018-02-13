@@ -1,3 +1,12 @@
+"""
+File: distpy/distribution/LoadDistribution.py
+Author: Keith Tauscher
+Date: 12 Feb 2018
+
+Description: File containing functions which can load any Distribution (and it
+             determines which needs to be loaded!) from an hdf5 file group or
+             file in which it was saved.
+"""
 from ..util import get_hdf5_value
 from .UniformDistribution import UniformDistribution
 from .GammaDistribution import GammaDistribution

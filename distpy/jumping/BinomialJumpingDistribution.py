@@ -1,10 +1,11 @@
 """
 File: distpy/jumping/BinomialJumpingDistribution.py
 Author: Keith Tauscher
-Date: 20 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing a jumping distribution on the
-             integers where there is a defined minimum and maximum.
+             integers where there is a defined minimum and maximum. This one is
+             based on the binomial distribution.
 """
 import numpy as np
 from scipy.special  import gammaln as log_gamma
@@ -14,7 +15,7 @@ from .JumpingDistribution import JumpingDistribution
 class BinomialJumpingDistribution(JumpingDistribution):
     """
     Class representing a jumping distribution on the integers where there is a
-    defined minimum and maximum.
+    defined minimum and maximum. This is based on the binomial distribution.
     """
     def __init__(self, minimum, maximum):
         """

@@ -1,7 +1,7 @@
 """
 File: distpy/jumping/GaussianJumpingDistribution.py
 Author: Keith Tauscher
-Date: 20 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing a jumping distribution which is Gaussian centered
              on the source point with a given covariance.

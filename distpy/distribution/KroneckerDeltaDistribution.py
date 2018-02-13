@@ -1,9 +1,10 @@
 """
-File: distpy/Distribution.py
+File: distpy/distribution/KroneckerDeltaDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
-Description: File containing class representing distribution which .
+Description: File containing class representing distribution which always takes
+             the same value.
 """
 from .Distribution import Distribution
 

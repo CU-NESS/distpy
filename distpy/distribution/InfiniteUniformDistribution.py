@@ -1,7 +1,7 @@
 """
-File: distpy/Distribution.py
+File: distpy/distribution/InfiniteUniformDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing an improper uniform
              "distribution". This Distribution cannot be drawn from as there is

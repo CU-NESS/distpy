@@ -1,7 +1,7 @@
 """
 File: distpy/transform/SumTransform.py
 Author: Keith Tauscher
-Date: 6 Dec 2017
+Date: 12 Feb 2018
 
 Description: File containing class describing the sum of arbitrary
              transformations.

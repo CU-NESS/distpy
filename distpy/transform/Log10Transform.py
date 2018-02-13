@@ -1,7 +1,7 @@
 """
 File: distpy/transform/Log10Transform.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing a Transform which performs
              logarithms base 10 on its inputs.

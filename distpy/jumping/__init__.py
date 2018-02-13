@@ -1,3 +1,10 @@
+"""
+File: distpy/jumping/__init__.py
+Author: Keith Tauscher
+Date: 12 Feb 2018
+
+Description: File containing the imports for the distpy.jumping module.
+"""
 from distpy.jumping.JumpingDistribution import JumpingDistribution
 from distpy.jumping.GaussianJumpingDistribution\
     import GaussianJumpingDistribution

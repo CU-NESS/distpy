@@ -1,7 +1,7 @@
 """
-File: distpy/GaussianDirectionDistribution.py
+File: distpy/distribution/GaussianDirectionDistribution.py
 Author: Keith Tauscher
-Date: 10 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing Gaussian distribution on the
              surface of the sphere.

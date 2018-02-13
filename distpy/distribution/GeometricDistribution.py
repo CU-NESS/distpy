@@ -1,7 +1,7 @@
 """
-File: distpy/GeometricDistribution.py
+File: distpy/distribution/GeometricDistribution.py
 Author: Keith Tauscher
-Date: 6 Aug 2017
+Date: 12 Feb 2018
 
 Description: File containing class representing a geometric distribution.
 """
