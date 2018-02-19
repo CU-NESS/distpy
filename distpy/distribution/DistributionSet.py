@@ -161,7 +161,7 @@ class DistributionSet(Savable, Loadable):
                 raise ValueError("The two DistributionSet objects shared " +\
                     "at least one parameter.")
             else:
-                result =\
+                return\
                     DistributionSet(distribution_tuples=self._data+other._data)
         else:
             raise TypeError("Can only add DistributionSet objects to other " +\

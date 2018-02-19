@@ -196,7 +196,7 @@ class JumpingDistributionSet(Savable, Loadable):
                 raise ValueError("The two JumpingDistributionSet objects " +\
                     "shared at least one parameter.")
             else:
-                result = JumpingDistributionSet(\
+                return JumpingDistributionSet(\
                     distribution_tuples=self._data+other._data)
         else:
             raise TypeError("Can only add JumpingDistributionSet objects " +\
