@@ -1,3 +1,11 @@
+"""
+File: examples/distribution/add_distribution_sets.py
+Author: Keith Tauscher
+Date: 18 Feb 2018
+
+Description: Example script showing the meaning and method of summing two
+             DistributionSet objects using the '+' and '+=' operators.
+"""
 from distpy import UniformDistribution, DistributionSet
 
 distribution_set = DistributionSet()
