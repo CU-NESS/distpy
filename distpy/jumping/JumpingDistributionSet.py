@@ -197,7 +197,7 @@ class JumpingDistributionSet(Savable, Loadable):
                     "shared at least one parameter.")
             else:
                 return JumpingDistributionSet(\
-                    distribution_tuples=self._data+other._data)
+                    jumping_distribution_tuples=self._data+other._data)
         else:
             raise TypeError("Can only add JumpingDistributionSet objects " +\
                 "to other JumpingDistributionSet objects.")
@@ -212,6 +212,7 @@ class JumpingDistributionSet(Savable, Loadable):
         if isinstance(other, JumpingDistributionSet):
             for distribution_tuple in other._data:
                 self.add_distribution(*distribution_tuple)
+            return self
         else:
             raise TypeError("JumpingDistributionSet objects can only have " +\
                 "other JumpingDistributionSet objects added to them.")

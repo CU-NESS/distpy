@@ -177,6 +177,7 @@ class DistributionSet(Savable, Loadable):
         if isinstance(other, DistributionSet):
             for distribution_tuple in other._data:
                 self.add_distribution(*distribution_tuple)
+            return self
         else:
             raise TypeError("DistributionSet objects can only have other " +\
                 "DistributionSet objects added to them.")
