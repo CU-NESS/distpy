@@ -140,10 +140,13 @@ class TransformList(Savable, Loadable):
         axis=-1):
         """
         Detransforms the gradient (assuming it was evaluated at the given
-        point) from the transformed space to the untransformed space.
+        point) from the transformed space to the untransformed space. Assuming
+        df/dy_i is the gradient in the transformed space (y), this function
+        encodes the equality:
+        df/dx_i=(df/dy_i)*(dy_i/dx_i)
         
-        transformed_gradient: the gradient in the transformed space
-        untransformed_point: the input point in the untransformed space
+        transformed_gradient: the gradient in the transformed space, df/dy_i
+        untransformed_point: the input point in the untransformed space, x_i
         axis: axis of the derivative in the gradient array
         
         returns: numpy.ndarray of same shape as transformed_gradient
@@ -160,10 +163,13 @@ class TransformList(Savable, Loadable):
         axis=-1):
         """
         Transforms the gradient (assuming it was evaluated at the given
-        point) from the untransformed space to the transformed space.
+        point) from the untransformed space to the transformed space. Assuming
+        that df/dx_i is the derivative in the untransformed space (x) and the
+        transformed space is y, this function encodes the following equality:
+        df/dy_i=(df/dx_i)/(dy_i/dx_i)
         
-        transformed_gradient: the gradient in the transformed space
-        untransformed_point: the input point in the untransformed space
+        transformed_gradient: the gradient in the transformed space, df/dx_i
+        untransformed_point: the input point in the untransformed space, x_i
         axis: axis of the derivative in the gradient array
         
         returns: numpy.ndarray of same shape as transformed_gradient
@@ -180,11 +186,16 @@ class TransformList(Savable, Loadable):
         untransformed_point, first_axis=-2):
         """
         Detransforms the hessian (assuming it was evaluated at the given point)
-        from the transformed space to the untransformed space.
+        from the transformed space to the untransformed space. Assuming
+        d2f/dy_idy_j is the Hessian in the transformed space (y) and df/dy_i is
+        the gradient in the transformed space, this function encodes the
+        equality:
+        d2f/dx_idx_j=(d2f/dy_idy_j)*(dy_i/dx_i)*(dy_jdx_j)+
+                     (\delta_ij)*(df/dy_i)*(d2y_i/dx_i2)
         
-        transformed_hessian: the hessian in the transformed space
-        transformed_gradient: the gradient in the transformed space
-        untransformed_point: the input point in the untransformed space
+        transformed_hessian: Hessian in the transformed space, (d2f/dy_idy_j)
+        transformed_gradient: gradient in the transformed space, (df/dy_i)
+        untransformed_point: the input point in the untransformed space, x_i
         first_axis: first axis of the derivative in the hessian array (once its
                     mod is taken, this should be the same axis of the
                     derivative axis of transformed_gradient)
@@ -209,16 +220,24 @@ class TransformList(Savable, Loadable):
         untransformed_point, first_axis=-2):
         """
         Transforms the hessian (assuming it was evaluated at the given point)
-        from the untransformed space to the transformed space.
+        from the untransformed space to the transformed space. Assuming
+        d2f/dx_idx_j is the Hessian in the untransformed space (x) and df/dy_i
+        is the gradient in the transformed space, this function encodes the
+        equality:
+                          (d2f/dx_idx_j-(\delta_ij)*(df/dy_i)*(d2y_i/dx_i2))
+        d2f/dy_idy_j=   -------------------------------------------------------
+                                      ((dy_i/dx_i)*(dy_j/dx_j))
         
-        transformed_hessian: the hessian in the transformed space
-        transformed_gradient: the gradient in the transformed space
-        untransformed_point: the input point in the untransformed space
+        untransformed_hessian: the hessian in the untransformed space,
+                               d2f/dx_idx_j
+        transformed_gradient: the gradient in the transformed space, df/dy_i
+        untransformed_point: the input point in the untransformed space, x_i
         first_axis: first axis of the derivative in the hessian array (once its
                     mod is taken, this should be the same axis of the
                     derivative axis of transformed_gradient)
         
-        returns: numpy.ndarray of same shape as transformed_hessian
+        returns: numpy.ndarray of same shape as untransformed_hessian,
+                 d2f/dy_idy_j
         """
         hessian = untransformed_hessian.copy()
         first_axis = (first_axis % hessian.ndim)
