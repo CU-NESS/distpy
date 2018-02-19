@@ -145,6 +145,41 @@ class DistributionSet(Savable, Loadable):
         for iparam in range(distribution.numparams):
             # this line looks weird but it works for any input
             self._params.append(self._data[-1][1][iparam])
+    
+    def __add__(self, other):
+        """
+        Adds this DistributionSet to another.
+        
+        other: a DistributionSet object with parameters distinct from the
+               parameters of self
+        
+        returns: DistributionSet object which is the combination of the given
+                 DistributionSet objects
+        """
+        if isinstance(other, DistributionSet):
+            if set(self.params) & set(other.params):
+                raise ValueError("The two DistributionSet objects shared " +\
+                    "at least one parameter.")
+            else:
+                result =\
+                    DistributionSet(distribution_tuples=self._data+other._data)
+        else:
+            raise TypeError("Can only add DistributionSet objects to other " +\
+                "DistributionSet objects.")
+    
+    def __iadd__(self, other):
+        """
+        Adds all distributions from other to this DistributionSet.
+        
+        other: DistributionSet object with parameters distinct from the
+               parameters of self
+        """
+        if isinstance(other, DistributionSet):
+            for distribution_tuple in other._data:
+                self.add_distribution(*distribution_tuple)
+        else:
+            raise TypeError("DistributionSet objects can only have other " +\
+                "DistributionSet objects added to them.")
 
     def draw(self, shape=None):
         """

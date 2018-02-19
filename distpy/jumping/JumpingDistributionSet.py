@@ -180,6 +180,41 @@ class JumpingDistributionSet(Savable, Loadable):
         for iparam in range(distribution.numparams):
             # this line looks weird but it works for any input
             self._params.append(self._data[-1][1][iparam])
+    
+    def __add__(self, other):
+        """
+        Adds this JumpingDistributionSet to another.
+        
+        other: a JumpingDistributionSet object with parameters distinct from
+               the parameters of self
+        
+        returns: JumpingDistributionSet object which is the combination of the
+                 given JumpingDistributionSet objects
+        """
+        if isinstance(other, JumpingDistributionSet):
+            if set(self.params) & set(other.params):
+                raise ValueError("The two JumpingDistributionSet objects " +\
+                    "shared at least one parameter.")
+            else:
+                result = JumpingDistributionSet(\
+                    distribution_tuples=self._data+other._data)
+        else:
+            raise TypeError("Can only add JumpingDistributionSet objects " +\
+                "to other JumpingDistributionSet objects.")
+    
+    def __iadd__(self, other):
+        """
+        Adds all distributions from other to this JumpingDistributionSet.
+        
+        other: JumpingDistributionSet object with parameters distinct from the
+               parameters of self
+        """
+        if isinstance(other, JumpingDistributionSet):
+            for distribution_tuple in other._data:
+                self.add_distribution(*distribution_tuple)
+        else:
+            raise TypeError("JumpingDistributionSet objects can only have " +\
+                "other JumpingDistributionSet objects added to them.")
 
     def draw(self, source, shape=None):
         """
