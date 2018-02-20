@@ -6,6 +6,8 @@ Date: 12 Feb 2018
 Description: File containing class representing distribution which always takes
              the same value.
 """
+import numpy as np
+from ..util import int_types, numerical_types, sequence_types
 from .Distribution import Distribution
 
 class KroneckerDeltaDistribution(Distribution):
@@ -28,7 +30,7 @@ class KroneckerDeltaDistribution(Distribution):
         distribution.
         """
         if not hasattr(self, '_value'):
-            raise AttributeError("value referenced before it wass set.")
+            raise AttributeError("value referenced before it was set.")
         return self._value
     
     @value.setter
@@ -39,7 +41,15 @@ class KroneckerDeltaDistribution(Distribution):
         value: value which is always returned by this distribution
         """
         if type(value) in numerical_types:
-            self._value = value
+            self._value = np.array([value])
+        elif type(value) in sequence_types:
+            value = np.array(value)
+            if (value.ndim == 1) and (value.size > 0):
+                self._value = value
+            else:
+                raise ValueError("KroneckerDeltaDistribution must be " +\
+                    "initialized with either a number value or a non-empty " +\
+                    "1D numpy.ndarray value.")
         else:
             raise TypeError("value was set to a non-number.")
     
@@ -58,10 +68,17 @@ class KroneckerDeltaDistribution(Distribution):
         
         returns: either single value (if distribution is 1D) or array of values
         """
+        
         if shape is None:
-            return self.value
+            return_value = self.value
         else:
-            return self.value * np.ones(shape)
+            if type(shape) in int_types:
+                shape = (shape,)
+            return_value = self.value * np.ones(shape + (self.numparams,))
+        if self.numparams == 1:
+            return return_value[...,0]
+        else:
+            return return_value
     
     def log_value(self, point):
         """
@@ -73,7 +90,7 @@ class KroneckerDeltaDistribution(Distribution):
         returns: single number, logarithm of value of this distribution at the
                  given point
         """
-        if point == self.value:
+        if np.all(point == self.value):
             return 0.
         else:
             return -np.inf
@@ -129,7 +146,9 @@ class KroneckerDeltaDistribution(Distribution):
         Property storing the integer number of parameters described by this
         distribution. It must be implemented by all subclasses.
         """
-        return 1
+        if not hasattr(self, '_numparams'):
+            self._numparams = len(self.value)
+        return self._numparams
     
     def to_string(self):
         """
@@ -148,9 +167,9 @@ class KroneckerDeltaDistribution(Distribution):
         returns: True or False
         """
         if isinstance(other, KroneckerDeltaDistribution):
-            value_equal = (self.value == other.value)
+            value_equal = np.all(self.value == other.value)
             metadata_equal = self.metadata_equal(other)
-            return (value_equal and metadata)
+            return (value_equal and metadata_equal)
         else:
             return False
     

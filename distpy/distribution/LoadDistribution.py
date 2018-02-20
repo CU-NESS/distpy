@@ -19,6 +19,7 @@ from .ExponentialDistribution import ExponentialDistribution
 from .DoubleSidedExponentialDistribution import\
     DoubleSidedExponentialDistribution
 from .WeibullDistribution import WeibullDistribution
+from .KroneckerDeltaDistribution import KroneckerDeltaDistribution
 from .InfiniteUniformDistribution import InfiniteUniformDistribution
 from .EllipticalUniformDistribution import EllipticalUniformDistribution
 from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
