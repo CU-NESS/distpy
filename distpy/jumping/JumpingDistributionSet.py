@@ -19,8 +19,7 @@ Description: A container which can hold an arbitrary number of jumping
 """
 import numpy as np
 from ..util import Savable, Loadable, int_types, sequence_types
-from ..transform import NullTransform, cast_to_transform,\
-    castable_to_transform, load_transform_from_hdf5_group
+from ..transform import cast_to_transform_list, TransformList, TransformSet
 from .JumpingDistribution import JumpingDistribution
 from .LoadJumpingDistribution import load_jumping_distribution_from_hdf5_group
 try:
@@ -106,37 +105,8 @@ class JumpingDistributionSet(Savable, Loadable):
                    (can be a single string if the distribution is univariate)
         """
         if isinstance(distribution, JumpingDistribution):
-            if transforms is None:
-                transforms = [NullTransform()] * distribution.numparams
-            elif castable_to_transform(transforms):
-                if (distribution.numparams == 1):
-                    transforms = [cast_to_transform(transforms)]
-                else:
-                    raise ValueError("The transforms variable applied to " +\
-                        "parameters of a JumpingDistributionSet was " +\
-                        "provided as a string even though the " +\
-                        "distribution being provided was multivariate.")
-            elif type(transforms) in sequence_types:
-                if len(transforms) == distribution.numparams:
-                    all_castable_to_transforms =\
-                        all([castable_to_transform(val) for val in transforms])
-                    if all_castable_to_transforms:
-                        transforms =\
-                            [cast_to_transform(val) for val in transforms]
-                    else:
-                        raise ValueError("Not all transforms given to " +\
-                            "add_distribution were understood.")
-                else:
-                    raise ValueError("The list of transforms applied to " +\
-                        "parameters in a JumpingDistributionSet was not " +\
-                        "the same length as the list of parameters of the " +\
-                        "distribution.")
-            else:
-                raise ValueError("The type of the transforms variable " +\
-                    "supplied to JumpingDistributionSet's add_distribution " +\
-                    "function was not recognized. It should be a single " +\
-                    "valid string (if distribution is univariate) or list " +\
-                    "of valid strings (if distribution is multivariate).")
+            transforms = cast_to_transform_list(transforms,\
+                num_transforms=distribution.numparams)
             if distribution.numparams == 1:
                 if type(params) is str:
                     self._check_name(params)
@@ -472,6 +442,20 @@ class JumpingDistributionSet(Savable, Loadable):
             raise ValueError("The name of a parameter provided to a " +\
                 "JumpingDistributionSet is already taken.")
     
+    @property
+    def transform_set(self):
+        """
+        Property storing the TransformSet object describing the transforms in
+        this DistributionSet.
+        """
+        if not hasattr(self, '_transform_set'):
+            transforms_dictionary = {}
+            for (distribution, params, transforms) in self._data:
+                for (param, transform) in zip(params, transforms):
+                    transforms_dictionary[param] = transform
+            self._transform_set = TransformSet(transforms_dictionary)
+        return self._transform_set
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this
@@ -484,11 +468,9 @@ class JumpingDistributionSet(Savable, Loadable):
             (distribution, params, transforms) = distribution_tuple
             subgroup = group.create_group('distribution_{}'.format(ituple))
             distribution.fill_hdf5_group(subgroup)
+            transforms.fill_hdf5_group(subgroup)
             for iparam in range(distribution.numparams):
                 subgroup.attrs['parameter_{}'.format(iparam)] = params[iparam]
-                subsubgroup =\
-                    subgroup.create_group('transform_{}'.format(iparam))
-                transforms[iparam].fill_hdf5_group(subsubgroup)
     
     @staticmethod
     def load_from_hdf5_group(group):
@@ -504,15 +486,13 @@ class JumpingDistributionSet(Savable, Loadable):
         while ('distribution_{}'.format(ituple)) in group:
             subgroup = group['distribution_{}'.format(ituple)]
             distribution = load_jumping_distribution_from_hdf5_group(subgroup)
+            transform_list = TransformList.load_from_hdf5_group(subgroup)
             params = []
-            transforms = []
             iparam = 0
             for iparam in range(distribution.numparams):
                 params.append(subgroup.attrs['parameter_{}'.format(iparam)])
-                subsubgroup = subgroup['transform_{}'.format(iparam)]
-                transforms.append(load_transform_from_hdf5_group(subsubgroup))
-                jumping_distribution_tuples.append(\
-                    (distribution, params, transforms))
+            jumping_distribution_tuples.append(\
+                (distribution, params, transform_list))
             ituple += 1
         return JumpingDistributionSet(\
             jumping_distribution_tuples=jumping_distribution_tuples)

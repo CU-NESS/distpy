@@ -101,7 +101,7 @@ class GaussianJumpingDistribution(JumpingDistribution):
                 np.random.normal(source, self.standard_deviation, size=shape)
         else:
             return np.random.multivariate_normal(source, self.covariance,\
-                size=shape)
+                size=shape, check_valid='raise')
     
     def log_value(self, source, destination):
         """

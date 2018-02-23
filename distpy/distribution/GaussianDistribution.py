@@ -215,7 +215,7 @@ class GaussianDistribution(Distribution):
             scale = np.sqrt(self.covariance.A[0,0])
             return rand.normal(loc=loc, scale=scale, size=shape)
         return rand.multivariate_normal(self.mean.A[0,:], self.covariance.A,\
-            size=shape)
+            size=shape, check_valid='raise')
 
     def log_value(self, point):
         """

@@ -16,7 +16,8 @@ from distpy.transform import Transform, NullTransform, LogTransform,\
     ExponentiatedTransform, LoggedTransform, SumTransform, ProductTransform,\
     CompositeTransform, castable_to_transform, cast_to_transform,\
     load_transform_from_hdf5_group, load_transform_from_hdf5_file,\
-    TransformList, castable_to_transform_list, cast_to_transform_list
+    TransformList, castable_to_transform_list, cast_to_transform_list,\
+    TransformSet
 from distpy.distribution import Distribution, BetaDistribution,\
     BinomialDistribution, ChiSquaredDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\

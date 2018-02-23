@@ -18,7 +18,7 @@ Description: A container which can hold an arbitrary number of distributions,
 """
 import numpy as np
 from ..util import Savable, Loadable, int_types, sequence_types
-from ..transform import cast_to_transform_list, TransformList
+from ..transform import cast_to_transform_list, TransformList, TransformSet
 from .Distribution import Distribution
 from .LoadDistribution import load_distribution_from_hdf5_group
 try:
@@ -398,6 +398,20 @@ class DistributionSet(Savable, Loadable):
         if broken:
             raise ValueError("The name of a parameter provided to a " +\
                 "DistributionSet is already taken.")
+    
+    @property
+    def transform_set(self):
+        """
+        Property storing the TransformSet object describing the transforms in
+        this DistributionSet.
+        """
+        if not hasattr(self, '_transform_set'):
+            transforms_dictionary = {}
+            for (distribution, params, transforms) in self._data:
+                for (param, transform) in zip(params, transforms):
+                    transforms_dictionary[param] = transform
+            self._transform_set = TransformSet(transforms_dictionary)
+        return self._transform_set
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
