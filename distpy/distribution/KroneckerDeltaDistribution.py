@@ -201,14 +201,6 @@ class KroneckerDeltaDistribution(Distribution):
         else:
             raise TypeError("is_discrete was set to a non-bool.")
     
-    @property
-    def is_discrete(self):
-        """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
-        """
-        raise cannot_instantiate_distribution_error
-    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with information about this
