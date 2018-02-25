@@ -444,6 +444,34 @@ class DistributionSet(Savable, Loadable):
             self._transform_set = TransformSet(transforms_dictionary)
         return self._transform_set
     
+    def discrete_subset(self):
+        """
+        Function which compiles a subset of the Distribution objects in this
+        DistributionSet: those that represent discrete variables.
+        
+        returns: a DistributionSet object containing all Distribution objects
+                 in this DistributionSet which describe discrete variables
+        """
+        answer = DistributionSet()
+        for (distribution, params, transforms) in self._data:
+            if distribution.is_discrete:
+                answer.add_distribution((distribution, params, transforms))
+        return answer
+    
+    def continuous_subset(self):
+        """
+        Function which compiles a subset of the Distribution objects in this
+        DistributionSet: those that represent continuous variables.
+        
+        returns: a DistributionSet object containing all Distribution objects
+                 in this DistributionSet which describe continuous variables
+        """
+        answer = DistributionSet()
+        for (distribution, params, transforms) in self._data:
+            if not distribution.is_discrete:
+                answer.add_distribution((distribution, params, transforms))
+        return answer
+    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this DistributionSet.

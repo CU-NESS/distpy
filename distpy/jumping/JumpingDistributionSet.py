@@ -487,6 +487,37 @@ class JumpingDistributionSet(Savable, Loadable):
             self._transform_set = TransformSet(transforms_dictionary)
         return self._transform_set
     
+    def discrete_subset(self):
+        """
+        Function which compiles a subset of the JumpingDistribution objects
+        in this JumpingDistributionSet: those that represent discrete
+        variables.
+        
+        returns: a JumpingDistributionSet object containing all
+                 JumpingDistribution objects in this JumpingDistributionSet
+                 which describe discrete variables
+        """
+        answer = JumpingDistributionSet()
+        for (distribution, params, transforms) in self._data:
+            if distribution.is_discrete:
+                answer.add_distribution((distribution, params, transforms))
+        return answer
+    
+    def continuous_subset(self):
+        """
+        Function which compiles a subset of the JumpingDistribution objects in
+        this JumpingDistributionSet: those that represent continuous variables.
+        
+        returns: a JumpingDistributionSet object containing all
+                 JumpingDistribution objects in this JumpingDistributionSet
+                 which describe continuous variables
+        """
+        answer = JumpingDistributionSet()
+        for (distribution, params, transforms) in self._data:
+            if not distribution.is_discrete:
+                answer.add_distribution((distribution, params, transforms))
+        return answer
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this
