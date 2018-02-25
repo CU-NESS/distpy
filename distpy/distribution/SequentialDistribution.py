@@ -128,6 +128,14 @@ class SequentialDistribution(Distribution):
         else:
             return False
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing a boolean describing whether this distribution is
+        discrete (True) or continuous (False).
+        """
+        return self.shared_distribution.is_discrete
+    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. That

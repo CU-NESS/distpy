@@ -107,6 +107,14 @@ class WeibullDistribution(Distribution):
         """
         return (self.scale * np.power(-np.log(1 - cdf), 1 / self.shape))
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing a boolean describing whether this distribution is
+        discrete (True) or continuous (False).
+        """
+        return False
+    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. All

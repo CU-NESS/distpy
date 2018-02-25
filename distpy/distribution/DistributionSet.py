@@ -46,7 +46,6 @@ class DistributionSet(Savable, Loadable):
                              describes
         """
         self._data = []
-        self._params = []
         if type(distribution_tuples) in sequence_types:
             for idistribution in range(len(distribution_tuples)):
                 this_tup = distribution_tuples[idistribution]
@@ -78,7 +77,29 @@ class DistributionSet(Savable, Loadable):
         """
         Finds and returns the parameters which this DistributionSet describes.
         """
+        if not hasattr(self, '_params'):
+            self._params = []
         return self._params
+    
+    @property
+    def discrete_params(self):
+        """
+        Finds and returns the discrete parameters which this DistributionSet
+        describes.
+        """
+        if not hasattr(self, '_discrete_params'):
+            self._discrete_params = []
+        return self._discrete_params
+    
+    @property
+    def continuous_params(self):
+        """
+        Finds and returns the continuous parameters which this DistributionSet
+        describes.
+        """
+        if not hasattr(self, '_continuous_params'):
+            self._continuous_params = []
+        return self._continuous_params
 
     @property
     def numparams(self):
@@ -142,9 +163,13 @@ class DistributionSet(Savable, Loadable):
         else:
             raise ValueError("The distribution given to a DistributionSet " +\
                 "was not recognized as a distribution.")
-        for iparam in range(distribution.numparams):
-            # this line looks weird but it works for any input
-            self._params.append(self._data[-1][1][iparam])
+        last_distribution_tuple = self._data[-1]
+        params_of_last_distribution_tuple = last_distribution_tuple[1]
+        self.params.extend(params_of_last_distribution_tuple)
+        if distribution.is_discrete:
+            self.discrete_params.extend(params_of_last_distribution_tuple)
+        else:
+            self.continuous_params.extend(params_of_last_distribution_tuple)
     
     def __add__(self, other):
         """
@@ -266,8 +291,14 @@ class DistributionSet(Savable, Loadable):
                 to_delete = idistribution
                 break
         try:
+            distribution_to_delete = self._data[to_delete][0]
+            is_discrete = distribution_to_delete.is_discrete
             for par in self._data[to_delete][1]:
-                self._params.remove(par)
+                self.params.remove(par)
+                if is_discrete:
+                    self.discrete_params.remove(par)
+                else:
+                    self.continuous_params.remove(par)
             self._data = self._data[:to_delete] + self._data[to_delete+1:]
         except:
             if throw_error:

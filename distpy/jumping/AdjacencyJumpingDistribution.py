@@ -282,6 +282,14 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         else:
             return False
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing boolean describing whether this JumpingDistribution
+        describes discrete (True) or continuous (False) variable(s).
+        """
+        return True
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this

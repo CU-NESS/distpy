@@ -165,6 +165,8 @@ class UniformJumpingDistribution(JumpingDistribution):
     @property
     def half_span(self):
         """
+        Property storing the distance between the source and farthest possible
+        destination (valid in the case where this distribution is univariate!).
         """
         if not hasattr(self, '_half_span'):
             if self.numparams == 1:
@@ -192,6 +194,14 @@ class UniformJumpingDistribution(JumpingDistribution):
                 return False
         else:
             return False
+    
+    @property
+    def is_discrete(self):
+        """
+        Property storing boolean describing whether this JumpingDistribution
+        describes discrete (True) or continuous (False) variable(s).
+        """
+        return False
     
     def fill_hdf5_group(self, group, covariance_link=None):
         """

@@ -151,6 +151,14 @@ class EllipticalUniformDistribution(Distribution):
         else:
             return False
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing a boolean describing whether this distribution is
+        discrete (True) or continuous (False).
+        """
+        return False
+    
     def fill_hdf5_group(self, group, mean_link=None, covariance_link=None,\
         save_metadata=True):
         """

@@ -292,6 +292,14 @@ class GaussianDistribution(Distribution):
         return (self.mean.A[0,0] +\
             (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing a boolean describing whether this distribution is
+        discrete (True) or continuous (False).
+        """
+        return False
+    
     def fill_hdf5_group(self, group, mean_link=None, covariance_link=None,\
         save_metadata=True):
         """

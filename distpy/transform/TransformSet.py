@@ -9,6 +9,7 @@ Description: File containing a class representing an unordered set of Transform
 from ..util import sequence_types, Savable, Loadable
 from .CastTransform import cast_to_transform, castable_to_transform
 from .LoadTransform import load_transform_from_hdf5_group
+from .TransformList import TransformList
 
 try:
     # this runs with no issues in python 2 but raises error in python 3
@@ -76,17 +77,48 @@ class TransformSet(Savable, Loadable):
         """
         Gets the transform associated with the given key.
         
-        key: string parameter associated with the desired Transform object
+        key: a string parameter associated with the desired Transform object,
+             an unordered set of such keys, or a sequence of such keys
         
-        returns: Transform object stored under the given string key
+        returns: if key is a string, Transform stored under given string key
+                 if key is a set, TransformSet containing only the transforms
+                                  associated with the strings in key
+                 if key is a sequence (list, tuple, etc.), a TransformList
+                                                           containing the
+                                                           transforms
+                                                           associated with the
+                                                           given strings in the
+                                                           order given in key
         """
-        try:
+        if isinstance(key, set):
+            if all([isinstance(element, basestring) for element in key]):
+                if all([(element in self.transforms) for element in key]):
+                    new_transforms =\
+                        {element: self.transforms[element] for element in key}
+                    return TransformSet(new_transforms)
+                else:
+                    raise KeyError("At least one of the strings given was " +\
+                        "not a key for a transform in this TransformSet.")
+            else:
+                raise KeyError("Not all elements of the given set were " +\
+                    "strings.")
+        elif type(key) in sequence_types:
+            if all([isinstance(element, basestring) for element in key]):
+                if all([(element in self.transforms) for element in key]):
+                    new_transforms =\
+                        [self.transforms[element] for element in key]
+                    return TransformList(*new_transforms)
+                else:
+                    raise KeyError("At least one of the strings given was " +\
+                        "not a key for a transform in this TransformSet.")
+            else:
+                raise TypeError("Not all elements of the given sequence " +\
+                    "were strings.")
+        elif key in self.transforms:
             return self.transforms[key]
-        except KeyError:
+        else:
             raise KeyError(("{!s} not in the transforms dictionary at the " +\
                 "heart of this TransformSet object.").format(key))
-        except:
-            raise
     
     def __iter__(self):
         """

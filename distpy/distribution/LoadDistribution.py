@@ -31,6 +31,7 @@ from .GriddedDistribution import GriddedDistribution
 from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .UniformTriangulationDistribution import UniformTriangulationDistribution
+from .CustomDiscreteDistribution import CustomDiscreteDistribution
 
 try:
     import h5py

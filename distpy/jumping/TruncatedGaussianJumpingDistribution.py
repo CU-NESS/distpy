@@ -250,6 +250,14 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
         else:
             return False
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing boolean describing whether this JumpingDistribution
+        describes discrete (True) or continuous (False) variable(s).
+        """
+        return False
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data from this distribution. The

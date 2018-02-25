@@ -102,6 +102,14 @@ class UniformDistribution(Distribution):
         """
         return (self.low + ((self.high - self.low) * cdf))
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing a boolean describing whether this distribution is
+        discrete (True) or continuous (False).
+        """
+        return False
+    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. All

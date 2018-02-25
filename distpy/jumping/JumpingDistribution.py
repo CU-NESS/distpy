@@ -90,6 +90,14 @@ class JumpingDistribution(Savable, Loadable):
         """
         raise cannot_instantiate_jumping_distribution_error
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing boolean describing whether this JumpingDistribution
+        describes discrete (True) or continuous (False) variable(s).
+        """
+        raise cannot_instantiate_jumping_distribution_error
+    
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this jumping

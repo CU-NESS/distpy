@@ -319,6 +319,14 @@ class GriddedDistribution(Distribution):
         #
         return search_sorted(self.cdf, value)
     
+    @property
+    def is_discrete(self):
+        """
+        Property storing a boolean describing whether this distribution is
+        discrete (True) or continuous (False).
+        """
+        return False
+    
     def fill_hdf5_group(self, group, pdf_link=None, save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The

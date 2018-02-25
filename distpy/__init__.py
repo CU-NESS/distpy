@@ -28,8 +28,8 @@ from distpy.distribution import Distribution, BetaDistribution,\
     WeibullDistribution, LinkedDistribution, SequentialDistribution,\
     DirectionDistribution, UniformDirectionDistribution,\
     GaussianDirectionDistribution, UniformTriangulationDistribution,\
-    DistributionSet, load_distribution_from_hdf5_group,\
-    load_distribution_from_hdf5_file
+    CustomDiscreteDistribution, DistributionSet,\
+    load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
     BinomialJumpingDistribution, AdjacencyJumpingDistribution,\
