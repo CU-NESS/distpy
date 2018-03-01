@@ -500,7 +500,7 @@ class JumpingDistributionSet(Savable, Loadable):
         answer = JumpingDistributionSet()
         for (distribution, params, transforms) in self._data:
             if distribution.is_discrete:
-                answer.add_distribution((distribution, params, transforms))
+                answer.add_distribution(distribution, params, transforms)
         return answer
     
     def continuous_subset(self):
@@ -515,7 +515,7 @@ class JumpingDistributionSet(Savable, Loadable):
         answer = JumpingDistributionSet()
         for (distribution, params, transforms) in self._data:
             if not distribution.is_discrete:
-                answer.add_distribution((distribution, params, transforms))
+                answer.add_distribution(distribution, params, transforms)
         return answer
     
     def fill_hdf5_group(self, group):
