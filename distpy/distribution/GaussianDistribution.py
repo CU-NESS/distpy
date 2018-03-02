@@ -249,7 +249,7 @@ class GaussianDistribution(Distribution):
         else:
             return "{}-dim Normal".format(len(self.mean.A[0]))
     
-    def __getitem__(self, key):
+    def marginalize(self, key):
         """
         Marginalizes this Gaussian over all of the parameters not described by
         given key.
@@ -261,6 +261,46 @@ class GaussianDistribution(Distribution):
         """
         new_mean = self.mean.A[0][key]
         new_covariance = self.covariance.A[:,key][key]
+        return GaussianDistribution(new_mean, new_covariance)
+    
+    def __getitem__(self, key):
+        """
+        Marginalizes this Gaussian over all of the parameters not described by
+        given key.
+        
+        key: key representing index (indices) to keep. It can be a slice, list,
+             numpy.ndarray, or integer.
+        
+        returns: marginalized GaussianDistribution
+        """
+        return self.marginalize(key)
+    
+    def conditionalize(self, known_indices, values):
+        """
+        Marginalizes this Gaussian over all of the parameters not described by
+        given key.
+        
+        known_indices: key representing index (indices) to keep. It can be a
+                       slice, list, numpy.ndarray, or integer.
+        values: values of variables corresponding to known_indices
+        
+        returns: conditionalized GaussianDistribution
+        """
+        if isinstance(known_indices, slice):
+            known_indices = np.arange(*known_indices.indices(self.numparams))
+        elif isinstance(known_indices, int):
+            known_indices = np.array([known_indices])
+        elif type(known_indices) in sequence_types:
+            known_indices = np.array(known_indices)
+        remaining_indices = np.array([index\
+            for index in np.arange(self.numparams)\
+            if index not in known_indices])
+        new_covariance =\
+            lalg.inv(self.invcov.A[:,remaining_indices][remaining_indices])
+        known_mean_displacement = values - self.mean.A[0][known_indices]
+        new_mean = self.mean.A[0][remaining_indices] - np.dot(new_covariance,\
+            np.dot(self.invcov.A[:,known_indices][remaining_indices],\
+            known_mean_displacement))
         return GaussianDistribution(new_mean, new_covariance)
     
     def __eq__(self, other):
