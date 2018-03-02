@@ -29,7 +29,8 @@ class GaussianDistribution(Distribution):
         mean the mean must be either a number (if univariate)
                                   or a 1D array (if multivariate)
         covariance the covariance must be either a number (if univariate)
-                                              or a 2D array (if multivariate)
+                   or a 2D array (if multivariate) final covariance used is
+                   average of this 2D array and its transpose
         """
         if type(mean) in numerical_types:
             self._check_covariance_when_mean_has_size_1(mean,\
@@ -50,7 +51,7 @@ class GaussianDistribution(Distribution):
                 if arrcov.shape == (len(arrmean), len(arrmean)):
                     self.mean = np.matrix(arrmean)
                     self._numparams = len(arrmean)
-                    self.covariance = np.matrix(arrcov)
+                    self.covariance = np.matrix((arrcov + arrcov.T) / 2.)
                 else:
                     raise ValueError("The covariance given to a " +\
                         "GaussianDistribution was not castable to an array " +\
