@@ -9,7 +9,15 @@ Description: File containing class implementing the abstract Sampler class from
 """
 import numpy as np
 from emcee import Sampler as emceeSampler
+from ..util import int_types
 from .JumpingDistributionSet import JumpingDistributionSet
+
+try:
+    from multiprocess import Pool
+except ImportError:
+    have_multiprocess = False
+else:
+    have_multiprocess = True
 
 try:
     # this runs with no issues in python 2 but raises error in python 3
@@ -18,13 +26,36 @@ except:
     # this try/except allows for python 2/3 compatible string type checking
     basestring = str
 
+class DummyPool(object):
+    """
+    Class representing a dummy-Pool which uses the built-in map function to do
+    its mapping.
+    """
+    def map(self, function, iterable):
+        """
+        Calls the given function on each element of the given iterable.
+        
+        function: function to apply to each element of iterable
+        iterable: sequence of elements to which to apply function
+        
+        returns: list where every element is given by the application of the
+                 function to the corresponding element of the iterable
+        """
+        return map(function, iterable)
+    
+    def close(self):
+        """
+        Closes the pool (by doing nothing).
+        """
+        pass
+
 class MetropolisHastingsSampler(emceeSampler):
     """
     Class implementing the abstract Sampler class from emcee using distpy's
     JumpingDistributionSet objects for the storing of proposal distributions.
     """
     def __init__(self, parameters, nwalkers, logprobability,\
-        jumping_distribution_set, args=[], kwargs={}):
+        jumping_distribution_set, nthreads=1, args=[], kwargs={}):
         """
         Initializes a new sampler of the given log probability function.
         
@@ -34,6 +65,9 @@ class MetropolisHastingsSampler(emceeSampler):
         jumping_distribution_set: JumpingDistributionSet object storing
                                   proposal distributions used to sample given
                                   log probability function
+        nthreads: the number of threads to use in log likelihood calculations
+                  for walkers. Default: 1, 1 is best unless loglikelihood is
+                  very slow
         args: extra positional arguments to pass to logprobability
         kwargs: extra keyword arguments to pass to logprobability
         """
@@ -42,6 +76,47 @@ class MetropolisHastingsSampler(emceeSampler):
         super(MetropolisHastingsSampler, self).__init__(len(self.parameters),\
             logprobability, *args, **kwargs)
         self.jumping_distribution_set = jumping_distribution_set
+        self.nthreads = nthreads
+    
+    @property
+    def nthreads(self):
+        """
+        Property storing the number of threads to use in calculating log
+        likelihood values.
+        """
+        if not hasattr(self, '_nthreads'):
+            raise AttributeError("nthreads referenced before it was set.")
+        return self._nthreads
+    
+    @nthreads.setter
+    def nthreads(self, value):
+        """
+        Setter for the number of threads to use in log likelihood calculations.
+        
+        value: a positive integer; 1 is best unless loglikelihood is very slow
+        """
+        if type(value) in int_types:
+            if value > 0:
+                self._nthreads = value
+            else:
+                raise ValueError("nthreads must be non-negative.")
+        else:
+            raise TypeError("nthreads was set to a non-int.")
+    
+    def create_pool(self):
+        """
+        Property storing the Pool object which is used for log likelihood
+        calculations. It stores an object which has a map function and a close
+        function.
+        """
+        if have_multiprocess and (self.nthreads > 1):
+            return Pool(self.nthreads)
+        else:
+            if self.nthreads > 1:
+                print("Python module 'multiprocess' is not installed, so " +\
+                    "multithreading is not possible in this Sampler. " +\
+                    "Either install multiprocess or set nthreads to 1.")
+            return DummyPool()
     
     @property
     def nwalkers(self):
@@ -141,7 +216,8 @@ class MetropolisHastingsSampler(emceeSampler):
         """
         Creates an array out of the dictionary.
         
-        dictionary: dict with parameters as keys and arrays or numbers as values 
+        dictionary: dict with parameters as keys and arrays or numbers as
+                    values 
         
         returns: array of ndim 1 greater than values ndim
         """
@@ -166,7 +242,7 @@ class MetropolisHastingsSampler(emceeSampler):
         self._chain = np.empty((self.nwalkers, 0, self.dim))
         self._lnprob = np.empty((self.nwalkers, 0))
         self.iterations = 0
-        self.naccepted = np.zeros(self.nwalkers)
+        self.naccepted = np.zeros((self.nwalkers,), dtype=int)
         self._last_run_mcmc_result = None
     
     def sample(self, point, lnprob=None, randomstate=None, thin=1,\
@@ -210,24 +286,31 @@ class MetropolisHastingsSampler(emceeSampler):
         i0 = self.iterations
         for i in range(int(iterations)):
             self.iterations += 1
+            destination_dicts = []
+            destinations = []
             for iwalker in range(self.nwalkers):
                 # Calculate the proposal distribution.
                 source_dict = self.dictionary_from_array(point[iwalker])
                 destination_dict =\
                     self.jumping_distribution_set.draw(source_dict)
                 destination = self.array_from_dictionary(destination_dict)
-                newlnprob = self.get_lnprob(destination)
+                destination_dicts.append(destination_dict)
+                destinations.append(destination)
+            pool = self.create_pool()
+            newlnprobs = list(pool.map(self.get_lnprob, destinations))
+            pool.close()
+            for iwalker in range(self.nwalkers):
+                #newlnprob = self.get_lnprob(destination)
+                newlnprob = newlnprobs[iwalker]
                 log_value_difference =\
                     self.jumping_distribution_set.log_value_difference(\
-                    source_dict, destination_dict)
-                diff = newlnprob - lnprob[iwalker] -\
-                    self.jumping_distribution_set.log_value_difference(\
-                    source_dict, destination_dict)
+                    source_dict, destination_dicts[iwalker])
+                diff = newlnprob - lnprob[iwalker] - log_value_difference
                 # M-H acceptance ratio
                 if diff < 0:
                     diff = np.exp(diff) - self._random.rand()
                 if diff > 0:
-                    point[iwalker,:] = destination
+                    point[iwalker,:] = destinations[iwalker]
                     lnprob[iwalker] = newlnprob
                     self.naccepted[iwalker] += 1
             if storechain and (i % thin) == 0:
