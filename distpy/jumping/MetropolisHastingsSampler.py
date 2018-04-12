@@ -286,6 +286,7 @@ class MetropolisHastingsSampler(emceeSampler):
         i0 = self.iterations
         for i in range(int(iterations)):
             self.iterations += 1
+            source_dicts = []
             destination_dicts = []
             destinations = []
             for iwalker in range(self.nwalkers):
@@ -294,17 +295,17 @@ class MetropolisHastingsSampler(emceeSampler):
                 destination_dict =\
                     self.jumping_distribution_set.draw(source_dict)
                 destination = self.array_from_dictionary(destination_dict)
+                source_dicts.append(source_dict)
                 destination_dicts.append(destination_dict)
                 destinations.append(destination)
             pool = self.create_pool()
             newlnprobs = list(pool.map(self.get_lnprob, destinations))
             pool.close()
             for iwalker in range(self.nwalkers):
-                #newlnprob = self.get_lnprob(destination)
                 newlnprob = newlnprobs[iwalker]
                 log_value_difference =\
                     self.jumping_distribution_set.log_value_difference(\
-                    source_dict, destination_dicts[iwalker])
+                    source_dicts[iwalker], destination_dicts[iwalker])
                 diff = newlnprob - lnprob[iwalker] - log_value_difference
                 # M-H acceptance ratio
                 if diff < 0:
