@@ -19,6 +19,8 @@ from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
 from .ArcsinTransform import ArcsinTransform
 from .LogisticTransform import LogisticTransform
+from .ReciprocalTransform import ReciprocalTransform
+from .AffineTransform import AffineTransform
 try:
     # this runs with no issues in python 2 but raises error in python 3
     basestring
@@ -38,24 +40,47 @@ def cast_to_transform(key):
     if key is None:
         return NullTransform()
     elif isinstance(key, basestring):
+        key_not_understood_error = ValueError(("transform could not be " +\
+            "reconstructed from key, {!s}, as key was not " +\
+            "understood.").format(key))
         lower_cased_key = key.lower()
-        if lower_cased_key in ['null', 'none']:
-            return NullTransform()
-        elif lower_cased_key in ['log', 'ln']:
-            return LogTransform()
-        elif lower_cased_key == 'log10':
-            return Log10Transform()
-        elif lower_cased_key == 'square':
-            return SquareTransform()
-        elif lower_cased_key == 'arcsin':
-            return ArcsinTransform()
-        elif lower_cased_key == 'logistic':
-            return LogisticTransform()
-        elif lower_cased_key == 'exp':
-            return ExponentialTransform()
+        split_lower_cased_key = lower_cased_key.split(' ')
+        num_tokens = len(split_lower_cased_key)
+        if num_tokens == 1:
+            if lower_cased_key in ['null', 'none']:
+                return NullTransform()
+            elif lower_cased_key in ['log', 'ln']:
+                return LogTransform()
+            elif lower_cased_key == 'log10':
+                return Log10Transform()
+            elif lower_cased_key == 'square':
+                return SquareTransform()
+            elif lower_cased_key == 'arcsin':
+                return ArcsinTransform()
+            elif lower_cased_key == 'logistic':
+                return LogisticTransform()
+            elif lower_cased_key == 'exp':
+                return ExponentialTransform()
+            elif lower_cased_key == '':
+                return ReciprocalTransform()
+            else:
+                raise key_not_understood_error
+        elif num_tokens == 2:
+            if split_lower_cased_key[0] == 'scale':
+                return AffineTransform(float(split_lower_cased_key[1]), 0)
+            elif split_lower_cased_key[0] == 'translate':
+                return AffineTransform(1, float(split_lower_cased_key[1]))
+            else:
+                raise key_not_understood_error
+        elif num_tokens == 3:
+            if split_lower_cased_key[0] == 'affine':
+                scale_factor = float(split_lower_cased_key[1])
+                translation = float(split_lower_cased_key[2])
+                return AffineTransform(scale_factor, translation)
+            else:
+                raise key_not_understood_error
         else:
-            raise ValueError(("transform could not be reconstructed from " +\
-                "key, {!s}, as key was not understood.").format(key))
+            raise key_not_understood_error
     elif isinstance(key, Transform):
         return key
     else:
