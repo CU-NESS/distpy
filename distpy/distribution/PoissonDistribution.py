@@ -40,7 +40,7 @@ class PoissonDistribution(Distribution):
         """
         return 1
     
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws and returns a value from this distribution using numpy.random.
         
@@ -51,8 +51,9 @@ class PoissonDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         """
-        return rand.poisson(lam=self.scale, size=shape)
+        return random.poisson(lam=self.scale, size=shape)
     
     def log_value(self, point):
         """

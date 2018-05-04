@@ -108,7 +108,7 @@ class GaussianDirectionDistribution(DirectionDistribution):
         return self.const_log_value_contribution -\
             (((gamma / self.sigma) ** 2) / 2)
     
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws value(s) from this distribution.
         
@@ -116,15 +116,15 @@ class GaussianDirectionDistribution(DirectionDistribution):
                if int, n, returns n random variates (array of shape (n, 2))
                if tuple of n ints, (n+1)-D array
         """
-        psi_draw = self.psi_distribution.draw(shape=shape)
+        psi_draw = self.psi_distribution.draw(shape=shape, random=random)
         if shape is None:
             gamma_draw =\
-                self.sigma * np.sqrt(-2 * np.log(1 - rand.rand()))
+                self.sigma * np.sqrt(-2 * np.log(1 - random.rand()))
         else:
             if type(shape) in int_types:
                 shape = (shape,)
             gamma_draw =\
-                self.sigma * np.sqrt(-2 * np.log(1 - rand.rand(*shape)))
+                self.sigma * np.sqrt(-2 * np.log(1 - random.rand(*shape)))
         theta_draw, phi_draw = self.rotator(gamma_draw, psi_draw)
         return np.stack([90 - np.degrees(theta_draw), np.degrees(phi_draw)],\
             axis=-1)

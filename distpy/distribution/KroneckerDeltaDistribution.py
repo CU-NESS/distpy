@@ -57,7 +57,7 @@ class KroneckerDeltaDistribution(Distribution):
         else:
             raise TypeError("value was set to a non-number.")
     
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=None):
         """
         Draws a point from the distribution. Must be implemented by any base
         class.
@@ -69,6 +69,7 @@ class KroneckerDeltaDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if distribution is 1D) or array of values
         """

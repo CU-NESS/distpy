@@ -207,11 +207,12 @@ class DistributionSet(Savable, Loadable):
             raise TypeError("DistributionSet objects can only have other " +\
                 "DistributionSet objects added to them.")
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=np.random):
         """
         Draws a point from all distributions.
         
         shape: shape of arrays which are values of return value
+        random: the random number generator to use (default: numpy.random)
         
         returns a dictionary of random values indexed by parameter name
         """
@@ -220,9 +221,9 @@ class DistributionSet(Savable, Loadable):
             if (distribution.numparams == 1):
                 (param, transform) = (params[0], transforms[0])
                 point[param] = transform.apply_inverse(\
-                    distribution.draw(shape=shape))
+                    distribution.draw(shape=shape, random=random))
             else:
-                this_draw = distribution.draw(shape=shape)
+                this_draw = distribution.draw(shape=shape, random=random)
                 for iparam in range(len(params)):
                     point[params[iparam]] = transforms[iparam].apply_inverse(\
                         this_draw[...,iparam])

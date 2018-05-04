@@ -226,21 +226,24 @@ class UniformDirectionDistribution(DirectionDistribution):
             self._const_log_value = -np.log(self.delta_omega)
         return self._const_log_value
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=np.random):
         """
         Draws a direction from this distribution.
         
         shape: if None, returns single pair (latitude, longitude) in degrees
                if int, n, returns n random variates (array of shape (n, 2))
                if tuple of n ints, (n+1)-D array
+        random: the random number generator to use (default: numpy.random)
         """
         if shape is None:
-            phi_draw = self.phi_distribution.draw()
-            theta_draw = np.arccos(self.cos_theta_distribution.draw())
+            phi_draw = self.phi_distribution.draw(random=random)
+            theta_draw =\
+                np.arccos(self.cos_theta_distribution.draw(random=random))
         else:
             if type(shape) in int_types:
                 shape = (shape,)
-            phi_draw = self.phi_distribution.draw(shape=shape).flatten()
+            phi_draw = self.phi_distribution.draw(shape=shape,\
+                random=random).flatten()
             theta_draw = np.arccos(self.cos_theta_distribution.draw(\
                 shape=shape).flatten())
         (theta, phi) = self.rotator(theta_draw, phi_draw)

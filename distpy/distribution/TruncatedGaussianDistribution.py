@@ -56,7 +56,7 @@ class TruncatedGaussianDistribution(Distribution):
         """
         return 1
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws and returns a value from this distribution using numpy.random.
         
@@ -67,13 +67,14 @@ class TruncatedGaussianDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         """
         none_shape = (shape is None)
         if none_shape:
             shape = (1,)
         elif type(shape) in int_types:
             shape = (shape,)
-        unifs = rand.rand(*shape)
+        unifs = random.rand(*shape)
         args_to_erfinv =\
             (unifs * self._hi_term) + ((1. - unifs) * self._lo_term)
         points = self.mean + (np.sqrt(2 * self.var) * erfinv(args_to_erfinv))

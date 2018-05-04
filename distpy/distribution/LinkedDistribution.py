@@ -57,7 +57,7 @@ class LinkedDistribution(Distribution):
         """
         return self._numparams
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=np.random):
         """
         Draws value from shared_distribution and assigns that value to all
         parameters.
@@ -69,16 +69,19 @@ class LinkedDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns numpy.ndarray of values (all are equal by design)
         """
         if shape is None:
-            return np.ones(self.numparams) * self.shared_distribution.draw()
+            return np.ones(self.numparams) *\
+                self.shared_distribution.draw(random=random)
         else:
             if type(shape) in int_types:
                 shape = (shape,)
             return np.ones(shape + (self.numparams,)) *\
-                self.shared_distribution.draw(shape=shape)[...,np.newaxis]
+                self.shared_distribution.draw(shape=shape,\
+                random=random)[...,np.newaxis]
 
     def log_value(self, point):
         """

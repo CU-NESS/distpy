@@ -149,7 +149,7 @@ class GeometricDistribution(Distribution):
             self._log_common_ratio = np.log(self.common_ratio)
         return self._log_common_ratio
     
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws and returns a value from this distribution using numpy.random.
         
@@ -160,8 +160,9 @@ class GeometricDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         """
-        uniforms = rand.uniform(size=shape)
+        uniforms = random.uniform(size=shape)
         if self.range is None:
             log_argument = uniforms
         else:

@@ -135,15 +135,16 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         else:
             raise TypeError("maximum was set to a non-int.")
     
-    def draw_single_value(self, source):
+    def draw_single_value(self, source, random=np.random):
         """
         Draws a single value from this distribution.
         
         source: single integer
+        random: the random number generator to use (default: numpy.random)
         
         returns: single integer within 1 of source
         """
-        uniform = np.random.rand()
+        uniform = random.rand()
         if uniform < self.jumping_probability:
             if source == self.minimum:
                 return (source + 1)
@@ -156,16 +157,17 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         else:
             return source
     
-    def draw_shaped_values(self, source, shape):
+    def draw_shaped_values(self, source, shape, random=np.random):
         """
         Draws arbitrary shape of random values given the source point.
         
         source: a single integer number from which to jump
         shape: tuple of ints describing shape of output
+        random: the random number generator to use (default: numpy.random)
         
         returns: numpy.ndarray of shape shape
         """
-        uniform = np.random.rand(*shape)
+        uniform = random.rand(*shape)
         jumps = np.where(uniform < self.jumping_probability, 1, 0)
         if source == self.minimum:
             pass
@@ -175,7 +177,7 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
             jumps[np.where(uniform < self.jumping_probability / 2.)[0]] = -1
         return source + jumps
     
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
         point.
@@ -185,6 +187,7 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
                if int n, n random values are drawn
                if tuple of ints, the shape of a numpy.ndarray of destination
                                  values
+        random: the random number generator to use (default: numpy.random)
         
         returns: random values (type/shape determined by shape argument)
         """

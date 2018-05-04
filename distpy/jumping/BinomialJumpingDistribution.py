@@ -121,17 +121,18 @@ class BinomialJumpingDistribution(JumpingDistribution):
         else:
             return (shifted_source * self.reciprocal_span)
     
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
         point.
         
         source: single integer number
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if shape is None) or np.ndarray of given
                  shape.
         """
-        return self.minimum + np.random.binomial(self.span,\
+        return self.minimum + random.binomial(self.span,\
             self.p_from_shifted_source(source - self.minimum), size=shape)
     
     @property

@@ -129,7 +129,7 @@ class CustomDiscreteDistribution(Distribution):
                 "referenced before it was set.")
         return self._flattened_cumulative_mass_function
     
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=np.random):
         """
         Draws a point from the distribution. Must be implemented by any base
         class.
@@ -141,6 +141,7 @@ class CustomDiscreteDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if distribution is 1D) or array of values
         """
@@ -149,7 +150,7 @@ class CustomDiscreteDistribution(Distribution):
             shape = 1
         if isinstance(shape, int):
             shape = (shape,)
-        random_values = np.random.rand(*shape)
+        random_values = random.rand(*shape)
         flattened_locations = np.searchsorted(\
             self.flattened_cumulative_mass_function, random_values)
         unpacked_locations = np.unravel_index(flattened_locations, self.shape)

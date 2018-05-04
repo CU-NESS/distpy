@@ -51,7 +51,7 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
         else:
             raise TypeError("distribution was not a Distribution object.")
     
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
         point.
@@ -66,20 +66,21 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if distribution is 1D and shape is None)
                  or array of values
         """
         none_shape = (shape is None)
         if none_shape:
-            return source + self.distribution.draw()
+            return source + self.distribution.draw(random=random)
         elif type(shape) in int_types:
             shape = (shape,)
         if self.numparams == 1:
-            return source + self.distribution.draw(shape=shape)
+            return source + self.distribution.draw(shape=shape, random=random)
         else:
             return source[((np.newaxis,) * len(shape)) + (slice(None),)] +\
-                self.distribution.draw(shape=shape)
+                self.distribution.draw(shape=shape, random=random)
     
     def log_value(self, source, destination):
         """

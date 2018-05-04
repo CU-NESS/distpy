@@ -107,7 +107,7 @@ class UniformTriangulationDistribution(Distribution):
             self._discrete_cdf = self._discrete_cdf / self.total_volume
         return self._discrete_cdf
     
-    def draw_coefficients(self):
+    def draw_coefficients(self, random=rand):
         """
         Draws numparams+1 numbers which are all in [0, 1] and add up to 1. It
         samples them uniformly.
@@ -116,10 +116,10 @@ class UniformTriangulationDistribution(Distribution):
               sampling from an exponential distribution and summing and
               normalizing.
         """
-        temp_space = rand.uniform(size=self.numparams)
+        temp_space = random.uniform(size=self.numparams)
         return np.diff(np.sort(np.concatenate([[0], temp_space, [1]])))
     
-    def draw_from_simplex(self, isimplex):
+    def draw_from_simplex(self, isimplex, random=rand):
         """
         Draws a point uniformly from the simplex associated with the given
         index.
@@ -130,9 +130,9 @@ class UniformTriangulationDistribution(Distribution):
         """
         vertices =\
             self.triangulation.points[self.triangulation.simplices[isimplex],:]
-        return np.dot(self.draw_coefficients(), vertices)
+        return np.dot(self.draw_coefficients(random=random), vertices)
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws and returns a value from this distribution using numpy.random.
         
@@ -151,11 +151,11 @@ class UniformTriangulationDistribution(Distribution):
             shape = (shape,)
         total_number = np.prod(shape)
         samples = np.ndarray((total_number, self.numparams))
-        cdf_values = rand.uniform(size=total_number)
+        cdf_values = random.uniform(size=total_number)
         for index in range(total_number):
             cdf_value = cdf_values[index]
             isimplex = np.where(self.discrete_cdf >= cdf_value)[0][0]
-            samples[index,:] = self.draw_from_simplex(isimplex)
+            samples[index,:] = self.draw_from_simplex(isimplex, random=random)
         if int_shape and (shape == (1,)):
             return samples[0]
         else:

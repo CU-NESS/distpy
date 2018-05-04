@@ -34,7 +34,7 @@ class JumpingDistribution(Savable, Loadable):
     single number for a univariate distribution or a numpy.ndarray for a
     multivariate distribution.
     """
-    def draw(self, source):
+    def draw(self, source, random=None):
         """
         Draws a destination point from this jumping distribution given a source
         point. Must be implemented by any base class.
@@ -42,6 +42,7 @@ class JumpingDistribution(Savable, Loadable):
         source: if this JumpingDistribution is univariate, source should be a
                                                            single number
                 otherwise, source should be numpy.ndarray of shape (numparams,)
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if distribution is 1D) or array of values
         """

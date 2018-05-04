@@ -13,7 +13,7 @@ from ..util import int_types
 from .JumpingDistributionSet import JumpingDistributionSet
 
 try:
-    from multiprocess import Pool
+    from multiprocessing import Pool
 except ImportError:
     have_multiprocess = False
 else:
@@ -25,6 +25,54 @@ try:
 except:
     # this try/except allows for python 2/3 compatible string type checking
     basestring = str
+    
+def array_from_dictionary(dictionary, parameters):
+    """
+    Creates an array out of the dictionary.
+        
+    dictionary: dict with parameters as keys and arrays or numbers as values 
+    
+    returns: array of ndim 1 greater than values ndim
+    """
+    return np.array([dictionary[parameter] for parameter in parameters])
+
+def dictionary_from_array(array, parameters):
+    """
+    Creates a dictionary out of the arrays.
+   
+    array: numpy.ndarray whose first dimension has length num_parameters
+    
+    returns: dictionary with parameters as keys
+    """
+    return {parameter: array[iparameter]\
+        for (iparameter, parameter) in enumerate(parameters)}
+
+def choose_destination(input_tuple):
+    """
+    Chooses a destination point given the source point and its loglikelihood.
+    
+    input_tuple: (source, lnprob, jumping_distribution_set, lnprobfn, args,
+                 kwargs, parameters, random)
+    
+    returns: output_tuple: (destination, newlnprob, accepted, random)
+    """
+    (source, lnprob, jumping_distribution_set, lnprobfn, args, kwargs,\
+        parameters, random) = input_tuple
+    source_dict = dictionary_from_array(source, parameters)
+    destination_dict =\
+        jumping_distribution_set.draw(source_dict, random=random)
+    destination = array_from_dictionary(destination_dict, parameters)
+    newlnprob = lnprobfn(destination, *args, **kwargs)
+    log_value_difference = jumping_distribution_set.log_value_difference(\
+        source_dict, destination_dict)
+    diff = newlnprob - lnprob - log_value_difference
+    # M-H acceptance ratio
+    if diff < 0:
+        diff = np.exp(diff) - random.rand()
+    if diff > 0:
+        return (destination, newlnprob, True, random)
+    else:
+        return (source, lnprob, False, random)
 
 class DummyPool(object):
     """
@@ -211,29 +259,6 @@ class MetropolisHastingsSampler(emceeSampler):
         else:
             raise TypeError("jumping_distribution_set was set to something " +\
                 "which is not a JumpingDistributionSet object.")
-    
-    def array_from_dictionary(self, dictionary):
-        """
-        Creates an array out of the dictionary.
-        
-        dictionary: dict with parameters as keys and arrays or numbers as
-                    values 
-        
-        returns: array of ndim 1 greater than values ndim
-        """
-        return\
-            np.array([dictionary[parameter] for parameter in self.parameters])
-    
-    def dictionary_from_array(self, array):
-        """
-        Creates a dictionary out of the arrays.
-        
-        array: numpy.ndarray whose first dimension has length num_parameters
-        
-        returns: dictionary with parameters as keys
-        """
-        return {parameter: array[iparameter]\
-            for (iparameter, parameter) in enumerate(self.parameters)}
 
     def reset(self):
         """
@@ -250,7 +275,7 @@ class MetropolisHastingsSampler(emceeSampler):
         """
         Advances the chain ``iterations`` steps as an iterator
 
-        point: the initial position vector.
+        point: the initial position vector(s).
         lnprob: (optional) the log posterior probability at position ``point``.
                 If lnprob is not provided, the initial value is calculated.
         rstate0: (optional) the state of the random number generator. See the
@@ -286,34 +311,20 @@ class MetropolisHastingsSampler(emceeSampler):
         i0 = self.iterations
         for i in range(int(iterations)):
             self.iterations += 1
-            source_dicts = []
-            destination_dicts = []
-            destinations = []
-            for iwalker in range(self.nwalkers):
-                # Calculate the proposal distribution.
-                source_dict = self.dictionary_from_array(point[iwalker])
-                destination_dict =\
-                    self.jumping_distribution_set.draw(source_dict)
-                destination = self.array_from_dictionary(destination_dict)
-                source_dicts.append(source_dict)
-                destination_dicts.append(destination_dict)
-                destinations.append(destination)
+            randoms = [np.random.RandomState(\
+                seed=self._random.randint(2 ** 32))\
+                for iwalker in range(self.nwalkers)]
             pool = self.create_pool()
-            newlnprobs = list(pool.map(self.get_lnprob, destinations))
+            arguments = [(point[iwalker], lnprob[iwalker],\
+                self.jumping_distribution_set, self.lnprobfn, self.args,\
+                self.kwargs, self.parameters, randoms[iwalker])\
+                for iwalker in range(self.nwalkers)]
+            (destinations, newlnprobs, accepted, randoms) = zip(*pool.map(\
+                choose_destination, arguments))
             pool.close()
-            for iwalker in range(self.nwalkers):
-                newlnprob = newlnprobs[iwalker]
-                log_value_difference =\
-                    self.jumping_distribution_set.log_value_difference(\
-                    source_dicts[iwalker], destination_dicts[iwalker])
-                diff = newlnprob - lnprob[iwalker] - log_value_difference
-                # M-H acceptance ratio
-                if diff < 0:
-                    diff = np.exp(diff) - self._random.rand()
-                if diff > 0:
-                    point[iwalker,:] = destinations[iwalker]
-                    lnprob[iwalker] = newlnprob
-                    self.naccepted[iwalker] += 1
+            point = np.array(destinations)
+            lnprob = np.array(newlnprobs)
+            self.naccepted = self.naccepted + np.array(accepted).astype(int)
             if storechain and (i % thin) == 0:
                 ind = i0 + int(i / thin)
                 self._chain[:,ind,:] = point

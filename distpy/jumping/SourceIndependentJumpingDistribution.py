@@ -7,6 +7,7 @@ Description: File containing a class which represents a degenerate sort of
              jumping distribution: one whose value is independent of the source
              of the jump.
 """
+import numpy as np
 from ..distribution import Distribution, load_distribution_from_hdf5_group
 from .JumpingDistribution import JumpingDistribution
 
@@ -49,7 +50,7 @@ class SourceIndependentJumpingDistribution(JumpingDistribution):
         else:
             raise TypeError("distribution was not a Distribution object.")
     
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
         point.
@@ -68,7 +69,7 @@ class SourceIndependentJumpingDistribution(JumpingDistribution):
         returns: either single value (if distribution is 1D and shape is None)
                  or array of values
         """
-        return self.distribution.draw(shape=shape)
+        return self.distribution.draw(shape=shape, random=random)
     
     def log_value(self, source, destination):
         """

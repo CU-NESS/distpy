@@ -45,7 +45,7 @@ class InfiniteUniformDistribution(Distribution):
         self.is_discrete = is_discrete
         self.metadata = metadata
     
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=None):
         """
         Draws a point from the distribution. Since this Distribution cannot be
         drawn from, this throws a NotImplementedError.

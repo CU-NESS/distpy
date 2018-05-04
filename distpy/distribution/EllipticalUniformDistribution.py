@@ -70,7 +70,7 @@ class EllipticalUniformDistribution(Distribution):
             self._numparams = len(self.mean)
         return self._numparams
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws a random vector from this uniform elliptical distribution. By the
         definition of this class, the point it draws is equally likely to lie
@@ -91,10 +91,10 @@ class EllipticalUniformDistribution(Distribution):
             shape = (1,)
         elif type(shape) in int_types:
             shape = (shape,)
-        xis = rand.randn(*(shape + (self.numparams,)))
+        xis = random.randn(*(shape + (self.numparams,)))
         xis = xis / np.sqrt(np.sum(np.power(xis, 2), axis=-1, keepdims=True))
         # xi now contains random directional unit vectors
-        radial_cdfs = rand.rand(*shape)
+        radial_cdfs = random.rand(*shape)
         max_z_radius = np.sqrt(self.numparams + 2)
         fractional_radii = np.power(radial_cdfs, 1. / self.numparams)
         deviations = max_z_radius * fractional_radii[...,np.newaxis] *\

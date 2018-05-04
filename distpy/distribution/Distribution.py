@@ -41,7 +41,7 @@ class Distribution(Savable, Loadable):
     single number for a univariate distribution or a numpy.ndarray for a
     multivariate distribution.
     """
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=None):
         """
         Draws a point from the distribution. Must be implemented by any base
         class.
@@ -53,6 +53,7 @@ class Distribution(Savable, Loadable):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if distribution is 1D) or array of values
         """

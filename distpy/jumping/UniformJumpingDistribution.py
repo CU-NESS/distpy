@@ -91,7 +91,7 @@ class UniformJumpingDistribution(JumpingDistribution):
         """
         return scila.sqrtm(self.covariance * (self.numparams + 2))
     
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
         point.
@@ -99,11 +99,12 @@ class UniformJumpingDistribution(JumpingDistribution):
         source: if this JumpingDistribution is univariate, source should be a
                                                            single number
                 otherwise, source should be numpy.ndarray of shape (numparams,)
+        random: the random number generator to use (default: numpy.random)
         
         returns: destination in same format as source
         """
         if self.numparams == 1:
-            return np.random.uniform(source - self.half_span,\
+            return random.uniform(source - self.half_span,\
                 source + self.half_span, size=shape)
         else:
             none_shape = (shape is None)
@@ -112,8 +113,8 @@ class UniformJumpingDistribution(JumpingDistribution):
             elif type(shape) in int_types:
                 shape = (shape,)
             normal_vector =\
-                np.random.standard_normal(size=shape+(self.numparams,))
-            radii = np.power(np.random.random(size=shape), 1. / self.numparams)
+                random.standard_normal(size=shape+(self.numparams,))
+            radii = np.power(random.random(size=shape), 1. / self.numparams)
             radii = (radii / npla.norm(normal_vector, axis=-1))[...,np.newaxis]
             displacement = radii * np.dot(normal_vector, self.matrix_for_draw)
             destination = displacement +\

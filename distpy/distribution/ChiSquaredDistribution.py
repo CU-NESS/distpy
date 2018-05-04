@@ -73,7 +73,7 @@ class ChiSquaredDistribution(Distribution):
         """
         return 1
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws and returns a value from this distribution using numpy.random.
         
@@ -84,8 +84,9 @@ class ChiSquaredDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         """
-        sample = rand.chisquare(self.degrees_of_freedom, size=shape)
+        sample = random.chisquare(self.degrees_of_freedom, size=shape)
         if self.reduced:
             return sample / self.degrees_of_freedom
         else:

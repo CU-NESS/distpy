@@ -212,7 +212,7 @@ class JumpingDistributionSet(Savable, Loadable):
             raise TypeError("JumpingDistributionSet objects can only have " +\
                 "other JumpingDistributionSet objects added to them.")
 
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a point from all distributions.
         
@@ -227,11 +227,12 @@ class JumpingDistributionSet(Savable, Loadable):
             if (distribution.numparams == 1):
                 point[params[0]] = transforms[0].apply_inverse(\
                     distribution.draw(transforms[0].apply(source[params[0]]),\
-                    shape=shape))
+                    shape=shape, random=random))
             else:
                 transformed_source = np.array([transform(source[param])\
                     for (param, transform) in zip(params, transforms)])
-                this_draw = distribution.draw(transformed_source, shape=shape)
+                this_draw = distribution.draw(transformed_source, shape=shape,\
+                    random=random)
                 if shape is None:
                     for iparam in range(len(params)):
                         point[params[iparam]] =\

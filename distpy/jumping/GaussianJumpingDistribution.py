@@ -78,7 +78,7 @@ class GaussianJumpingDistribution(JumpingDistribution):
                 la.slogdet(self.covariance)[1]) / (-2.)
         return self._constant_in_log_value
     
-    def draw(self, source, shape=None):
+    def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
         point.
@@ -93,14 +93,14 @@ class GaussianJumpingDistribution(JumpingDistribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns: either single value (if distribution is 1D) or array of values
         """
         if self.numparams == 1:
-            return\
-                np.random.normal(source, self.standard_deviation, size=shape)
+            return random.normal(source, self.standard_deviation, size=shape)
         else:
-            return np.random.multivariate_normal(source, self.covariance,\
+            return random.multivariate_normal(source, self.covariance,\
                 size=shape, check_valid='raise')
     
     def log_value(self, source, destination):

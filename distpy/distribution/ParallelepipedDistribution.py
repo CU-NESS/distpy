@@ -147,7 +147,7 @@ class ParallelepipedDistribution(Distribution):
             self._area = np.abs(lalg.det(self.matrix))
         return self._area
 
-    def draw(self, shape=None):
+    def draw(self, shape=None, random=rand):
         """
         Draws a value from the parallelepiped this object describes (uniform
         distribution over support).
@@ -159,6 +159,7 @@ class ParallelepipedDistribution(Distribution):
                if tuple of n ints, returns that many random variates
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
+        random: the random number generator to use (default: numpy.random)
         
         returns random draw in form of numpy.ndarray
         """
@@ -167,7 +168,7 @@ class ParallelepipedDistribution(Distribution):
             shape = (1,)
         elif type(shape) in int_types:
             shape = (shape,)
-        transformed_point = rand.rand(*(shape + (self.numparams,)))
+        transformed_point = random.rand(*(shape + (self.numparams,)))
         points = self.vertex + np.dot(transformed_point, self.matrix.A)
         if none_shape:
             return points[0]
