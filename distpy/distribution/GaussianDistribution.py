@@ -8,10 +8,11 @@ Description: File containing class representing Gaussian distribution
 """
 import numpy as np
 import numpy.random as rand
-import numpy.linalg as lalg
+import numpy.linalg as npla
+import scipy.linalg as scila
 from scipy.special import erfinv
-from ..util import numerical_types, sequence_types, create_hdf5_dataset,\
-    get_hdf5_value
+from ..util import numerical_types, int_types, sequence_types,\
+    create_hdf5_dataset, get_hdf5_value
 from .Distribution import Distribution
 
 two_pi = 2 * np.pi
@@ -63,8 +64,8 @@ class GaussianDistribution(Distribution):
         else:
             raise ValueError("The mean of a GaussianDistribution is not of " +\
                 "a recognizable type.")
-        self.invcov = lalg.inv(self.covariance)
-        self.logdetcov = lalg.slogdet(self.covariance)[1]
+        self.invcov = npla.inv(self.covariance)
+        self.logdetcov = npla.slogdet(self.covariance)[1]
         self.metadata = metadata
     
     def _check_covariance_when_mean_has_size_1(self, true_mean, covariance):
@@ -196,6 +197,15 @@ class GaussianDistribution(Distribution):
         commutative).
         """
         return self.__mul__(other)
+    
+    @property
+    def square_root_covariance(self):
+        """
+        Property storing the square root of the covariance matrix.
+        """
+        if not hasattr(self, '_square_root_covariance'):
+            self._square_root_covariance = scila.sqrtm(self.covariance)
+        return self._square_root_covariance
 
     def draw(self, shape=None, random=rand):
         """
@@ -216,8 +226,15 @@ class GaussianDistribution(Distribution):
             loc = self.mean.A[0,0]
             scale = np.sqrt(self.covariance.A[0,0])
             return random.normal(loc=loc, scale=scale, size=shape)
-        return random.multivariate_normal(self.mean.A[0,:], self.covariance.A,\
-            size=shape, check_valid='raise')
+        elif shape is None:
+            return self.mean.A[0] + np.dot(self.square_root_covariance,\
+                random.normal(0, 1, size=self.numparams))
+        else:
+            if type(shape) in int_types:
+                shape = (shape,)
+            random_vector = random.normal(0, 1, size=shape+(1,self.numparams))
+            return self.mean.A +\
+                np.sum(random_vector * self.square_root_covariance, axis=-1)
 
     def log_value(self, point):
         """
@@ -298,7 +315,7 @@ class GaussianDistribution(Distribution):
             for index in np.arange(self.numparams)\
             if index not in known_indices])
         new_covariance =\
-            lalg.inv(self.invcov.A[:,remaining_indices][remaining_indices])
+            npla.inv(self.invcov.A[:,remaining_indices][remaining_indices])
         known_mean_displacement = values - self.mean.A[0][known_indices]
         new_mean = self.mean.A[0][remaining_indices] - np.dot(new_covariance,\
             np.dot(self.invcov.A[:,known_indices][remaining_indices],\

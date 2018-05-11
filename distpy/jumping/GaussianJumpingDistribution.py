@@ -7,7 +7,8 @@ Description: File containing a jumping distribution which is Gaussian centered
              on the source point with a given covariance.
 """
 import numpy as np
-import numpy.linalg as la
+import numpy.linalg as npla
+import scipy.linalg as scila
 from ..util import create_hdf5_dataset, get_hdf5_value, numerical_types,\
     sequence_types
 from .JumpingDistribution import JumpingDistribution
@@ -63,7 +64,7 @@ class GaussianJumpingDistribution(JumpingDistribution):
         stored in covariance property.
         """
         if not hasattr(self, '_inverse_covariance'):
-            self._inverse_covariance = la.inv(self.covariance)
+            self._inverse_covariance = npla.inv(self.covariance)
         return self._inverse_covariance
     
     @property
@@ -75,8 +76,17 @@ class GaussianJumpingDistribution(JumpingDistribution):
         if not hasattr(self, '_constant_in_log_value'):
             self._constant_in_log_value =\
                 ((self.numparams * np.log(2 * np.pi)) +\
-                la.slogdet(self.covariance)[1]) / (-2.)
+                npla.slogdet(self.covariance)[1]) / (-2.)
         return self._constant_in_log_value
+    
+    @property
+    def square_root_covariance(self):
+        """
+        Property storing the square root of the covariance matrix.
+        """
+        if not hasattr(self, '_square_root_covariance'):
+            self._square_root_covariance = scila.sqrtm(self.covariance)
+        return self._square_root_covariance
     
     def draw(self, source, shape=None, random=np.random):
         """
@@ -99,9 +109,13 @@ class GaussianJumpingDistribution(JumpingDistribution):
         """
         if self.numparams == 1:
             return random.normal(source, self.standard_deviation, size=shape)
+        elif shape is None:
+            return source + np.dot(self.square_root_covariance,\
+                random.normal(0, 1, size=(self.numparams)))
         else:
-            return random.multivariate_normal(source, self.covariance,\
-                size=shape, check_valid='raise')
+            random_vector = random.normal(0, 1, size=shape+(1, self.numparams))
+            return source +\
+                np.sum(random_vector * self.square_root_covariance, axis=-1)
     
     def log_value(self, source, destination):
         """

@@ -18,7 +18,8 @@ Description: A container which can hold an arbitrary number of distributions,
 """
 import numpy as np
 from ..util import Savable, Loadable, int_types, sequence_types
-from ..transform import cast_to_transform_list, TransformList, TransformSet
+from ..transform import cast_to_transform_list, TransformList, TransformSet,\
+    NullTransform
 from .Distribution import Distribution
 from .LoadDistribution import load_distribution_from_hdf5_group
 try:
@@ -250,6 +251,8 @@ class DistributionSet(Savable, Loadable):
                         for (param, transform) in zip(params, transforms)]
                     result += distribution.log_value(subpoint)
                 for (param, transform) in zip(params, transforms):
+                    if isinstance(transform, NullTransform):
+                        continue
                     result += transform.log_derivative(point[param])
             return result
         else:
