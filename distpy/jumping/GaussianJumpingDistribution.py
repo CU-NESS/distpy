@@ -50,7 +50,7 @@ class GaussianJumpingDistribution(JumpingDistribution):
         elif type(value) in sequence_types:
             value = np.array(value)
             if (value.ndim == 2) and (value.shape[0] == value.shape[1]):
-                self._covariance = value
+                self._covariance = (value + value.T) / 2
             else:
                 raise ValueError("covariance didn't have the expected shape.")
         else:
