@@ -13,7 +13,7 @@ from ..util import int_types
 from .JumpingDistributionSet import JumpingDistributionSet
 
 try:
-    from multiprocessing import Pool
+    from multiprocess import Pool
 except ImportError:
     have_multiprocess = False
 else:
