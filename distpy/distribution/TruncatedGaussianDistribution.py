@@ -168,8 +168,10 @@ class TruncatedGaussianDistribution(Distribution):
                        if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'TruncatedGaussianDistribution'
-        group.attrs['low'] = self.lo
-        group.attrs['high'] = self.hi
+        if self.lo is not None:
+            group.attrs['low'] = self.lo
+        if self.hi is not None:
+            group.attrs['high'] = self.hi
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.var
         if save_metadata:
@@ -194,8 +196,14 @@ class TruncatedGaussianDistribution(Distribution):
         metadata = Distribution.load_metadata(group)
         mean = group.attrs['mean']
         variance = group.attrs['variance']
-        low = group.attrs['low']
-        high = group.attrs['high']
+        if 'low' in group.attrs:
+            low = group.attrs['low']
+        else:
+            low = None
+        if 'high' in group.attrs:
+            high = group.attrs['high']
+        else:
+            high = None
         return TruncatedGaussianDistribution(mean, variance, low=low,\
             high=high, metadata=metadata)
     

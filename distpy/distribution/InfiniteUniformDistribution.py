@@ -32,11 +32,11 @@ class InfiniteUniformDistribution(Distribution):
     single number for a univariate distribution or a numpy.ndarray for a
     multivariate distribution.
     """
-    def __init__(self, ndim, metadata=None, is_discrete=False):
+    def __init__(self, ndim=1, metadata=None, is_discrete=False):
         """
         Initializes a new InfiniteUniformDistribution
         
-        ndim: the dimension of this distribution
+        ndim: the dimension of this distribution, default 1
         metadata: data to store alongside this distribution
         is_discrete: True if the variable underlying this distribution is
                      discrete. False otherwise (default False)
