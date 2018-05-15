@@ -205,6 +205,13 @@ class GaussianDistribution(Distribution):
         """
         if not hasattr(self, '_square_root_covariance'):
             self._square_root_covariance = scila.sqrtm(self.covariance)
+            if issubclass(self._square_root_covariance.dtype.type, complex):
+                raise ValueError("Something went wrong, causing the square " +\
+                    "root of the covariance matrix of this " +\
+                    "GaussianDistribution to have at least one complex " +\
+                    "element. This is usually caused by an asymmetric " +\
+                    "covariance matrix or a negative eigenvalue of the " +\
+                    "covariance matrix.")
         return self._square_root_covariance
 
     def draw(self, shape=None, random=rand):
