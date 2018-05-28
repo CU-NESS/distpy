@@ -15,6 +15,8 @@ from distpy.distribution.DoubleSidedExponentialDistribution import\
 from distpy.distribution.EllipticalUniformDistribution import\
     EllipticalUniformDistribution
 from distpy.distribution.ExponentialDistribution import ExponentialDistribution
+from distpy.distribution.GeneralizedParetoDistribution import\
+    GeneralizedParetoDistribution
 from distpy.distribution.GammaDistribution import GammaDistribution
 from distpy.distribution.GaussianDistribution import GaussianDistribution
 from distpy.distribution.GeometricDistribution import GeometricDistribution

@@ -9,6 +9,7 @@ Description: File containing functions which can load any Distribution (and it
 """
 from ..util import get_hdf5_value
 from .UniformDistribution import UniformDistribution
+from .GeneralizedParetoDistribution import GeneralizedParetoDistribution
 from .GammaDistribution import GammaDistribution
 from .ChiSquaredDistribution import ChiSquaredDistribution
 from .BetaDistribution import BetaDistribution
