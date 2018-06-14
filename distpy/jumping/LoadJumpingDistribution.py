@@ -18,6 +18,7 @@ from .SourceIndependentJumpingDistribution\
     import SourceIndependentJumpingDistribution
 from .LocaleIndependentJumpingDistribution\
     import LocaleIndependentJumpingDistribution
+from .JumpingDistributionSum import JumpingDistributionSum
 
 try:
     import h5py
@@ -41,11 +42,23 @@ def load_jumping_distribution_from_hdf5_group(group):
     except KeyError:
         raise ValueError("group given does not appear to contain a jumping " +\
             "distribution.")
+    if class_name == 'JumpingDistributionSum':
+        subgroup = group['jumping_distributions']
+        idistribution = 0
+        inner_class_names = []
+        while '{:d}'.format(idistribution) in subgroup:
+            inner_class_names.append(\
+                subgroup['{:d}'.format(idistribution)].attrs['class'])
+            idistribution += 1
+        args = [eval(inner_class_name)\
+                for inner_class_name in inner_class_names]
+    else:
+        args = []
     try:
         cls = eval(class_name)
     except:
         raise ValueError("The class of the Distribution was not recognized.")
-    return cls.load_from_hdf5_group(group)
+    return cls.load_from_hdf5_group(group, *args)
 
 def load_jumping_distribution_from_hdf5_file(file_name):
     """

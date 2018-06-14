@@ -33,6 +33,7 @@ from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .UniformTriangulationDistribution import UniformTriangulationDistribution
 from .CustomDiscreteDistribution import CustomDiscreteDistribution
+from .DistributionSum import DistributionSum
 
 try:
     import h5py
@@ -53,7 +54,17 @@ def load_distribution_from_hdf5_group(group):
     """
     try:
         class_name = group.attrs['class']
-        if class_name in ['LinkedDistribution', 'SequentialDistribution']:
+        if class_name == 'DistributionSum':
+            subgroup = group['distributions']
+            idistribution = 0
+            inner_class_names = []
+            while '{:d}'.format(idistribution) in subgroup:
+                inner_class_names.append(\
+                    subgroup['{:d}'.format(idistribution)].attrs['class'])
+                idistribution += 1
+            args = [eval(inner_class_name)\
+                for inner_class_name in inner_class_names]
+        elif class_name in ['LinkedDistribution', 'SequentialDistribution']:
             inner_class_name = group['shared_distribution'].attrs['class']
             args = [eval(inner_class_name)]
         else:

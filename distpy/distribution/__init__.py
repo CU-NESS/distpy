@@ -43,6 +43,7 @@ from distpy.distribution.UniformTriangulationDistribution import\
     UniformTriangulationDistribution
 from distpy.distribution.CustomDiscreteDistribution import\
     CustomDiscreteDistribution
+from distpy.distribution.DistributionSum import DistributionSum
 from distpy.distribution.LoadDistribution import\
     load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
 from distpy.distribution.DistributionSet import DistributionSet

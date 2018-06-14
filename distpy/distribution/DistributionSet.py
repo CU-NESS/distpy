@@ -207,6 +207,19 @@ class DistributionSet(Savable, Loadable):
         else:
             raise TypeError("DistributionSet objects can only have other " +\
                 "DistributionSet objects added to them.")
+    
+    def modify_parameter_names(self, function):
+        """
+        Modifies the names of the parameters in this distribution by applying
+        the given function to each one.
+        
+        function: function to apply to each parameter name
+        """
+        self._params = list(map(function, self.params))
+        self._discrete_params = list(map(function, self.discrete_params))
+        self._continuous_params = list(map(function, self.continuous_params))
+        self._data = [(distribution, list(map(function, params)), transforms)\
+            for (distribution, params, transforms) in self._data]
 
     def draw(self, shape=None, random=np.random):
         """

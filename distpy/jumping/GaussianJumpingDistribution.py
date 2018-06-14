@@ -9,8 +9,8 @@ Description: File containing a jumping distribution which is Gaussian centered
 import numpy as np
 import numpy.linalg as npla
 import scipy.linalg as scila
-from ..util import create_hdf5_dataset, get_hdf5_value, numerical_types,\
-    sequence_types
+from ..util import create_hdf5_dataset, get_hdf5_value, int_types,\
+    numerical_types, sequence_types
 from .JumpingDistribution import JumpingDistribution
 
 class GaussianJumpingDistribution(JumpingDistribution):
@@ -120,6 +120,8 @@ class GaussianJumpingDistribution(JumpingDistribution):
             return source + np.dot(self.square_root_covariance,\
                 random.normal(0, 1, size=(self.numparams)))
         else:
+            if type(shape) in int_types:
+                shape = (shape,)
             random_vector = random.normal(0, 1, size=shape+(1, self.numparams))
             return source +\
                 np.sum(random_vector * self.square_root_covariance, axis=-1)

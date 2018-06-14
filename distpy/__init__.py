@@ -29,14 +29,14 @@ from distpy.distribution import Distribution, BetaDistribution,\
     DirectionDistribution, UniformDirectionDistribution,\
     GeneralizedParetoDistribution, GaussianDirectionDistribution,\
     UniformTriangulationDistribution, CustomDiscreteDistribution,\
-    DistributionSet, load_distribution_from_hdf5_group,\
+    DistributionSum, DistributionSet, load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
     BinomialJumpingDistribution, AdjacencyJumpingDistribution,\
     SourceIndependentJumpingDistribution,\
-    LocaleIndependentJumpingDistribution, JumpingDistributionSet,\
-    load_jumping_distribution_from_hdf5_group,\
+    LocaleIndependentJumpingDistribution, JumpingDistributionSum,\
+    JumpingDistributionSet, load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file,\
     MetropolisHastingsSampler
 

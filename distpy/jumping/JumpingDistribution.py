@@ -70,7 +70,8 @@ class JumpingDistribution(Savable, Loadable):
         
         returns: single number difference between one-way log-PDF's
         """
-        return log_value(source, destination) - log_value(destination, source)
+        return self.log_value(source, destination) -\
+            self.log_value(destination, source)
     
     @property
     def numparams(self):
