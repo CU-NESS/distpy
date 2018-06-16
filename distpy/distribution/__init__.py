@@ -41,6 +41,8 @@ from distpy.distribution.GaussianDirectionDistribution import\
     GaussianDirectionDistribution
 from distpy.distribution.UniformTriangulationDistribution import\
     UniformTriangulationDistribution
+from distpy.distribution.DiscreteUniformDistribution import\
+    DiscreteUniformDistribution
 from distpy.distribution.CustomDiscreteDistribution import\
     CustomDiscreteDistribution
 from distpy.distribution.DistributionSum import DistributionSum

@@ -236,7 +236,7 @@ class Distribution(Savable, Loadable):
         Confidence intervals for most distributions can be generated as long as
         this distribution describes only one dimension.
         """
-        return (self.numparams == 1)
+        return ((not self.is_discrete) and (self.numparams == 1))
     
     def left_confidence_interval(self, probability_level):
         """
