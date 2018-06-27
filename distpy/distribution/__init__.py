@@ -45,6 +45,8 @@ from distpy.distribution.DiscreteUniformDistribution import\
     DiscreteUniformDistribution
 from distpy.distribution.CustomDiscreteDistribution import\
     CustomDiscreteDistribution
+from distpy.distribution.DeterministicDistribution import\
+    DeterministicDistribution
 from distpy.distribution.DistributionSum import DistributionSum
 from distpy.distribution.LoadDistribution import\
     load_distribution_from_hdf5_group, load_distribution_from_hdf5_file

@@ -29,8 +29,9 @@ from distpy.distribution import Distribution, BetaDistribution,\
     DirectionDistribution, UniformDirectionDistribution,\
     GeneralizedParetoDistribution, GaussianDirectionDistribution,\
     UniformTriangulationDistribution, DiscreteUniformDistribution,\
-    CustomDiscreteDistribution, DistributionSum, DistributionSet,\
-    load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
+    CustomDiscreteDistribution, DeterministicDistribution, DistributionSum,\
+    DistributionSet, load_distribution_from_hdf5_group,\
+    load_distribution_from_hdf5_file
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
     BinomialJumpingDistribution, AdjacencyJumpingDistribution,\

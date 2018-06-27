@@ -34,6 +34,7 @@ from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .UniformTriangulationDistribution import UniformTriangulationDistribution
 from .CustomDiscreteDistribution import CustomDiscreteDistribution
 from .DistributionSum import DistributionSum
+from .DeterministicDistribution import DeterministicDistribution
 
 try:
     import h5py
