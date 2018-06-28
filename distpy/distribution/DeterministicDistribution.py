@@ -237,4 +237,31 @@ class DeterministicDistribution(Distribution):
         points = group['points'].value
         metadata = Distribution.load_metadata(group)
         return DeterministicDistribution(points, metadata=metadata)
+    
+    def __mul__(self, other):
+        """
+        "Multiplies" this DeterministicDistribution by another
+        DeterministicDistribution by combining them. The two distributions must
+        contain the same number of points, but may contain different numbers of
+        parameters. This function ignores metadata.
+        
+        other: another DeterministicDistribution to combine with this one
+        """
+        if isinstance(other, DeterministicDistribution):
+            self_one_param = (self.numparams == 1)
+            other_one_param = (other.numparams == 1)
+            if self.numparams == 1:
+                self_points_slice = (slice(None), np.newaxis)
+            else:
+                self_points_slice = (slice(None), slice(None))
+            if other.numparams == 1:
+                other_points_slice = (slice(None), np.newaxis)
+            else:
+                other_points_slice = (slice(None), slice(None))
+            new_points = np.concatenate([self.points[self_points_slice],\
+                other.points[other_points_slice]], axis=-1)
+            return DeterministicDistribution(new_points)
+        else:
+            raise TypeError("A DeterministicDistribution can only be " +\
+                "combined to other DeterministicDistribution.")
 
