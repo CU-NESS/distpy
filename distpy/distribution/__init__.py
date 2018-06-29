@@ -51,4 +51,5 @@ from distpy.distribution.DistributionSum import DistributionSum
 from distpy.distribution.LoadDistribution import\
     load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
 from distpy.distribution.DistributionSet import DistributionSet
+from distpy.distribution.DistributionHarmonizer import DistributionHarmonizer
 

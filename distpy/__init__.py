@@ -31,7 +31,7 @@ from distpy.distribution import Distribution, BetaDistribution,\
     UniformTriangulationDistribution, DiscreteUniformDistribution,\
     CustomDiscreteDistribution, DeterministicDistribution, DistributionSum,\
     DistributionSet, load_distribution_from_hdf5_group,\
-    load_distribution_from_hdf5_file
+    load_distribution_from_hdf5_file, DistributionHarmonizer
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
     BinomialJumpingDistribution, AdjacencyJumpingDistribution,\
