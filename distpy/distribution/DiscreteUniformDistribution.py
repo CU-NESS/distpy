@@ -156,4 +156,11 @@ class DiscreteUniformDistribution(Distribution):
         False.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return DiscreteUniformDistribution(self.low, self.high)
 

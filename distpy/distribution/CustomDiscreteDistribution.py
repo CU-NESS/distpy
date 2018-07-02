@@ -316,4 +316,12 @@ class CustomDiscreteDistribution(Distribution):
         This distribution cannot yield confidence intervals.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return CustomDiscreteDistribution(self.variable_values.copy(),\
+            self.probability_mass_function.copy())
 

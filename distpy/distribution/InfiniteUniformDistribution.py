@@ -224,4 +224,12 @@ class InfiniteUniformDistribution(Distribution):
         this distribution describes only one dimension.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return InfiniteUniformDistribution(self.numparams,\
+            is_dicrete=self.is_discrete)
 

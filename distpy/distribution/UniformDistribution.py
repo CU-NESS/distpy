@@ -185,4 +185,11 @@ class UniformDistribution(Distribution):
         returns: single number representing second derivative of log value
         """
         return 0.
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return UniformDistribution(self.low, self.high)
 

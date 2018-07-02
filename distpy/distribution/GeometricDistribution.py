@@ -288,4 +288,12 @@ class GeometricDistribution(Distribution):
         False.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return GeometricDistribution(self.common_ratio, self.minimum,\
+            self.maximum)
 

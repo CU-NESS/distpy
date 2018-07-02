@@ -631,4 +631,26 @@ class DistributionSet(Savable, Loadable):
             raise ValueError("point given to hessian_of_log_value " +\
                 "function of a DistributionSet was not a dictionary of " +\
                 "values indexed by parameter names.")
+    
+    def copy(self):
+        """
+        Returns a deep copy of this DistributionSet.
+        """
+        copied = DistributionSet()
+        for (distribution, params, transforms) in self._data:
+            copied_distribution = distribution.copy()
+            copied_params = [param for param in params]
+            copied_transforms =\
+                [transform.to_string() for transform in transforms]
+            copied.add_distribution(\
+                copied_distribution, copied_params, copied_transforms)
+        return copied
+    
+    def reset(self):
+        """
+        Resets this distribution. This allows ideal distributions to live
+        alongside samples as the same kind of object.
+        """
+        for (distribution, parameters, transforms) in self._data:
+            distribution.reset()
 

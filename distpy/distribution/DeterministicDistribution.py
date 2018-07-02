@@ -89,9 +89,16 @@ class DeterministicDistribution(Distribution):
             if value >= 0:
                 self._current_index = value
             else:
-                raise 
+                raise ValueError("current_index was set to a negative number.")
         else:
-            return 
+            raise TypeError("current index was set to a non-integer.")
+    
+    def reset(self):
+        """
+        Resets this DeterministicDistribution by setting the current_index to 0
+        """
+        if hasattr(self, '_current_index'):
+            delattr(self, '_current_index')
     
     def draw(self, shape=None, random=None):
         """
@@ -117,9 +124,9 @@ class DeterministicDistribution(Distribution):
         total_number = np.prod(shape)
         if total_number <= (self.num_points - self.current_index):
             points_slice =\
-                slice(self.current_index, self.current_index + self.num_points)
+                slice(self.current_index, self.current_index + total_number)
             to_return = self.points[points_slice]
-            self.current_index = self.current_index + self.num_points
+            self.current_index = self.current_index + total_number
             if len(shape) == 1:
                 if none_shape:
                     return to_return[0]
@@ -128,8 +135,10 @@ class DeterministicDistribution(Distribution):
             else:
                 return np.reshape(to_return, shape)
         else:
-            raise RuntimeError("Not enough points remain in this " +\
-                "DeterministicDistribution to return the desired shape.")
+            raise RuntimeError(("Not enough points remain in this " +\
+                "DeterministicDistribution to return the desired shape. " +\
+                "There are a total of {:d} points stored.").format(\
+                len(self.points)))
     
     def log_value(self, point):
         """
@@ -264,4 +273,11 @@ class DeterministicDistribution(Distribution):
         else:
             raise TypeError("A DeterministicDistribution can only be " +\
                 "combined to other DeterministicDistribution.")
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return DeterministicDistribution(self.points.copy())
 

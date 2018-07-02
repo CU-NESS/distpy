@@ -81,7 +81,7 @@ class GriddedDistribution(Distribution):
                 self.pdf = np.ones(self.shape)
             elif type(pdf) in sequence_types:
                 arrpdf = np.array(pdf)
-                if arrpdf.shape == self.shape:
+                if arrpdf.size == np.prod(self.shape):
                     self.pdf = arrpdf
                 else:
                     raise ValueError(("The pdf given to a " +\
@@ -387,4 +387,11 @@ class GriddedDistribution(Distribution):
         has been implemented. It has not been implemented, so it returns False.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return GriddedDistribution(self.vars, self.pdf)
 

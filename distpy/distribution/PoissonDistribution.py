@@ -159,4 +159,11 @@ class PoissonDistribution(Distribution):
         False.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return PoissonDistribution(self.scale)
 

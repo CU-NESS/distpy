@@ -238,4 +238,12 @@ class SequentialDistribution(Distribution):
             return np.diag(answer)
         else:
             return np.zeros((self.numparams,) * 2)
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return SequentialDistribution(self.shared_distribution.copy(),\
+            self.numparams)
 

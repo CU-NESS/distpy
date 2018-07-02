@@ -237,4 +237,11 @@ class EllipticalUniformDistribution(Distribution):
         returns: 2D square matrix of second derivatives of log value
         """
         return np.zeros((self.numparams,) * 2)
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return EllipticalUniformDistribution(self.mean.copy(), self.cov.copy())
 

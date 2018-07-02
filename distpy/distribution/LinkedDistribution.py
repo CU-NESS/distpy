@@ -203,4 +203,12 @@ class LinkedDistribution(Distribution):
         has been implemented. It has not been implemented, so it returns False.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return\
+            LinkedDistribution(self.shared_distribution.copy(), self.numparams)
 

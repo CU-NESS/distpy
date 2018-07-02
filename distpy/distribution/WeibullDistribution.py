@@ -193,4 +193,11 @@ class WeibullDistribution(Distribution):
         return (((1 - self.shape) / (point ** 2)) -\
             ((self.shape / self.scale) * ((self.shape - 1) / self.scale) *\
             ((point / self.scale) ** (self.shape - 2))))
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return WeibullDistribution(self.shape, self.scale)
 

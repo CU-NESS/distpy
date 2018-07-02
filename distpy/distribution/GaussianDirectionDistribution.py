@@ -182,4 +182,13 @@ class GaussianDirectionDistribution(DirectionDistribution):
         sigma = group.attrs['sigma']
         return GaussianDirectionDistribution(pointing_center=pointing_center,\
             sigma=sigma, degrees=False, metadata=metadata)
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return GaussianDirectionDistribution(\
+            pointing_center=[element for element in self.pointing_center],\
+            sigma=self.sigma, degrees=False)
 

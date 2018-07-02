@@ -189,4 +189,11 @@ class BetaDistribution(Distribution):
         """
         return (-(((self.alpha - 1) / (point ** 2)) +\
             ((self.beta - 1) / ((1 - point) ** 2))))
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return BetaDistribution(self.alpha, self.beta)
 

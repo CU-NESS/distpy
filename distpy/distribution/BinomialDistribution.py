@@ -181,4 +181,12 @@ class BinomialDistribution(Distribution):
         False.
         """
         return False
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return BinomialDistribution(self.probability_of_success,\
+            self.number_of_trials)
 

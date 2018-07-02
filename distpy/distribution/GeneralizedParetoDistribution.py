@@ -280,4 +280,12 @@ class GeneralizedParetoDistribution(Distribution):
         returns: single number representing second derivative of log value
         """
         return self.shape / (((self.location - point) - self.scale) ** 2)
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return GeneralizedParetoDistribution(self.shape, self.location,\
+            self.scale)
 

@@ -194,6 +194,13 @@ class Distribution(Savable, Loadable):
         """
         raise cannot_instantiate_distribution_error
     
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        raise cannot_instantiate_distribution_error
+    
     def save_metadata(self, group):
         """
         Saves the metadata from this distribution.
@@ -339,4 +346,10 @@ class Distribution(Savable, Loadable):
         except:
             return False
     
+    def reset(self):
+        """
+        This function exists so that conceptual distributions can be stored
+        alongside DeterministicDistributions, which are really just samples.
+        """
+        pass
 

@@ -336,4 +336,12 @@ class ParallelepipedDistribution(Distribution):
         returns: 2D square matrix of second derivatives of log value
         """
         return np.zeros((self.numparams,) * 2)
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return ParallelepipedDistribution(self.center.A[0].copy(),\
+            self.face_directions.A.copy(), self.distances.copy())
 

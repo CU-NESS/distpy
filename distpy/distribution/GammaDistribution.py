@@ -189,4 +189,11 @@ class GammaDistribution(Distribution):
         returns: single number representing second derivative of log value
         """
         return ((1. - self.shape) / (point ** 2))
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return GammaDistribution(self.shape, self.scale)
 

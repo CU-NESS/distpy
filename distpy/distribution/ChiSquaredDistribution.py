@@ -224,4 +224,12 @@ class ChiSquaredDistribution(Distribution):
         returns: single number representing second derivative of log value
         """
         return ((2 - self.degrees_of_freedom) / (2. * (point ** 2)))
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return ChiSquaredDistribution(self.degrees_of_freedom,\
+            reduced=self.reduced)
 

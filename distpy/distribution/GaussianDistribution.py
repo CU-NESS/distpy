@@ -460,4 +460,12 @@ class GaussianDistribution(Distribution):
             return -self.invcov.A[0,0]
         else:
             return -self.invcov.A
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return GaussianDistribution(self.mean.A[0].copy(),\
+            self.covariance.A.copy())
 

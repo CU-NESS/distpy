@@ -341,4 +341,12 @@ class UniformDirectionDistribution(DirectionDistribution):
             high_theta=high_theta, low_phi=low_phi, high_phi=high_phi,\
             pointing_center=pointing_center, psi_center=psi_center,\
             metadata=metadata)
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return UniformDirectionDistribution(self.low_theta, self.high_theta,\
+            self.low_phi, self.high_phi, self.pointing_center, self.psi_center)
 

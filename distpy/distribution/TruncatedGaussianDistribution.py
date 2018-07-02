@@ -244,4 +244,12 @@ class TruncatedGaussianDistribution(Distribution):
         returns: single number representing second derivative of log value
         """
         return (-1.) / self.var
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return TruncatedGaussianDistribution(self.mean, self.var, self.lo,\
+            self.hi)
 

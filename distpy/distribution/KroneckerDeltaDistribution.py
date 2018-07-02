@@ -280,4 +280,12 @@ class KroneckerDeltaDistribution(Distribution):
         returns: (low, high) interval
         """
         return self.confidence_interval
+    
+    def copy(self):
+        """
+        Returns a deep copy of this Distribution. This function ignores
+        metadata.
+        """
+        return KroneckerDeltaDistribution(self.value,\
+            is_discrete=self.is_discrete)
 
