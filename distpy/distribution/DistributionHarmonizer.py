@@ -137,34 +137,35 @@ class DistributionHarmonizer(object):
         """
         if not hasattr(self, '_full_distribution_set'):
             known_draw = self.known_distribution_set.draw(self.ndraw)
-            sampled_known_distribution_set = DistributionSet()
-            for parameter in known_draw:
-                distribution = DeterministicDistribution(known_draw[parameter])
-                sampled_known_distribution_set.add_distribution(distribution,\
-                    parameter)
+            known_parameter_names = self.known_distribution_set.params
+            known_sample = np.stack([known_draw[parameter]\
+                for parameter in known_parameter_names], axis=-1)
             for idraw in range(self.ndraw):
                 known_parameters = {parameter: known_draw[parameter][idraw]\
                     for parameter in known_draw}
-                solved_for_parameters =\
+                these_solved_for_parameters =\
                     self.remaining_parameter_solver(known_parameters)
                 if idraw == 0:
-                    full_solved_for_parameters =\
-                        {parameter: [solved_for_parameters[parameter]]\
-                        for parameter in solved_for_parameters}
+                    solved_for_parameters =\
+                        {parameter: [these_solved_for_parameters[parameter]]\
+                        for parameter in these_solved_for_parameters}
                 else:
-                    for parameter in full_solved_for_parameters:
-                        full_solved_for_parameters[parameter].append(\
-                            solved_for_parameters[parameter])
-            full_solved_for_parameters =\
-                {parameter: np.array(full_solved_for_parameters[parameter])\
-                for parameter in full_solved_for_parameters}
-            solved_for_distribution_set = DistributionSet()
-            for parameter in full_solved_for_parameters:
-                distribution = DeterministicDistribution(\
-                    full_solved_for_parameters[parameter])
-                solved_for_distribution_set.add_distribution(distribution,\
-                    parameter)
-            self._full_distribution_set =\
-                sampled_known_distribution_set + solved_for_distribution_set
+                    for parameter in solved_for_parameters:
+                        solved_for_parameters[parameter].append(\
+                            these_solved_for_parameters[parameter])
+            solved_for_parameters =\
+                {parameter: np.array(solved_for_parameters[parameter])\
+                for parameter in solved_for_parameters}
+            unknown_parameter_names =\
+                [parameter for parameter in solved_for_parameters]
+            solved_for_sample = np.stack([solved_for_parameters[parameter]\
+                for parameter in unknown_parameter_names], axis=-1)
+            full_sample =\
+                np.concatenate([known_sample, solved_for_sample], axis=-1)
+            full_distribution = DeterministicDistribution(full_sample)
+            full_parameter_names =\
+                known_parameter_names + unknown_parameter_names
+            self._full_distribution_set = DistributionSet([(\
+                full_distribution, full_parameter_names, None)])
         return self._full_distribution_set
 

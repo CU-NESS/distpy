@@ -12,7 +12,8 @@ from ..util import int_types, sequence_types
 
 class DeterministicDistribution(Distribution):
     """
-    
+    Class representing a deterministic distribution which simply yields draws
+    which come from an array given at initialization.
     """
     def __init__(self, points, metadata=None):
         """
@@ -57,6 +58,24 @@ class DeterministicDistribution(Distribution):
                 self._points = value
         else:
             raise TypeError("points was set to a non-sequence.")
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of the points in this sample.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = np.mean(self.points, axis=0)
+        return self._mean
+    
+    @property
+    def covariance(self):
+        """
+        Property storing the covariance of the points in this sample.
+        """
+        if not hasattr(self, '_covariance'):
+            self._covariance = np.cov(self.points, rowvar=False)
+        return self._covariance
     
     @property
     def num_points(self):
@@ -143,7 +162,7 @@ class DeterministicDistribution(Distribution):
     def log_value(self, point):
         """
         Computes the logarithm of the value of this distribution at the given
-       point. It must be implemented by all subclasses.
+        point. It must be implemented by all subclasses.
         
         point: either single value (if distribution is 1D) or array of values
         
@@ -257,22 +276,66 @@ class DeterministicDistribution(Distribution):
         other: another DeterministicDistribution to combine with this one
         """
         if isinstance(other, DeterministicDistribution):
-            self_one_param = (self.numparams == 1)
-            other_one_param = (other.numparams == 1)
-            if self.numparams == 1:
-                self_points_slice = (slice(None), np.newaxis)
-            else:
-                self_points_slice = (slice(None), slice(None))
-            if other.numparams == 1:
-                other_points_slice = (slice(None), np.newaxis)
-            else:
-                other_points_slice = (slice(None), slice(None))
-            new_points = np.concatenate([self.points[self_points_slice],\
-                other.points[other_points_slice]], axis=-1)
+            self_points_slice = (None if self.numparams == 1 else slice(None))
+            other_points_slice =\
+                (None if other.numparams == 1 else slice(None))
+            new_points = np.concatenate([self.points[:,self_points_slice],\
+                other.points[:,other_points_slice]], axis=-1)
             return DeterministicDistribution(new_points)
         else:
             raise TypeError("A DeterministicDistribution can only be " +\
                 "combined to other DeterministicDistribution.")
+    
+    @staticmethod
+    def combine(*distributions):
+        """
+        Combines the given DeterministicDistributions into a single
+        DeterministicDistribution. Same as product staticmethod of this class.
+        
+        distributions: the DeterministicDistribution objects to combine
+        
+        returns: DeterministicDistribution object which encodes the combination
+                 of all of the given distributions
+        """
+        if all([isinstance(distribution, DeterministicDistribution)\
+            for distribution in distributions]):
+            num_points =\
+                [distribution.num_points for distribution in distributions]
+            if all([(npoints == num_points[0]) for npoints in num_points]):
+                slices = [None if distribution.numparams == 1 else slice(None)\
+                    for distribution in distributions]
+                new_points = np.concatenate([distribution.points[:,slc]\
+                    for (distribution, slc) in zip(distributions, slices)],\
+                    axis=1)
+                return DeterministicDistribution(new_points)
+            else:
+                raise ValueError("Can only combine " +\
+                    "DeterministicDistributions which have the same " +\
+                    "num_points property.")
+        else:
+            raise TypeError("Can only combine multiple " +\
+                "DeterministicDistributions.")
+    
+    @staticmethod
+    def product(*distributions):
+        """
+        Combines the given DeterministicDistributions into a single
+        DeterministicDistribution. Should return same thing as combine
+        staticmethod of this class but is implemented through repeated
+        multiplication.
+        
+        distributions: the DeterministicDistribution objects to combine
+        
+        returns: DeterministicDistribution object which encodes the combination
+                 of all of the given distributions
+        """
+        product_distribution = None
+        for distribution in distributions:
+            if product_distribution is None:
+                product_distribution = distribution
+            else:
+                product_distribution = product_distribution * distribution
+        return product_distribution
     
     def copy(self):
         """

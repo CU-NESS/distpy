@@ -85,14 +85,16 @@ class GaussianJumpingDistribution(JumpingDistribution):
         Property storing the square root of the covariance matrix.
         """
         if not hasattr(self, '_square_root_covariance'):
-            self._square_root_covariance = scila.sqrtm(self.covariance)
-            if issubclass(self._square_root_covariance.dtype.type, complex):
-                raise ValueError("Something went wrong, causing the square " +\
+            (eigenvalues, eigenvectors) = npla.eigh(self.covariance)
+            if np.any(eigenvalues <= 0):
+                raise ValueError(("Something went wrong, causing the square " +\
                     "root of the covariance matrix of this " +\
                     "GaussianJumpingDistribution to have at least one " +\
-                    "complex element. This is usually caused by an " +\
-                    "asymmetric covariance matrix or a negative eigenvalue " +\
-                    "of the covariance matrix.")
+                    "complex element. The eigenvalues of the covariance " +\
+                    "matrix are {!s}.").format(eigenvalues))
+            eigenvalues = np.sqrt(eigenvalues)
+            self._square_root_covariance =\
+                np.dot(eigenvectors * eigenvalues[None,:], eigenvectors.T)
         return self._square_root_covariance
     
     def draw(self, source, shape=None, random=np.random):
