@@ -21,9 +21,10 @@ from distpy.transform import Transform, NullTransform, LogTransform,\
 from distpy.distribution import Distribution, BetaDistribution,\
     BinomialDistribution, ChiSquaredDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
-    ExponentialDistribution, GammaDistribution, GaussianDistribution,\
-    GeometricDistribution, GriddedDistribution, ParallelepipedDistribution,\
-    PoissonDistribution, KroneckerDeltaDistribution, UniformDistribution,\
+    ExponentialDistribution, GammaDistribution, SechDistribution,\
+    SechSquaredDistribution, GaussianDistribution, GeometricDistribution,\
+    GriddedDistribution, ParallelepipedDistribution, PoissonDistribution,\
+    KroneckerDeltaDistribution, UniformDistribution,\
     TruncatedGaussianDistribution, InfiniteUniformDistribution,\
     WeibullDistribution, LinkedDistribution, SequentialDistribution,\
     DirectionDistribution, UniformDirectionDistribution,\

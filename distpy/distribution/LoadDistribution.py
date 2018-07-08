@@ -24,6 +24,8 @@ from .KroneckerDeltaDistribution import KroneckerDeltaDistribution
 from .InfiniteUniformDistribution import InfiniteUniformDistribution
 from .EllipticalUniformDistribution import EllipticalUniformDistribution
 from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
+from .SechDistribution import SechDistribution
+from .SechSquaredDistribution import SechSquaredDistribution
 from .GaussianDistribution import GaussianDistribution
 from .ParallelepipedDistribution import ParallelepipedDistribution
 from .LinkedDistribution import LinkedDistribution

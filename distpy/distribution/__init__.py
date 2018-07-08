@@ -18,6 +18,8 @@ from distpy.distribution.ExponentialDistribution import ExponentialDistribution
 from distpy.distribution.GeneralizedParetoDistribution import\
     GeneralizedParetoDistribution
 from distpy.distribution.GammaDistribution import GammaDistribution
+from distpy.distribution.SechDistribution import SechDistribution
+from distpy.distribution.SechSquaredDistribution import SechSquaredDistribution
 from distpy.distribution.GaussianDistribution import GaussianDistribution
 from distpy.distribution.GeometricDistribution import GeometricDistribution
 from distpy.distribution.GriddedDistribution import GriddedDistribution
