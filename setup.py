@@ -10,9 +10,11 @@ try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
-        
+    
+packages = ['distpy.{!s}'.format(submodule)\
+    for submodule in ['util', 'transform', 'distribution', 'jumping']]
 setup(name='distpy', version='0.1', description='Distributions in Python',\
-    packages=['distpy'])
+    packages=packages)
 
     
     
