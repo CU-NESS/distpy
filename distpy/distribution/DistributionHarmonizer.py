@@ -138,8 +138,11 @@ class DistributionHarmonizer(object):
         if not hasattr(self, '_full_distribution_set'):
             known_draw = self.known_distribution_set.draw(self.ndraw)
             known_parameter_names = self.known_distribution_set.params
-            known_sample = np.stack([known_draw[parameter]\
-                for parameter in known_parameter_names], axis=-1)
+            if known_parameter_names:
+                known_sample = np.stack([known_draw[parameter]\
+                    for parameter in known_parameter_names], axis=-1)
+            else:
+                known_sample = np.zeros((self.ndraw, 0))
             for idraw in range(self.ndraw):
                 known_parameters = {parameter: known_draw[parameter][idraw]\
                     for parameter in known_draw}
