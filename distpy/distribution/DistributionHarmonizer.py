@@ -11,6 +11,7 @@ Description: File containing class created to generate a set of
 """
 import numpy as np
 from ..util import int_types
+from ..transform import TransformList, NullTransform
 from .DeterministicDistribution import DeterministicDistribution
 from .DistributionSet import DistributionSet
 
@@ -21,7 +22,7 @@ class DistributionHarmonizer(object):
     a user-defined solver once other components subtracted out) distribution.
     """
     def __init__(self, known_distribution_set, remaining_parameter_solver,\
-        ndraw):
+        ndraw, **transforms):
         """
         Initializes a new DistributionHarmonizer with the given known (or
         assumed) distribution sets, a solver for parameters not included in the
@@ -41,6 +42,30 @@ class DistributionHarmonizer(object):
         self.known_distribution_set = known_distribution_set
         self.remaining_parameter_solver = remaining_parameter_solver
         self.ndraw = ndraw
+        self.transforms = transforms
+    
+    @property
+    def transforms(self):
+        """
+        Property storing the transform to use for each parameter name (in a
+        dictionary).
+        """
+        if not hasattr(self, '_transforms'):
+            raise AttributeError("transforms was referenced before it was " +\
+                "set.")
+        return self._transforms
+    
+    @transforms.setter
+    def transforms(self, value):
+        """
+        Setter for the transforms to apply to the parameters.
+        
+        value: a dictionary with parameter names as keys
+        """
+        if isinstance(value, dict):
+            self._transforms = value
+        else:
+            raise TypeError("transforms was set to a non-dictionary.")
     
     @property
     def known_distribution_set(self):
@@ -165,10 +190,19 @@ class DistributionHarmonizer(object):
                 for parameter in unknown_parameter_names], axis=-1)
             full_sample =\
                 np.concatenate([known_sample, solved_for_sample], axis=-1)
-            full_distribution = DeterministicDistribution(full_sample)
             full_parameter_names =\
                 known_parameter_names + unknown_parameter_names
+            transform_list = []
+            for name in full_parameter_names:
+                if name in self.transforms:
+                    transform_list.append(self.transforms[name])
+                else:
+                    transform_list.append(NullTransform())
+            transform_list = TransformList(*transform_list)
+            full_transformed_sample = transform_list(full_sample)
+            full_distribution =\
+                DeterministicDistribution(full_transformed_sample)
             self._full_distribution_set = DistributionSet([(\
-                full_distribution, full_parameter_names, None)])
+                full_distribution, full_parameter_names, transform_list)])
         return self._full_distribution_set
 

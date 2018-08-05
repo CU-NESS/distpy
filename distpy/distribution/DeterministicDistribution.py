@@ -60,24 +60,6 @@ class DeterministicDistribution(Distribution):
             raise TypeError("points was set to a non-sequence.")
     
     @property
-    def mean(self):
-        """
-        Property storing the mean of the points in this sample.
-        """
-        if not hasattr(self, '_mean'):
-            self._mean = np.mean(self.points, axis=0)
-        return self._mean
-    
-    @property
-    def covariance(self):
-        """
-        Property storing the covariance of the points in this sample.
-        """
-        if not hasattr(self, '_covariance'):
-            self._covariance = np.cov(self.points, rowvar=False)
-        return self._covariance
-    
-    @property
     def num_points(self):
         """
         Property storing the maximum number of points this distribution can

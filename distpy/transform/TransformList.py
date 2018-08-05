@@ -88,6 +88,125 @@ class TransformList(Savable, Loadable):
             point[this_slice] = transform(point[this_slice])
         return point
     
+    def derivative(self, untransformed_point, axis=-1):
+        """
+        Finds derivative of transforms at given point.
+        
+        untransformed_point: numpy.ndarray of untransformed point values
+        axis: axis of the array corresponding to the list of transforms at the
+              heart of this TransformList, default -1
+        
+        returns: the derivative of the transform in a numpy.ndarray of same
+                 shape as untransformed_point
+        """
+        point = untransformed_point.copy()
+        axis = (axis % point.ndim)
+        buffer_slice = ((slice(None),) * axis)
+        for (itransform, transform) in enumerate(self.transforms):
+            this_slice = buffer_slice + (itransform,)
+            point[this_slice] = transform.derivative(point[this_slice])
+        return point
+    
+    def second_derivative(self, untransformed_point, axis=-1):
+        """
+        Finds second_derivative of transforms at given point.
+        
+        untransformed_point: numpy.ndarray of untransformed point values
+        axis: axis of the array corresponding to the list of transforms at the
+              heart of this TransformList, default -1
+        
+        returns: the second derivative of the transform in a numpy.ndarray of
+                 same shape as untransformed_point
+        """
+        point = untransformed_point.copy()
+        axis = (axis % point.ndim)
+        buffer_slice = ((slice(None),) * axis)
+        for (itransform, transform) in enumerate(self.transforms):
+            this_slice = buffer_slice + (itransform,)
+            point[this_slice] = transform.second_derivative(point[this_slice])
+        return point
+    
+    def third_derivative(self, untransformed_point, axis=-1):
+        """
+        Finds third derivative of transforms at given point.
+        
+        untransformed_point: numpy.ndarray of untransformed point values
+        axis: axis of the array corresponding to the list of transforms at the
+              heart of this TransformList, default -1
+        
+        returns: the third derivative of the transform in a numpy.ndarray of
+                 same shape as untransformed_point
+        """
+        point = untransformed_point.copy()
+        axis = (axis % point.ndim)
+        buffer_slice = ((slice(None),) * axis)
+        for (itransform, transform) in enumerate(self.transforms):
+            this_slice = buffer_slice + (itransform,)
+            point[this_slice] = transform.third_derivative(point[this_slice])
+        return point
+    
+    def log_derivative(self, untransformed_point, axis=-1):
+        """
+        Finds natural log of derivative of transforms at given point.
+        
+        untransformed_point: numpy.ndarray of untransformed point values
+        axis: axis of the array corresponding to the list of transforms at the
+              heart of this TransformList, default -1
+        
+        returns: the log of the derivative of the transform in a numpy.ndarray
+                 of same shape as untransformed_point
+        """
+        point = untransformed_point.copy()
+        axis = (axis % point.ndim)
+        buffer_slice = ((slice(None),) * axis)
+        for (itransform, transform) in enumerate(self.transforms):
+            this_slice = buffer_slice + (itransform,)
+            point[this_slice] = transform.log_derivative(point[this_slice])
+        return point
+    
+    def derivative_of_log_derivative(self, untransformed_point, axis=-1):
+        """
+        Finds derivative of the log of the derivative of transforms at given
+        point.
+        
+        untransformed_point: numpy.ndarray of untransformed point values
+        axis: axis of the array corresponding to the list of transforms at the
+              heart of this TransformList, default -1
+        
+        returns: the derivative of the log of the derivative of the transform
+                 in a numpy.ndarray of same shape as untransformed_point
+        """
+        point = untransformed_point.copy()
+        axis = (axis % point.ndim)
+        buffer_slice = ((slice(None),) * axis)
+        for (itransform, transform) in enumerate(self.transforms):
+            this_slice = buffer_slice + (itransform,)
+            point[this_slice] =\
+                transform.derivative_of_log_derivative(point[this_slice])
+        return point
+    
+    def second_derivative_of_log_derivative(self, untransformed_point,\
+        axis=-1):
+        """
+        Finds second derivative of the log of the derivative of transforms at
+        given point.
+        
+        untransformed_point: numpy.ndarray of untransformed point values
+        axis: axis of the array corresponding to the list of transforms at the
+              heart of this TransformList, default -1
+        
+        returns: the second derivative of the log of the transform's derivative
+                 in a numpy.ndarray of same shape as untransformed_point
+        """
+        point = untransformed_point.copy()
+        axis = (axis % point.ndim)
+        buffer_slice = ((slice(None),) * axis)
+        for (itransform, transform) in enumerate(self.transforms):
+            this_slice = buffer_slice + (itransform,)
+            point[this_slice] = transform.second_derivative_of_log_derivative(\
+                point[this_slice])
+        return point
+    
     def __call__(self, untransformed_point, axis=-1):
         """
         Transforms the given point from the untransformed space to the
@@ -168,7 +287,7 @@ class TransformList(Savable, Loadable):
         transformed space is y, this function encodes the following equality:
         df/dy_i=(df/dx_i)/(dy_i/dx_i)
         
-        transformed_gradient: the gradient in the transformed space, df/dx_i
+        transformed_gradient: the gradient in the transformed space, df/dy_i
         untransformed_point: the input point in the untransformed space, x_i
         axis: axis of the derivative in the gradient array
         
