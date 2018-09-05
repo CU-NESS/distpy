@@ -49,7 +49,11 @@ class GaussianDistribution(Distribution):
                                                             covariance)
             elif type(covariance) in sequence_types:
                 arrcov = np.array(covariance)
-                if arrcov.shape == (len(arrmean), len(arrmean)):
+                if np.any(np.isnan(arrcov)):
+                    raise ValueError("For some reason, there are nan's in " +\
+                        "the covariance matrix given to a " +\
+                        "GaussianDistribution.")
+                elif arrcov.shape == (len(arrmean), len(arrmean)):
                     self.mean = np.matrix(arrmean)
                     self._numparams = len(arrmean)
                     self.covariance = np.matrix((arrcov + arrcov.T) / 2.)
@@ -84,7 +88,10 @@ class GaussianDistribution(Distribution):
         elif type(covariance) in sequence_types:
             # covariance should be number but at first glance, it isn't
             arrcov = np.array(covariance)
-            if arrcov.size == 1:
+            if np.any(np.isnan(arrcov)):
+                raise ValueError("For some reason, there are nan's in the " +\
+                    "covariance matrix given to a GuassianDistribution.")
+            elif arrcov.size == 1:
                 self.covariance = np.matrix([[arrcov[(0,) * arrcov.ndim]]])
             else:
                 raise ValueError("The mean of a GaussianDistribution was " +\
