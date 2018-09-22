@@ -16,6 +16,8 @@ from distpy.jumping.BinomialJumpingDistribution\
     import BinomialJumpingDistribution
 from distpy.jumping.AdjacencyJumpingDistribution\
     import AdjacencyJumpingDistribution
+from distpy.jumping.GridHopJumpingDistribution\
+    import GridHopJumpingDistribution
 from distpy.jumping.SourceIndependentJumpingDistribution\
     import SourceIndependentJumpingDistribution
 from distpy.jumping.LocaleIndependentJumpingDistribution\

@@ -35,6 +35,7 @@ from .UniformDirectionDistribution import UniformDirectionDistribution
 from .GaussianDirectionDistribution import GaussianDirectionDistribution
 from .UniformTriangulationDistribution import UniformTriangulationDistribution
 from .CustomDiscreteDistribution import CustomDiscreteDistribution
+from .DiscreteUniformDistribution import DiscreteUniformDistribution
 from .DistributionSum import DistributionSum
 from .DeterministicDistribution import DeterministicDistribution
 

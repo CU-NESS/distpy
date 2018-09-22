@@ -8,7 +8,8 @@ Description: Example of using the DiscreteUniformDistribution.
 import os, time
 import numpy as np
 import matplotlib.pyplot as pl
-from distpy import DiscreteUniformDistribution
+from distpy import DiscreteUniformDistribution,\
+    load_distribution_from_hdf5_file
 
 low = -27
 high = 19
@@ -20,6 +21,7 @@ hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
 distribution.save(hdf5_file_name)
 try:
     assert (distribution == DiscreteUniformDistribution.load(hdf5_file_name))
+    assert (distribution == load_distribution_from_hdf5_file(hdf5_file_name))
 except:
     os.remove(hdf5_file_name)
     raise

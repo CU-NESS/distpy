@@ -192,10 +192,10 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         returns: random values (type/shape determined by shape argument)
         """
         if shape is None:
-            return self.draw_single_value(source)
-        elif type(shape) in int_types:
+            return self.draw_single_value(source, random=random)
+        if type(shape) in int_types:
             shape = (shape,)
-        return self.draw_shaped_values(source, shape)
+        return self.draw_shaped_values(source, shape, random=random)
     
     def log_value(self, source, destination):
         """
@@ -221,7 +221,7 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
                 return_value -= log2
             return return_value
         else:
-            return -np.inf	
+            return -np.inf
     
     def log_value_difference(self, source, destination):
         """

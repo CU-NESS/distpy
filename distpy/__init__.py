@@ -36,7 +36,7 @@ from distpy.distribution import Distribution, BetaDistribution,\
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
     BinomialJumpingDistribution, AdjacencyJumpingDistribution,\
-    SourceIndependentJumpingDistribution,\
+    GridHopJumpingDistribution, SourceIndependentJumpingDistribution,\
     LocaleIndependentJumpingDistribution, JumpingDistributionSum,\
     JumpingDistributionSet, load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file,\

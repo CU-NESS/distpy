@@ -14,6 +14,7 @@ from .TruncatedGaussianJumpingDistribution\
 from .UniformJumpingDistribution import UniformJumpingDistribution
 from .BinomialJumpingDistribution import BinomialJumpingDistribution
 from .AdjacencyJumpingDistribution import AdjacencyJumpingDistribution
+from .GridHopJumpingDistribution import GridHopJumpingDistribution
 from .SourceIndependentJumpingDistribution\
     import SourceIndependentJumpingDistribution
 from .LocaleIndependentJumpingDistribution\
