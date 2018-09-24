@@ -278,6 +278,25 @@ class TransformList(Savable, Loadable):
                 transform.derivative(untransformed_point[itransform])
         return gradient
     
+    def transform_covariance(self, untransformed_covariance,\
+        untransformed_point, axis=(-2, -1)):
+        """
+        Uses the detransform_gradient function twice to change the given
+        covariance from untransformed space to transformed space.
+        
+        untransformed_covariance: the covariance in the untransformed space
+        untransformed_point: the point at which the covariance is defined in
+                             the untransformed space
+        axis: a tuple containing the two integer indices of the axes
+              representing the covariance matrix.
+        """
+        covariance = untransformed_covariance.copy()
+        covariance = self.detransform_gradient(untransformed_covariance,\
+            untransformed_point, axis=axis[0])
+        covariance = self.detransform_gradient(untransformed_covariance,\
+            untransformed_point, axis=axis[1])
+        return covariance
+    
     def transform_gradient(self, untransformed_gradient, untransformed_point,\
         axis=-1):
         """
