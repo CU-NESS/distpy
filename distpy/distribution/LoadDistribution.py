@@ -50,7 +50,7 @@ except:
 else:
     have_h5py = True
 
-def load_distribution_from_hdf5_group(group):
+def load_distribution_from_hdf5_group(group, *args):
     """
     Loads a distribution from the given hdf5 group.
     
@@ -69,10 +69,11 @@ def load_distribution_from_hdf5_group(group):
                     subgroup['{:d}'.format(idistribution)].attrs['class'])
                 idistribution += 1
             args = [eval(inner_class_name)\
-                for inner_class_name in inner_class_names]
+                for inner_class_name in inner_class_names] +\
+                [arg for arg in args]
         elif class_name in ['LinkedDistribution', 'SequentialDistribution']:
             inner_class_name = group['shared_distribution'].attrs['class']
-            args = [eval(inner_class_name)]
+            args = [eval(inner_class_name)] + [arg for arg in args]
         elif class_name == 'DistributionList':
             idistribution = 0
             inner_class_names = []
@@ -81,16 +82,18 @@ def load_distribution_from_hdf5_group(group):
                 inner_class_names.append(subgroup.attrs['class'])
                 idistribution += 1
             args = [eval(inner_class_name)\
-                for inner_class_name in inner_class_names]
+                for inner_class_name in inner_class_names] +\
+                [arg for arg in args]
         elif class_name == 'WindowedDistribution':
             background_distribution_class_name =\
                 group['background_distribution'].attrs['class']
             foreground_distribution_class_name =\
                 group['foreground_distribution'].attrs['class']
             args = [eval(background_distribution_class_name),\
-                eval(foreground_distribution_class_name)]
+                eval(foreground_distribution_class_name)] +\
+                [arg for arg in args]
         else:
-            args = []
+            args = [arg for arg in args]
         cls = eval(class_name)
     except KeyError:
         raise ValueError("This group doesn't appear to contain a " +\

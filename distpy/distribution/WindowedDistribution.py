@@ -127,6 +127,7 @@ class WindowedDistribution(Distribution):
                 for draw in new_draws]
             new_draws = new_draws[np.isfinite(foreground_log_values),...]
             points = np.concatenate([points, new_draws], axis=0)
+        points = points[:num_to_draw,...]
         if len(shape) != 1:
             points = np.reshape(points, shape + points.shape[-1:])
         if none_shape:
@@ -200,8 +201,7 @@ class WindowedDistribution(Distribution):
     
     @staticmethod
     def load_from_hdf5_group(group, background_distribution_class,\
-        foreground_distribution_class, background_args=(),\
-        background_kwargs={}, foreground_args=(), foreground_kwargs={}):
+        foreground_distribution_class, *args, **kwargs):
         """
         Loads a WindowedDistribution from the given hdf5 file group.
         
@@ -213,16 +213,10 @@ class WindowedDistribution(Distribution):
         foreground_distribution_class: the Distribution subclass which should
                                        be loaded from this group as foreground
                                        distribution
-        background_args: positional arguments to pass on to
-                         load_from_hdf5_group method of
-                         background_distribution_class
-        background_kwargs: keyword arguments to pass on to load_from_hdf5_group
-                           method of background_distribution_class
-        foreground_args: positional arguments to pass on to
-                         load_from_hdf5_group method of
-                         foreground_distribution_class
-        foreground_kwargs: keyword arguments to pass on to load_from_hdf5_group
-                           method of foreground_distribution_class
+        args: positional arguments to pass on to load_from_hdf5_group method of
+              foreground_distribution_class
+        kwargs: keyword arguments to pass on to load_from_hdf5_group method of
+                foreground_distribution_class
         
         returns: a WindowedDistribution object created from the information in
                  the given group
@@ -235,12 +229,10 @@ class WindowedDistribution(Distribution):
         metadata = Distribution.load_metadata(group)
         background_distribution =\
             background_distribution_class.load_from_hdf5_group(\
-            group['background_distribution'], *background_args,\
-            **background_kwargs)
+            group['background_distribution'])
         foreground_distribution =\
             foreground_distribution_class.load_from_hdf5_group(\
-            group['foreground_distribution'], *foreground_args,\
-            **foreground_kwargs)
+            group['foreground_distribution'], *args, **kwargs)
         return WindowedDistribution(background_distribution,\
             foreground_distribution, metadata=metadata)
     

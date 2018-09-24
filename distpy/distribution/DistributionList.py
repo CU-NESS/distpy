@@ -193,6 +193,8 @@ class DistributionList(Distribution):
                         result += transform.log_derivative(\
                             point[params_included+itransform])
                     params_included += numparams
+                    if not np.isfinite(result):
+                        return -np.inf
                 return result
             else:
                 raise ValueError("point given to log_value function of a " +\
@@ -258,6 +260,15 @@ class DistributionList(Distribution):
         distribution.
         """
         return '{:d}D DistributionList'.format(self.numparams)
+    
+    @property
+    def is_discrete(self):
+        """
+        Property storing whether all of the distributions in this list are
+        discrete.
+        """
+        return all([distribution.is_discrete\
+            for (distribution, transforms) in self._data])
     
     def __eq__(self, other):
         """
@@ -366,8 +377,13 @@ class DistributionList(Distribution):
         distribution_tuples = []
         while ('distribution_{}'.format(ituple)) in group:
             subgroup = group['distribution_{}'.format(ituple)]
-            distribution =\
-                distribution_classes[ituple].load_from_hdf5_group(subgroup)
+            distribution_class_name = subgroup.attrs['class']
+            if ituple >= len(distribution_classes):
+                module = __import__('distpy')
+                distribution_class = getattr(module, distribution_class_name)
+            else:
+                distribution_class =  distribution_classes[ituple]
+            distribution = distribution_class.load_from_hdf5_group(subgroup)
             transform_list = TransformList.load_from_hdf5_group(subgroup)
             distribution_tuples.append((distribution, transform_list))
             ituple += 1

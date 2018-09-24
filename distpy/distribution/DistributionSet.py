@@ -21,6 +21,7 @@ from ..util import Savable, Loadable, int_types, sequence_types
 from ..transform import cast_to_transform_list, TransformList, TransformSet,\
     NullTransform
 from .Distribution import Distribution
+from .DistributionList import DistributionList
 from .LoadDistribution import load_distribution_from_hdf5_group
 try:
     # this runs with no issues in python 2 but raises error in python 3
@@ -207,6 +208,51 @@ class DistributionSet(Savable, Loadable):
         else:
             raise TypeError("DistributionSet objects can only have other " +\
                 "DistributionSet objects added to them.")
+    
+    def distribution_list(self, parameters):
+        """
+        Creates a DistributionList out of this DistributionSet by ordering it
+        in the same way as the given parameters.
+        
+        parameters: the parameters whose distribution should be put into the
+                    list, including order. May oy may not contain all of this
+                    DistributionSet object's parameters
+        
+        returns: DistributionList object containing the distribution of the
+                 given parameters
+        """
+        to_list = [parameter for parameter in parameters]
+        distribution_order = []
+        while to_list:
+            first_parameter = to_list[0]
+            broken = False
+            for (ituple, (distribution, params, transforms)) in\
+                enumerate(self._data):
+                if (first_parameter in params):
+                    if ituple in distribution_order:
+                        raise ValueError("The same distribution cannot be " +\
+                            "put in the same DistributionList twice using " +\
+                            "this function. The parameters must be out of " +\
+                            "order.")
+                    distribution_order.append(ituple)
+                    broken = True
+                    break
+            if not broken:
+                raise ValueError(("The parameter {!s} was not found in this " +\
+                    "DistributionSet, so couldn't be used to populate a " +\
+                    "DistributionList object.").format(first_parameter))
+            (distribution, params, transforms) =\
+                self._data[distribution_order[-1]]
+            for (distribution_param, list_param) in\
+                zip(params, to_list[:distribution.numparams]):
+                if distribution_param != list_param:
+                    raise ValueError("Something went wrong. You must have " +\
+                        "parameters out of order with respect to the " +\
+                        "distributions they are in.")
+            to_list = to_list[distribution.numparams:]
+        distribution_tuples =\
+            [self._data[element][::2] for element in distribution_order]
+        return DistributionList(distribution_tuples=distribution_tuples)
     
     def modify_parameter_names(self, function):
         """
