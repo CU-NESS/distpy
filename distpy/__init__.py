@@ -18,8 +18,8 @@ from distpy.transform import Transform, NullTransform, LogTransform,\
     load_transform_from_hdf5_group, load_transform_from_hdf5_file,\
     TransformList, castable_to_transform_list, cast_to_transform_list,\
     TransformSet
-from distpy.distribution import Distribution, BetaDistribution,\
-    BinomialDistribution, ChiSquaredDistribution,\
+from distpy.distribution import Distribution, WindowedDistribution,\
+    BetaDistribution, BinomialDistribution, ChiSquaredDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
     ExponentialDistribution, GammaDistribution, SechDistribution,\
     SechSquaredDistribution, GaussianDistribution, GeometricDistribution,\
@@ -31,7 +31,7 @@ from distpy.distribution import Distribution, BetaDistribution,\
     GeneralizedParetoDistribution, GaussianDirectionDistribution,\
     UniformTriangulationDistribution, DiscreteUniformDistribution,\
     CustomDiscreteDistribution, DeterministicDistribution, DistributionSum,\
-    DistributionSet, load_distribution_from_hdf5_group,\
+    DistributionSet, DistributionList, load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file, DistributionHarmonizer
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\

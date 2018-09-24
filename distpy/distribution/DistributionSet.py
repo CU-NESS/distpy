@@ -453,13 +453,11 @@ class DistributionSet(Savable, Loadable):
         Property storing the TransformSet object describing the transforms in
         this DistributionSet.
         """
-        if not hasattr(self, '_transform_set'):
-            transforms_dictionary = {}
-            for (distribution, params, transforms) in self._data:
-                for (param, transform) in zip(params, transforms):
-                    transforms_dictionary[param] = transform
-            self._transform_set = TransformSet(transforms_dictionary)
-        return self._transform_set
+        transforms_dictionary = {}
+        for (distribution, params, transforms) in self._data:
+            for (param, transform) in zip(params, transforms):
+                transforms_dictionary[param] = transform
+        return TransformSet(transforms_dictionary)
     
     def discrete_subset(self):
         """
@@ -536,12 +534,10 @@ class DistributionSet(Savable, Loadable):
         Property which stores whether the gradient of the given distribution
         has been implemented.
         """
-        if not hasattr(self, '_gradient_computable'):
-            self._gradient_computable = True
-            for (distribution, params, transforms) in self._data:
-                self._gradient_computable = (self._gradient_computable and\
-                    distribution.gradient_computable)
-        return self._gradient_computable
+        answer = True
+        for (distribution, params, transforms) in self._data:
+            answer = (answer and distribution.gradient_computable)
+        return answer
     
     def gradient_of_log_value(self, point):
         """
@@ -586,12 +582,10 @@ class DistributionSet(Savable, Loadable):
         Property which stores whether the hessian of the given distribution
         has been implemented.
         """
-        if not hasattr(self, '_hessian_computable'):
-            self._hessian_computable = True
-            for (distribution, params, transforms) in self._data:
-                self._hessian_computable = (self._hessian_computable and\
-                    distribution.hessian_computable)
-        return self._hessian_computable
+        answer = True
+        for (distribution, params, transforms) in self._data:
+            answer = (answer and distribution.hessian_computable)
+        return answer
     
     def hessian_of_log_value(self, point):
         """

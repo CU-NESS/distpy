@@ -516,7 +516,8 @@ class TransformList(Savable, Loadable):
             raise TypeError("Can only extend TransformList objects with " +\
                 "other TransformList objects or by sequences which can be " +\
                 "used to initialize a TransformList object.")
-        del self._num_transforms
+        if hasattr(self, '_num_transforms'):
+            delattr(self, '_num_transforms')
     
     def __add__(self, other):
         """
@@ -556,6 +557,7 @@ class TransformList(Savable, Loadable):
             raise TypeError("The only things which can be added to a " +\
                 "TransformList is another TransformList or an object which " +\
                 "can be cast to a Transform.")
+        return self
     
     def __mul__(self, other):
         """

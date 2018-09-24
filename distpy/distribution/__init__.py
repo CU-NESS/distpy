@@ -7,6 +7,7 @@ Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
 """
 from distpy.distribution.Distribution import Distribution
+from distpy.distribution.WindowedDistribution import WindowedDistribution
 from distpy.distribution.BetaDistribution import BetaDistribution
 from distpy.distribution.BinomialDistribution import BinomialDistribution
 from distpy.distribution.ChiSquaredDistribution import ChiSquaredDistribution
@@ -53,5 +54,6 @@ from distpy.distribution.DistributionSum import DistributionSum
 from distpy.distribution.LoadDistribution import\
     load_distribution_from_hdf5_group, load_distribution_from_hdf5_file
 from distpy.distribution.DistributionSet import DistributionSet
+from distpy.distribution.DistributionList import DistributionList
 from distpy.distribution.DistributionHarmonizer import DistributionHarmonizer
 

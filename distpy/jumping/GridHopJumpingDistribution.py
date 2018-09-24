@@ -157,6 +157,9 @@ class GridHopJumpingDistribution(JumpingDistribution):
                 self._maxima = np.array(\
                     [(np.inf if (element is None) else element)\
                     for element in value])
+                if np.any(self.maxima <= self.minima):
+                    raise ValueError("minima and maxima were not all " +\
+                        "compatible with each other.")
             else:
                 raise ValueError("At least one element of maxima was " +\
                     "neither None nor an integer.")

@@ -8,6 +8,7 @@ Description: File containing functions which can load any Distribution (and it
              file in which it was saved.
 """
 from ..util import get_hdf5_value
+from .WindowedDistribution import WindowedDistribution
 from .UniformDistribution import UniformDistribution
 from .GeneralizedParetoDistribution import GeneralizedParetoDistribution
 from .GammaDistribution import GammaDistribution
@@ -38,6 +39,7 @@ from .CustomDiscreteDistribution import CustomDiscreteDistribution
 from .DiscreteUniformDistribution import DiscreteUniformDistribution
 from .DistributionSum import DistributionSum
 from .DeterministicDistribution import DeterministicDistribution
+from .DistributionList import DistributionList
 
 try:
     import h5py
@@ -71,6 +73,22 @@ def load_distribution_from_hdf5_group(group):
         elif class_name in ['LinkedDistribution', 'SequentialDistribution']:
             inner_class_name = group['shared_distribution'].attrs['class']
             args = [eval(inner_class_name)]
+        elif class_name == 'DistributionList':
+            idistribution = 0
+            inner_class_names = []
+            while 'distribution_{:d}'.format(idistribution) in group:
+                subgroup = group['distribution_{:d}'.format(idistribution)]
+                inner_class_names.append(subgroup.attrs['class'])
+                idistribution += 1
+            args = [eval(inner_class_name)\
+                for inner_class_name in inner_class_names]
+        elif class_name == 'WindowedDistribution':
+            background_distribution_class_name =\
+                group['background_distribution'].attrs['class']
+            foreground_distribution_class_name =\
+                group['foreground_distribution'].attrs['class']
+            args = [eval(background_distribution_class_name),\
+                eval(foreground_distribution_class_name)]
         else:
             args = []
         cls = eval(class_name)
