@@ -15,6 +15,14 @@ try:
 except:
     # this try/except allows for python 2/3 compatible string type checking
     basestring = str
+    
+try:
+    from mpi4py import MPI
+    rank = MPI.COMM_WORLD.rank
+    size = MPI.COMM_WORLD.size
+except ImportError:
+    rank = 0
+    size = 1
 
 cannot_instantiate_distribution_error = NotImplementedError("Some part of " +\
     "Distribution class was not implemented by subclass or Distribution is " +\
@@ -326,10 +334,13 @@ class Distribution(Savable, Loadable):
             is_savable = isinstance(value, Savable)
             if not any([is_string, is_number, is_bool, is_dictionary,\
                 is_array, is_savable]):
-                print("Even though metadata will be stored in memory, an " +\
-                    "error will be thrown if fill_hdf5_group is called " +\
-                    "because it is unknown how to save this metadata to " +\
-                    "disk (i.e. it is not hdf5-able).")
+                
+                if rank == 0:
+                    print("distpy: Even though metadata will be stored in memory, an " +\
+                        "error will be thrown if fill_hdf5_group is called " +\
+                        "because it is unknown how to save this metadata to " +\
+                        "disk (i.e. it is not hdf5-able).")
+                        
         self._metadata = value
     
     def metadata_equal(self, other):
