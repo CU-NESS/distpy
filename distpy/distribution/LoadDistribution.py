@@ -84,6 +84,11 @@ def load_distribution_from_hdf5_group(group, *args):
             args = [eval(inner_class_name)\
                 for inner_class_name in inner_class_names] +\
                 [arg for arg in args]
+        elif class_name == 'LinearDirectionDistribution':
+            angle_distribution_class_name =\
+                group['angle_distribution'].attrs['class']
+            args =\
+                [eval(angle_distribution_class_name)] + [arg for arg in args]
         elif class_name == 'WindowedDistribution':
             background_distribution_class_name =\
                 group['background_distribution'].attrs['class']

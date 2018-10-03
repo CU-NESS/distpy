@@ -8,7 +8,9 @@ Description: Imports classes in this module so that any given class, CLASS, can
 """
 from distpy.transform.Transform import Transform
 from distpy.transform.NullTransform import NullTransform
+from distpy.transform.BoxCoxTransform import BoxCoxTransform
 from distpy.transform.LogTransform import LogTransform
+from distpy.transform.ArsinhTransform import ArsinhTransform
 from distpy.transform.ExponentialTransform import ExponentialTransform
 from distpy.transform.Log10Transform import Log10Transform
 from distpy.transform.SquareTransform import SquareTransform
@@ -29,3 +31,4 @@ from distpy.transform.TransformList import TransformList
 from distpy.transform.CastTransformList import castable_to_transform_list,\
     cast_to_transform_list
 from distpy.transform.TransformSet import TransformSet
+

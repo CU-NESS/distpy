@@ -42,6 +42,8 @@ from distpy.distribution.UniformDirectionDistribution import\
     UniformDirectionDistribution
 from distpy.distribution.GaussianDirectionDistribution import\
     GaussianDirectionDistribution
+from distpy.distribution.LinearDirectionDistribution import\
+    LinearDirectionDistribution
 from distpy.distribution.UniformTriangulationDistribution import\
     UniformTriangulationDistribution
 from distpy.distribution.DiscreteUniformDistribution import\

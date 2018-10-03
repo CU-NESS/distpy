@@ -88,7 +88,7 @@ class NullTransform(Transform):
         
         returns: value of function in same format as value
         """
-        return value
+        return 1 * value
     
     def apply_inverse(self, value):
         """
@@ -98,7 +98,7 @@ class NullTransform(Transform):
         
         returns: value of inverse function in same format as value
         """
-        return value
+        return 1 * value
     
     def __eq__(self, other):
         """

@@ -13,7 +13,9 @@ Description: File containing function (cast_to_transform) which cast
 """
 from .Transform import Transform
 from .NullTransform import NullTransform
+from .BoxCoxTransform import BoxCoxTransform
 from .LogTransform import LogTransform
+from .ArsinhTransform import ArsinhTransform
 from .ExponentialTransform import ExponentialTransform
 from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
@@ -70,6 +72,12 @@ def cast_to_transform(key):
                 return AffineTransform(float(split_lower_cased_key[1]), 0)
             elif split_lower_cased_key[0] == 'translate':
                 return AffineTransform(1, float(split_lower_cased_key[1]))
+            elif split_lower_cased_key[0] in ['boxcox', 'box-cox']:
+                return\
+                    BoxCoxTransform(float(split_lower_cased_key[1]), offset=0)
+            elif split_lower_cased_key[0] == 'arsinh':
+                return\
+                    ArsinhTransform(float(split_lower_cased_key[1]), offset=0)
             else:
                 raise key_not_understood_error
         elif num_tokens == 3:
@@ -77,6 +85,12 @@ def cast_to_transform(key):
                 scale_factor = float(split_lower_cased_key[1])
                 translation = float(split_lower_cased_key[2])
                 return AffineTransform(scale_factor, translation)
+            elif split_lower_cased_key[0] in ['boxcox', 'box-cox']:
+                return BoxCoxTransform(float(split_lower_cased_key[1]),\
+                    offset=float(split_lower_cased_key[2]))
+            elif split_lower_cased_key[0] == 'arsinh':
+                return ArsinhTransform(float(split_lower_cased_key[1]),\
+                    offset=float(split_lower_cased_key[2]))
             else:
                 raise key_not_understood_error
         else:

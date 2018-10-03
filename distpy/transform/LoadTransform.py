@@ -7,7 +7,9 @@ Description: File containing functions which load Transform objects from hdf5
              files or hdf5 file groups.
 """
 from .NullTransform import NullTransform
+from .BoxCoxTransform import BoxCoxTransform
 from .LogTransform import LogTransform
+from .ArsinhTransform import ArsinhTransform
 from .ExponentialTransform import ExponentialTransform
 from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
@@ -44,6 +46,14 @@ def load_transform_from_hdf5_group(group):
         raise ValueError("group does not appear to contain a transform.")
     if class_name == 'NullTransform':
         return NullTransform()
+    elif class_name == 'BoxCoxTransform':
+        power = group.attrs['power']
+        offset = group.attrs['offset']
+        return BoxCoxTransform(power, offset=offset)
+    elif class_name == 'ArsinhTransform':
+        shape = group.attrs['shape']
+        offset = group.attrs['offset']
+        return ArsinhTransform(shape, offset=offset)
     elif class_name == 'AffineTransform':
         scale_factor = group.attrs['scale_factor']
         translation = group.attrs['translation']

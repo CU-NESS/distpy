@@ -10,14 +10,14 @@ from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
     save_dictionary, load_dictionary, Savable, Loadable, bool_types,\
     int_types, float_types, real_numerical_types, complex_numerical_types,\
     numerical_types, sequence_types
-from distpy.transform import Transform, NullTransform, LogTransform,\
-    ExponentialTransform, Log10Transform, SquareTransform, ArcsinTransform,\
-    LogisticTransform, AffineTransform, ReciprocalTransform,\
-    ExponentiatedTransform, LoggedTransform, SumTransform, ProductTransform,\
-    CompositeTransform, castable_to_transform, cast_to_transform,\
-    load_transform_from_hdf5_group, load_transform_from_hdf5_file,\
-    TransformList, castable_to_transform_list, cast_to_transform_list,\
-    TransformSet
+from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
+    LogTransform, ArsinhTransform, ExponentialTransform, Log10Transform,\
+    SquareTransform, ArcsinTransform, LogisticTransform, AffineTransform,\
+    ReciprocalTransform, ExponentiatedTransform, LoggedTransform,\
+    SumTransform, ProductTransform, CompositeTransform, castable_to_transform,\
+    cast_to_transform, load_transform_from_hdf5_group,\
+    load_transform_from_hdf5_file, TransformList, castable_to_transform_list,\
+    cast_to_transform_list, TransformSet
 from distpy.distribution import Distribution, WindowedDistribution,\
     BetaDistribution, BinomialDistribution, ChiSquaredDistribution,\
     DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
@@ -29,9 +29,10 @@ from distpy.distribution import Distribution, WindowedDistribution,\
     WeibullDistribution, LinkedDistribution, SequentialDistribution,\
     DirectionDistribution, UniformDirectionDistribution,\
     GeneralizedParetoDistribution, GaussianDirectionDistribution,\
-    UniformTriangulationDistribution, DiscreteUniformDistribution,\
-    CustomDiscreteDistribution, DeterministicDistribution, DistributionSum,\
-    DistributionSet, DistributionList, load_distribution_from_hdf5_group,\
+    LinearDirectionDistribution, UniformTriangulationDistribution,\
+    DiscreteUniformDistribution, CustomDiscreteDistribution,\
+    DeterministicDistribution, DistributionSum, DistributionSet,\
+    DistributionList, load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file, DistributionHarmonizer
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     TruncatedGaussianJumpingDistribution, UniformJumpingDistribution,\
