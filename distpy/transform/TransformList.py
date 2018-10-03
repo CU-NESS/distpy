@@ -609,13 +609,26 @@ class TransformList(Savable, Loadable):
     
     def __getitem__(self, index):
         """
-        Gets a specific element of the Transforms sequence.
+        Gets a specific element or set of elements of the Transforms sequence.
         
-        index: the index of the element to retrieve
+        index: the index of the element(s) to retrieve. Can be an integer, a
+               slice, or a sequence of integers.
         
-        returns: a Transform object
+        returns: a Transform object or a TransformList object
         """
-        return self.transforms[index]
+        if isinstance(index, int):
+            return self.transforms[index]
+        elif isinstance(index, slice):
+            return TransformList(*self.transforms[index])
+        elif type(index) in sequence_types:
+            if all([isinstance(element, int) for element in index]):
+                return TransformList(*[self.transforms[element]\
+                    for element in index])
+            else:
+                raise TypeError("Not all elements of sequence index were " +\
+                    "integers.")
+        else:
+            raise TypeError("index type not recognized.")
     
     def __eq__(self, other):
         """
