@@ -5,11 +5,10 @@ Date: 2 Oct 2018
 
 Description: File containing class representing transform which takes powers of
              an offset version of its argument. It was originally given in:
-             Robert L. Schuhmann, Benjamin Joachimi, Hiranya V. Peiris;
-             Gaussianization for fast and accurate inference from cosmological
-             data, Monthly Notices of the Royal Astronomical Society,
-             Volume 459, Issue 2, 21 June 2016, Pages 1916–1928,
-             https://doi.org/10.1093/mnras/stw738
+             Shuhmann, R.L., Joachimi, B., Peiris, H.V., Gaussianization for
+             fast and accurate inference from cosmological data, Monthly
+             Notices of the Royal Astronomical Society, Volume 459, Issue 2,
+             21 June 2016, Pages 1916-1928 https://doi.org/10.1093/mnras/stw738
 """
 from __future__ import division
 from ..util import real_numerical_types
