@@ -37,11 +37,11 @@ class SequentialDistribution(Distribution):
                 "SequentialDistribution was not recognizable as a " +\
                 "distribution.")
         if (type(numpars) in numerical_types):
-            if int(numpars) > 1:
+            if int(numpars) >= 1:
                 self._numparams = int(numpars)
             else:
                 raise ValueError("A SequentialDistribution was initialized " +\
-                    "with only one parameter. Is this really what you want?")
+                    "with non-positive numpars.")
         else:
             raise ValueError("The type of the number of parameters given " +\
                 "to a SequentialDistribution was not numerical.")
@@ -78,7 +78,9 @@ class SequentialDistribution(Distribution):
         unsorted =\
             self.shared_distribution.draw(shape=shape+(self.numparams,),\
             random=random)
-        points = np.sort(np.array(unsorted))
+        points = np.sort(np.array(unsorted), axis=-1)
+        if self.numparams == 1:
+            points = points[...,0]
         if none_shape:
             return points[0]
         else:
@@ -90,7 +92,9 @@ class SequentialDistribution(Distribution):
         numpy.ndarray (or other list-type) and if they are sorted, log_value
         returns -inf.
         """
-        if type(point) in sequence_types:
+        if (type(point) in numerical_types) and (self.numparams == 1):
+            result = self.shared_distribution.log_value(point)
+        elif type(point) in sequence_types:
             if len(point) == self.numparams:
                 if np.all(point[1:] >= point[:-1]):
                     result = log_gamma(self.numparams + 1)
@@ -204,7 +208,9 @@ class SequentialDistribution(Distribution):
         
         returns: returns single number representing derivative of log value
         """
-        if np.all(point[1:] >= point[:-1]):
+        if self.numparams == 1:
+            return self.shared_distribution.gradient_of_log_value(point)
+        elif np.all(point[1:] >= point[:-1]):
             answer = []
             for parameter in point:
                 answer.append(\
@@ -230,7 +236,9 @@ class SequentialDistribution(Distribution):
         
         returns: single number representing second derivative of log value
         """
-        if np.all(point[1:] >= point[:-1]):
+        if self.numparams == 1:
+            return self.shared_distribution.hessian_of_log_value(point)
+        elif np.all(point[1:] >= point[:-1]):
             answer = []
             for parameter in point:
                 answer.append(\
