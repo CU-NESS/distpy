@@ -8,6 +8,8 @@ Description: File containing the imports for the distpy.jumping module.
 from distpy.jumping.JumpingDistribution import JumpingDistribution
 from distpy.jumping.GaussianJumpingDistribution\
     import GaussianJumpingDistribution
+from distpy.jumping.SourceDependentGaussianJumpingDistribution\
+    import SourceDependentGaussianJumpingDistribution
 from distpy.jumping.TruncatedGaussianJumpingDistribution\
     import TruncatedGaussianJumpingDistribution
 from distpy.jumping.UniformJumpingDistribution\
@@ -28,3 +30,4 @@ from distpy.jumping.LoadJumpingDistribution\
 from distpy.jumping.JumpingDistributionSum import JumpingDistributionSum
 from distpy.jumping.JumpingDistributionSet import JumpingDistributionSet
 from distpy.jumping.MetropolisHastingsSampler import MetropolisHastingsSampler
+

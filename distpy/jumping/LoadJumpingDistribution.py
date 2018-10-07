@@ -9,6 +9,8 @@ Description: File containing functions which load JumpingDistribution objects
 from ..util import get_hdf5_value
 from ..distribution import load_distribution_from_hdf5_group
 from .GaussianJumpingDistribution import GaussianJumpingDistribution
+from .SourceDependentGaussianJumpingDistribution\
+    import SourceDependentGaussianJumpingDistribution
 from .TruncatedGaussianJumpingDistribution\
     import TruncatedGaussianJumpingDistribution
 from .UniformJumpingDistribution import UniformJumpingDistribution
