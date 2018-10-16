@@ -17,6 +17,7 @@ from .BoxCoxTransform import BoxCoxTransform
 from .LogTransform import LogTransform
 from .ArsinhTransform import ArsinhTransform
 from .ExponentialTransform import ExponentialTransform
+from .Exp10Transform import Exp10Transform
 from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
 from .ArcsinTransform import ArcsinTransform
@@ -63,7 +64,9 @@ def cast_to_transform(key):
                 return LogisticTransform()
             elif lower_cased_key == 'exp':
                 return ExponentialTransform()
-            elif lower_cased_key == '':
+            elif lower_cased_key == 'exp10':
+                return Exp10Transform()
+            elif lower_cased_key == 'reciprocal':
                 return ReciprocalTransform()
             else:
                 raise key_not_understood_error

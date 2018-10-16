@@ -1,7 +1,7 @@
 """
 File: distpy/__init__.py
 Author: Keith Tauscher
-Update date: 12 Feb 2018
+Update date: 15 Oct 2018
 
 Description: Imports classes in this module so that any given class, CLASS, can
              be imported using "from distpy import CLASS"
@@ -11,11 +11,11 @@ from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
     int_types, float_types, real_numerical_types, complex_numerical_types,\
     numerical_types, sequence_types
 from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
-    LogTransform, ArsinhTransform, ExponentialTransform, Log10Transform,\
-    SquareTransform, ArcsinTransform, LogisticTransform, AffineTransform,\
-    ReciprocalTransform, ExponentiatedTransform, LoggedTransform,\
-    SumTransform, ProductTransform, CompositeTransform, castable_to_transform,\
-    cast_to_transform, load_transform_from_hdf5_group,\
+    LogTransform, ArsinhTransform, ExponentialTransform, Exp10Transform,\
+    Log10Transform, SquareTransform, ArcsinTransform, LogisticTransform,\
+    AffineTransform, ReciprocalTransform, ExponentiatedTransform,\
+    LoggedTransform, SumTransform, ProductTransform, CompositeTransform,\
+    castable_to_transform, cast_to_transform, load_transform_from_hdf5_group,\
     load_transform_from_hdf5_file, TransformList, castable_to_transform_list,\
     cast_to_transform_list, TransformSet
 from distpy.distribution import Distribution, WindowedDistribution,\

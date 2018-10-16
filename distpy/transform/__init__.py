@@ -12,6 +12,7 @@ from distpy.transform.BoxCoxTransform import BoxCoxTransform
 from distpy.transform.LogTransform import LogTransform
 from distpy.transform.ArsinhTransform import ArsinhTransform
 from distpy.transform.ExponentialTransform import ExponentialTransform
+from distpy.transform.Exp10Transform import Exp10Transform
 from distpy.transform.Log10Transform import Log10Transform
 from distpy.transform.SquareTransform import SquareTransform
 from distpy.transform.ArcsinTransform import ArcsinTransform

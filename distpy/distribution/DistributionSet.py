@@ -533,6 +533,17 @@ class DistributionSet(Savable, Loadable):
                 answer.add_distribution(distribution, params, transforms)
         return answer
     
+    def transformed_version(self):
+        """
+        Function which returns a version of this DistributionSet where the
+        parameters exist in transformed space (instead of transforms being
+        carried through this object).
+        """
+        answer = DistributionSet()
+        for (distribution, params, transforms) in self._data:
+            answer.add_distribution(distribution, params)
+        return answer
+    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this DistributionSet.

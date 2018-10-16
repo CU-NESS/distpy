@@ -11,6 +11,7 @@ from .BoxCoxTransform import BoxCoxTransform
 from .LogTransform import LogTransform
 from .ArsinhTransform import ArsinhTransform
 from .ExponentialTransform import ExponentialTransform
+from .Exp10Transform import Exp10Transform
 from .Log10Transform import Log10Transform
 from .SquareTransform import SquareTransform
 from .ArcsinTransform import ArcsinTransform
@@ -70,6 +71,8 @@ def load_transform_from_hdf5_group(group):
         return LogisticTransform()
     elif class_name == 'ExponentialTransform':
         return ExponentialTransform()
+    elif class_name == 'Exp10Transform':
+        return Exp10Transform()
     elif class_name == 'ReciprocalTransform':
         transform = load_transform_from_hdf5_group(group['transform'])
         return ReciprocalTransform(transform)

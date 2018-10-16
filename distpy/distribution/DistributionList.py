@@ -345,6 +345,17 @@ class DistributionList(Distribution):
                 answer.add_distribution(distribution, transforms)
         return answer
     
+    def transformed_version(self):
+        """
+        Function which returns a version of this DistributionList where the
+        parameters exist in transformed space (instead of transforms being
+        carried through this object).
+        """
+        answer = DistributionList()
+        for (distribution, transforms) in self._data:
+            answer.add_distribution(distribution)
+        return answer
+    
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with data about this DistributionList.
