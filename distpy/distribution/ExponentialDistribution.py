@@ -108,6 +108,20 @@ class ExponentialDistribution(Distribution):
         return (self.shift - (np.log(1 - cdf) / self.rate))
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return 0
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return None
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

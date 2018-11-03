@@ -152,6 +152,22 @@ class EllipticalUniformDistribution(Distribution):
             return False
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        # TODO change this to be the actual minimum coordinates of the ellipse!
+        return [None] * self.numparams
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        # TODO change this to be the actual maximum coordinates of the ellipse!
+        return [None] * self.numparams
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

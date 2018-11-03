@@ -94,6 +94,20 @@ class DiscreteUniformDistribution(Distribution):
             return False
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return self.low
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return self.high
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

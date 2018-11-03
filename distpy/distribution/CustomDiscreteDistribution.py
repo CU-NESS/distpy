@@ -240,6 +240,26 @@ class CustomDiscreteDistribution(Distribution):
             return False
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_minimum'):
+            self._minimum = np.array([np.min(varvals)\
+                for varvals in self.variable_values])
+        return self._minimum
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_maximum'):
+            self._maximum = np.array([np.max(varvals)\
+                for varvals in self.variable_values])
+        return self._maximum
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

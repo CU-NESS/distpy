@@ -209,6 +209,22 @@ class UniformTriangulationDistribution(Distribution):
             return False
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        # TODO make this actual minimum coordinates of convex hull
+        return [None] * self.numparams
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        # TODO make this actual maximum coordinates of conves hull
+        return [None] * self.numparams
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

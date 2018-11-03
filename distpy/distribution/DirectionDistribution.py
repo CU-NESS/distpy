@@ -231,4 +231,20 @@ class DirectionDistribution(Distribution):
         returns False.
         """
         return False
+    
+    @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        raise NotImplementedError("minimum makes no sense in the context " +\
+            "of directions.")
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        raise NotImplementedError("maximum makes no sense in the context " +\
+            "of directions.")
 

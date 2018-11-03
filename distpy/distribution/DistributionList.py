@@ -262,6 +262,34 @@ class DistributionList(Distribution):
         return '{:d}D DistributionList'.format(self.numparams)
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_minimum'):
+            self._minimum = []
+            for (distribution, transforms) in self._data:
+                if distribution.numparams == 1:
+                    self._minimum.append(distribution.minimum)
+                else:
+                    self._minimum.extend(list(distribution.minimum))
+        return self._minimum
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_maximum'):
+            self._maximum = []
+            for (distribution, transforms) in self._data:
+                if distribution.numparams == 1:
+                    self._maximum.append(distribution.maximum)
+                else:
+                    self._maximum.extend(list(distribution.maximum))
+        return self._maximum
+    
+    @property
     def is_discrete(self):
         """
         Property storing whether all of the distributions in this list are

@@ -218,6 +218,20 @@ class InfiniteUniformDistribution(Distribution):
         return InfiniteUniformDistribution(ndim, metadata=metadata)
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return None
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return None
+    
+    @property
     def can_give_confidence_intervals(self):
         """
         Confidence intervals for most distributions can be generated as long as

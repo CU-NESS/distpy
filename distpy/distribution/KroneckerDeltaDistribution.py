@@ -188,6 +188,20 @@ class KroneckerDeltaDistribution(Distribution):
             raise AttributeError("is_discrete referenced before it was set.")
         return self._is_discrete
     
+    @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return self.value
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return self.value
+    
     @is_discrete.setter
     def is_discrete(self, value):
         """

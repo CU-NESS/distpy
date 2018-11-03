@@ -149,6 +149,20 @@ class TruncatedGaussianDistribution(Distribution):
         return (self.mean + (np.sqrt(2 * self.var) * erfinv(erfinv_args)))
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return self.lo
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return self.hi
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

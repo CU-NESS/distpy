@@ -247,6 +247,20 @@ class ParallelepipedDistribution(Distribution):
         return False
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return self.center - np.abs(self.vertex - self.center)
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return self.center + np.abs(self.vertex - self.center)
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

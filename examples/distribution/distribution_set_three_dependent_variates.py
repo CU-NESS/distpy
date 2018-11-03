@@ -22,7 +22,10 @@ distribution_set.add_distribution(UniformDistribution(-3., 17.), 'z')
 hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
 distribution_set.save(hdf5_file_name)
 try:
-    assert distribution_set == DistributionSet.load(hdf5_file_name)
+    assert(distribution_set == DistributionSet.load(hdf5_file_name))
+    assert(distribution_set.bounds['x'] == (None, None))
+    assert(distribution_set.bounds['y'] == (None, None))
+    assert(distribution_set.bounds['z'] == (-3, 17))
 except:
     os.remove(hdf5_file_name)
     raise

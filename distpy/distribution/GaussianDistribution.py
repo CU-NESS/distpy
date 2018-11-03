@@ -368,6 +368,20 @@ class GaussianDistribution(Distribution):
             (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return None if (self.numparams == 1) else ([None] * self.numparams)
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return None if (self.numparams == 1) else ([None] * self.numparams)
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

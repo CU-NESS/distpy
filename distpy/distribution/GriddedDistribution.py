@@ -170,7 +170,6 @@ class GriddedDistribution(Distribution):
             return -np.inf
         return np.log(self.pdf[index])
 
-
     def to_string(self):
         """
         Finds and returns a string representation of this GriddedDistribution.
@@ -319,6 +318,20 @@ class GriddedDistribution(Distribution):
         # Finds the index where the cdf has the given value.
         #
         return search_sorted(self.cdf, value)
+    
+    @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return [np.min(var) for var in self.vars]
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return [np.max(var) for var in self.vars]
     
     @property
     def is_discrete(self):

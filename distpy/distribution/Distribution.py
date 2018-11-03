@@ -168,6 +168,31 @@ class Distribution(Savable, Loadable):
         raise cannot_instantiate_distribution_error
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        raise cannot_instantiate_distribution_error
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        raise cannot_instantiate_distribution_error
+    
+    @property
+    def bounds(self):
+        """
+        Property storing the bounds of this distribution. It merely combines
+        the minimum and maximum properties.
+        """
+        if self.numparams == 1:
+            return (self.minimum, self.maximum)
+        else:
+            return [(mn, mx) in zip(self.minimum, self.maximum)]
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

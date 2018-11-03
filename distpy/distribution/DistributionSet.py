@@ -562,6 +562,51 @@ class DistributionSet(Savable, Loadable):
             for (iparam, param) in enumerate(params):
                 subgroup.attrs['parameter_{}'.format(iparam)] = param
     
+    @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_minimum'):
+            self._minimum = {}
+            for (distribution, params, transforms) in self._data:
+                if distribution.numparams == 1:
+                    self._minimum[params[0]] = distribution.minimum
+                else:
+                    these_minima = list(distribution.minimum)
+                    for (iparam, param) in enumerate(params):
+                        self._minimum[param] = these_minima[iparam]
+        return self._minimum
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_maximum'):
+            self._maximum = {}
+            for (distribution, params, transforms) in self._data:
+                if distribution.numparams == 1:
+                    self._maximum[params[0]] = distribution.maximum
+                else:
+                    these_maxima = list(distribution.maximum)
+                    for (iparam, param) in enumerate(params):
+                        self._maximum[param] = these_maxima[iparam]
+        return self._maximum
+    
+    @property
+    def bounds(self):
+        """
+        Property storing the bounds (minimum and maximum) of each parameter in
+        a dictionary.
+        """
+        if not hasattr(self, '_bounds'):
+            self._bounds = {}
+            for parameter in self.params:
+                self._bounds[parameter] =\
+                    (self.minimum[parameter], self.maximum[parameter])
+        return self._bounds
+    
     @staticmethod
     def load_from_hdf5_group(group):
         """

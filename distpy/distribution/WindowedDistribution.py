@@ -173,6 +173,26 @@ class WindowedDistribution(Distribution):
             return False
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return np.where(self.foreground_distribution.minimum >\
+            self.background_distribution.minimum,\
+            self.foreground_distribution.minimum,\
+            self.background_distribution.minimum)
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return np.where(self.foreground_distribution.maximum <\
+            self.background_distribution.maximum,\
+            self.foreground_distribution.maximum,\
+            self.background_distribution.maximum)
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is

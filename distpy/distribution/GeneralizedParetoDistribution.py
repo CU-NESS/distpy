@@ -196,6 +196,20 @@ class GeneralizedParetoDistribution(Distribution):
             (self.scale * (np.power(cdf, 1 / (1 - self.shape)) - 1))
     
     @property
+    def minimum(self):
+        """
+        Property storing the minimum allowable value(s) in this distribution.
+        """
+        return self.location
+    
+    @property
+    def maximum(self):
+        """
+        Property storing the maximum allowable value(s) in this distribution.
+        """
+        return None
+    
+    @property
     def is_discrete(self):
         """
         Property storing a boolean describing whether this distribution is
