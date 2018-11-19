@@ -26,8 +26,9 @@ else:
 
 t0 = time.time()
 sample = distribution.draw(sample_size)
-print(('It took {0:.5f} s to draw {1} points from a gamma ' +\
+print(('It took {0:.5f} s to draw {1:d} points from a gamma ' +\
     'distribution.').format(time.time() - t0, sample_size))
+print("sample={}".format(sample))
 pl.figure()
 pl.hist(sample, bins=100, linewidth=2, color='b', histtype='step',\
     label='sampled', normed=True)
