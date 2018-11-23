@@ -17,7 +17,7 @@ Description: A container which can hold an arbitrary number of distributions,
              functions for further details.
 """
 import numpy as np
-from ..util import Savable, Loadable, int_types, sequence_types
+from ..util import Savable, Loadable, int_types, sequence_types, triangle_plot
 from ..transform import cast_to_transform_list, TransformList, TransformSet,\
     NullTransform
 from .Distribution import Distribution
@@ -749,4 +749,49 @@ class DistributionSet(Savable, Loadable):
         """
         for (distribution, parameters, transforms) in self._data:
             distribution.reset()
+    
+    def triangle_plot(self, ndraw, parameters=None, in_transformed_space=True,\
+        figsize=(8, 8), fig=None, show=False, kwargs_1D={}, kwargs_2D={},\
+        fontsize=28, nbins=100, plot_type='contour',\
+        reference_value_mean=None, reference_value_covariance=None,\
+        contour_confidence_levels=0.95, parameter_renamer=(lambda x: x)):
+        """
+        Makes a triangle plot out of ndraw samples from this distribution
+        
+        ndraw: integer number of samples to draw to plot in the triangle plot
+        parameters: sequence of string parameter names to include in the plot
+        figsize: the size of the figure on which to put the triangle plot
+        show: if True, matplotlib.pyplot.show is called before this function
+                       returns
+        kwargs_1D: keyword arguments to pass on to univariate_histogram
+                   function
+        kwargs_2D: keyword arguments to pass on to bivariate_histogram function
+        fontsize: the size of the label fonts
+        nbins: the number of bins for each sample
+        plot_type: 'contourf', 'contour', or 'histogram'
+        reference_value_mean: reference values to place on plots, if there are
+                              any
+        reference_value_covariance: if not None, used (along with
+                                    reference_value_mean) to plot reference
+                                    ellipses in each bivariate histogram
+        contour_confidence_levels: the confidence level of the contour in the
+                                   bivariate histograms. Only used if plot_type
+                                   is 'contour' or 'contourf'. Can be single
+                                   number or sequence of numbers
+        """
+        samples = self.draw(ndraw)
+        if parameters is None:
+            parameters = self.params
+        if in_transformed_space:
+            samples = [self.transform_set[parameter](samples[parameter])\
+                for parameter in parameters]
+        else:
+            samples = [samples[parameter] for parameter in parameters]
+        labels = [parameter_renamer(parameter) for parameter in parameters]
+        return triangle_plot(samples, labels, figsize=figsize, fig=fig,\
+            show=show, kwargs_1D=kwargs_1D, kwargs_2D=kwargs_2D,\
+            fontsize=fontsize, nbins=nbins, plot_type=plot_type,\
+            reference_value_mean=reference_value_mean,\
+            reference_value_covariance=reference_value_covariance,\
+            contour_confidence_levels=contour_confidence_levels)
 

@@ -13,4 +13,6 @@ from distpy.util.TypeCategories import bool_types, int_types, float_types,\
     sequence_types
 from distpy.util.h5py_extensions import create_hdf5_dataset, get_hdf5_value,\
     HDF5Link, save_dictionary, load_dictionary
+from distpy.util.TrianglePlot import univariate_histogram,\
+    confidence_contour_2D, bivariate_histogram, triangle_plot
 
