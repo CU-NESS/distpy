@@ -150,7 +150,7 @@ def confidence_contour_2D(xsample, ysample, nums=None,\
 def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     reference_value_covariance=None, bins=None, matplotlib_function='imshow',\
     xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False,\
-    contour_confidence_levels=0.95, **kwargs):
+    contour_confidence_levels=0.95, reference_alpha=1, **kwargs):
     """
     Plots a 2D histogram of the given joint sample.
     
@@ -227,7 +227,7 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
             (ellipse_xs, ellipse_ys) = ellipse_points
             ax.fill(ellipse_xs, ellipse_ys, edgecolor='g', linewidth=1,\
                 fill=(matplotlib_function=='contourf'), linestyle='--',\
-                color='r')
+                color='r', alpha=reference_alpha)
     ax.tick_params(width=2, length=6, labelsize=fontsize)
     ax.set_xlabel(xlabel, size=fontsize)
     ax.set_ylabel(ylabel, size=fontsize)
