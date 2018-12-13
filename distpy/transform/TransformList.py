@@ -5,6 +5,7 @@ Date: 12 Feb 2018
 
 Description: File containing a class representing a list of Transform objects.
 """
+from __future__ import division
 from ..util import sequence_types, Savable, Loadable
 from .NullTransform import NullTransform
 from .CompositeTransform import CompositeTransform
