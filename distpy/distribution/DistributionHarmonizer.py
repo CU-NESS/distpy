@@ -31,7 +31,8 @@ class DistributionHarmonizer(object):
         known_distribution_set: DistributionSet object or sequence of
                                 DistributionSet objects which describe the
                                 parameters whose distribution is known
-                                (and/or) assumed
+                                (and/or) assumed. If None, then no parameters
+                                are assumed known
         remaining_parameter_solver: a Callable which returns a dictionary of
                                     solved-for parameters when a dictionary
                                     sample of known- (or assumed-) distribution
@@ -87,7 +88,9 @@ class DistributionHarmonizer(object):
                which decribe the parameters whose distribution is known
                (and/or) assumed
         """
-        if isinstance(value, DistributionSet):
+        if value is None:
+            self._known_distribution_set = DistributionSet()
+        elif isinstance(value, DistributionSet):
             self._known_distribution_set = value
         elif type(value) in sequence_types:
             if all([isinstance(element, DistributionSet)\

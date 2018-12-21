@@ -17,7 +17,8 @@ Description: A container which can hold an arbitrary number of distributions,
              functions for further details.
 """
 import numpy as np
-from ..util import Savable, Loadable, int_types, sequence_types, triangle_plot
+from ..util import Savable, Loadable, int_types, sequence_types,\
+    univariate_histogram, bivariate_histogram, triangle_plot
 from ..transform import cast_to_transform_list, TransformList, TransformSet,\
     NullTransform
 from .Distribution import Distribution
@@ -749,6 +750,105 @@ class DistributionSet(Savable, Loadable):
         """
         for (distribution, parameters, transforms) in self._data:
             distribution.reset()
+    
+    def plot_univariate_histogram(self, ndraw, parameter,\
+        in_transformed_space=True, reference_value=None, bins=None,\
+        matplotlib_function='fill_between', show_intervals=False,\
+        norm_by_max=True, xlabel='', ylabel='', title='', fontsize=28,\
+        ax=None, show=False, contour_confidence_levels=0.95, **kwargs):
+        """
+        Plots a 1D histogram of the given sample.
+        
+        xsample: the sample to use for the x coordinates
+        ysample: the sample to use for the y coordinates
+        reference_value: points to plot a dashed reference line for axes
+        bins: bins to pass to numpy.histogram2d, default: None
+        matplotlib_function: function to use in plotting. One of ['imshow',
+                             'contour', 'contourf']. default: 'imshow'
+        show_intervals: if True, 95% confidence intervals are plotted
+        norm_by_max: if True, normalization is such that maximum of histogram
+                              values is 1. Default: True
+        xlabel: the string to use in labeling x axis
+        ylabel: the string to use in labeling y axis
+        title: title with which to top plot
+        fontsize: the size of the tick label font (and other fonts)
+        ax: if None, new Figure and Axes are created
+            otherwise, this Axes object is plotted on
+        show: if True, matplotlib.pyplot.show is called before this function
+                       returns
+        contour_confidence_levels: the confidence level of the contour in the
+                                   bivariate histograms. Only used if
+                                   matplotlib_function is 'contour' or
+                                   'contourf'. Can be single number or sequence
+                                   of numbers
+        kwargs: keyword arguments to pass on to matplotlib.Axes.fill_between
+                (any but 'origin', 'extent', or 'aspect') or
+                matplotlib.Axes.contour or matplotlib.Axes.contourf (any)
+        
+        returns: None if show is True, otherwise Axes instance with plot
+        """
+        sample = self.draw(ndraw)
+        if in_transformed_space:
+            sample = self.transform_set[parameter](sample[parameter])
+        else:
+            sample = sample[parameter]
+        return univariate_histogram(sample, reference_value=reference_value,\
+            bins=bins, matplotlib_function=matplotlib_function,\
+            show_intervals=show_intervals, xlabel=xlabel, ylabel=ylabel,\
+            title=title, fontsize=fontsize, ax=ax, show=show,\
+            norm_by_max=norm_by_max, **kwargs)
+    
+    def plot_bivariate_histogram(self, ndraw, parameter1, parameter2,\
+        in_transformed_space=True, reference_value_mean=None,\
+        reference_value_covariance=None, bins=None,\
+        matplotlib_function='imshow', xlabel='', ylabel='', title='',\
+        fontsize=28, ax=None, show=False, contour_confidence_levels=0.95,\
+        **kwargs):
+        """
+        Plots a 2D histogram of the given joint sample.
+        
+        xsample: the sample to use for the x coordinates
+        ysample: the sample to use for the y coordinates
+        reference_value_mean: points to plot a dashed reference line for axes
+        reference_value_covariance: if not None, used (along with
+                                    reference_value_mean) to plot reference
+                                    ellipse
+        bins: bins to pass to numpy.histogram2d, default: None
+        matplotlib_function: function to use in plotting. One of ['imshow',
+                             'contour', 'contourf']. default: 'imshow'
+        xlabel: the string to use in labeling x axis
+        ylabel: the string to use in labeling y axis
+        title: title with which to top plot
+        fontsize: the size of the tick label font (and other fonts)
+        ax: if None, new Figure and Axes are created
+            otherwise, this Axes object is plotted on
+        show: if True, matplotlib.pyplot.show is called before this function
+                       returns
+        contour_confidence_levels: the confidence level of the contour in the
+                                   bivariate histograms. Only used if
+                                   matplotlib_function is 'contour' or
+                                   'contourf'. Can be single number or sequence
+                                   of numbers
+        kwargs: keyword arguments to pass on to matplotlib.Axes.imshow (any but
+                'origin', 'extent', or 'aspect') or matplotlib.Axes.contour or
+                matplotlib.Axes.contourf (any)
+        
+        returns: None if show is True, otherwise Axes instance with plot
+        """
+        samples = self.draw(ndraw)
+        parameters = [parameter1, parameter2]
+        if in_transformed_space:
+            samples = [self.transform_set[parameter](samples[parameter])\
+                for parameter in parameters]
+        else:
+            samples = [samples[parameter] for parameter in parameters]
+        return bivariate_histogram(samples[0], samples[1],\
+            reference_value_mean=reference_value_mean,\
+            reference_value_covariance=reference_value_covariance, bins=bins,\
+            matplotlib_function=matplotlib_function, xlabel=xlabel,\
+            ylabel=ylabel, title=title, fontsize=fontsize, ax=ax, show=show,\
+            contour_confidence_levels=contour_confidence_levels,\
+            **kwargs)
     
     def triangle_plot(self, ndraw, parameters=None, in_transformed_space=True,\
         figsize=(8, 8), fig=None, show=False, kwargs_1D={}, kwargs_2D={},\

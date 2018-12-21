@@ -150,7 +150,8 @@ def confidence_contour_2D(xsample, ysample, nums=None,\
 def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     reference_value_covariance=None, bins=None, matplotlib_function='imshow',\
     xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False,\
-    contour_confidence_levels=0.95, reference_alpha=1, **kwargs):
+    contour_confidence_levels=0.95, reference_color='r', reference_alpha=1,\
+    **kwargs):
     """
     Plots a 2D histogram of the given joint sample.
     
@@ -210,11 +211,11 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
             raise ValueError("matplotlib_function not recognized.")
     if reference_value_mean is not None:
         if reference_value_mean[0] is not None:
-            ax.plot([reference_value_mean[0]] * 2, ylim, color='r',\
-                linewidth=1, linestyle='--')
+            ax.plot([reference_value_mean[0]] * 2, ylim,\
+                color=reference_color, linewidth=1, linestyle='--')
         if reference_value_mean[1] is not None:
-            ax.plot(xlim, [reference_value_mean[1]] * 2, color='r',\
-                linewidth=1, linestyle='--')
+            ax.plot(xlim, [reference_value_mean[1]] * 2,\
+                color=reference_color, linewidth=1, linestyle='--')
         if (reference_value_mean[0] is not None) and\
             (reference_value_mean[1] is not None) and\
             (reference_value_covariance is not None):
@@ -227,7 +228,7 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
             (ellipse_xs, ellipse_ys) = ellipse_points
             ax.fill(ellipse_xs, ellipse_ys, edgecolor='g', linewidth=1,\
                 fill=(matplotlib_function=='contourf'), linestyle='--',\
-                color='r', alpha=reference_alpha)
+                color=reference_color, alpha=reference_alpha)
     ax.tick_params(width=2, length=6, labelsize=fontsize)
     ax.set_xlabel(xlabel, size=fontsize)
     ax.set_ylabel(ylabel, size=fontsize)
