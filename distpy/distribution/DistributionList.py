@@ -274,7 +274,7 @@ class DistributionList(Distribution):
                 else:
                     self._minimum.extend([transform.I(minimum)\
                         for (minimum, transform) in\
-                        zip(distribution.minimum, transforms)]))
+                        zip(distribution.minimum, transforms)])
         return self._minimum
     
     @property
@@ -290,7 +290,7 @@ class DistributionList(Distribution):
                 else:
                     self._maximum.extend([transform.I(maximum)\
                         for (maximum, transform) in\
-                        zip(distribution.maximum, transforms)]))
+                        zip(distribution.maximum, transforms)])
         return self._maximum
     
     @property
