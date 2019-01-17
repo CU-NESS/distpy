@@ -50,9 +50,10 @@ class GaussianJumpingDistribution(JumpingDistribution):
         elif type(value) in sequence_types:
             value = np.array(value)
             if np.any(np.isnan(value)):
-                raise ValueError("For some reason, there are nan's in the " +\
+                raise ValueError(("For some reason, there are nan's in the " +\
                     "covariance matrix given to a " +\
-                    "GaussianJumpingDistribution.")
+                    "GaussianJumpingDistribution, which was:\n{}.").format(\
+                    value))
             elif (value.ndim == 2) and (value.shape[0] == value.shape[1]):
                 self._covariance = (value + value.T) / 2
             else:

@@ -572,11 +572,14 @@ class DistributionSet(Savable, Loadable):
             self._minimum = {}
             for (distribution, params, transforms) in self._data:
                 if distribution.numparams == 1:
-                    self._minimum[params[0]] = distribution.minimum
+                    self._minimum[params[0]] =\
+                        transforms[0].I(distribution.minimum)
                 else:
                     these_minima = list(distribution.minimum)
-                    for (iparam, param) in enumerate(params):
-                        self._minimum[param] = these_minima[iparam]
+                    for (iparam, (param, transform)) in\
+                        enumerate(zip(params, transforms)):
+                        self._minimum[param] =\
+                            transform.I(these_minima[iparam])
         return self._minimum
     
     @property
@@ -588,11 +591,14 @@ class DistributionSet(Savable, Loadable):
             self._maximum = {}
             for (distribution, params, transforms) in self._data:
                 if distribution.numparams == 1:
-                    self._maximum[params[0]] = distribution.maximum
+                    self._maximum[params[0]] =\
+                        transforms[0].I(distribution.maximum)
                 else:
                     these_maxima = list(distribution.maximum)
-                    for (iparam, param) in enumerate(params):
-                        self._maximum[param] = these_maxima[iparam]
+                    for (iparam, (param, transform)) in\
+                        enumerate(zip(params, transforms)):
+                        self._maximum[param] =\
+                            transform.I(these_maxima[iparam])
         return self._maximum
     
     @property

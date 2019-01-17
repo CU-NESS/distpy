@@ -50,9 +50,10 @@ class GaussianDistribution(Distribution):
             elif type(covariance) in sequence_types:
                 arrcov = np.array(covariance)
                 if np.any(np.isnan(arrcov)):
-                    raise ValueError("For some reason, there are nan's in " +\
+                    raise ValueError(("For some reason, there are nan's in " +\
                         "the covariance matrix given to a " +\
-                        "GaussianDistribution.")
+                        "GaussianDistribution, which was:\n{}.").format(\
+                        arrcov))
                 elif arrcov.shape == (len(arrmean), len(arrmean)):
                     self.mean = np.matrix(arrmean)
                     self._numparams = len(arrmean)

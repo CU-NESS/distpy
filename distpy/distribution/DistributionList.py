@@ -270,9 +270,11 @@ class DistributionList(Distribution):
             self._minimum = []
             for (distribution, transforms) in self._data:
                 if distribution.numparams == 1:
-                    self._minimum.append(distribution.minimum)
+                    self._minimum.append(transforms[0].I(distribution.minimum))
                 else:
-                    self._minimum.extend(list(distribution.minimum))
+                    self._minimum.extend([transform.I(minimum)\
+                        for (minimum, transform) in\
+                        zip(distribution.minimum, transforms)]))
         return self._minimum
     
     @property
@@ -284,9 +286,11 @@ class DistributionList(Distribution):
             self._maximum = []
             for (distribution, transforms) in self._data:
                 if distribution.numparams == 1:
-                    self._maximum.append(distribution.maximum)
+                    self._maximum.append(transforms[0].I(distribution.maximum))
                 else:
-                    self._maximum.extend(list(distribution.maximum))
+                    self._maximum.extend([transform.I(maximum)\
+                        for (maximum, transform) in\
+                        zip(distribution.maximum, transforms)]))
         return self._maximum
     
     @property
