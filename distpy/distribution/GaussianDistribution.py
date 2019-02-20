@@ -8,8 +8,7 @@ Description: File containing class representing Gaussian distribution
 """
 import numpy as np
 import numpy.random as rand
-import numpy.linalg as npla
-import scipy.linalg as scila
+import numpy.linalg as la
 from scipy.special import erfinv
 from ..util import numerical_types, int_types, sequence_types,\
     create_hdf5_dataset, get_hdf5_value
@@ -69,8 +68,8 @@ class GaussianDistribution(Distribution):
         else:
             raise ValueError("The mean of a GaussianDistribution is not of " +\
                 "a recognizable type.")
-        self.invcov = npla.inv(self.covariance)
-        self.logdetcov = npla.slogdet(self.covariance)[1]
+        self.invcov = la.inv(self.covariance)
+        self.logdetcov = la.slogdet(self.covariance)[1]
         self.metadata = metadata
     
     def _check_covariance_when_mean_has_size_1(self, true_mean, covariance):
@@ -212,10 +211,10 @@ class GaussianDistribution(Distribution):
         Property storing the square root of the covariance matrix.
         """
         if not hasattr(self, '_square_root_covariance'):
-            (eigenvalues, eigenvectors) = npla.eigh(self.covariance.A)
+            (eigenvalues, eigenvectors) = la.eigh(self.covariance.A)
             if np.any(eigenvalues <= 0):
-                raise ValueError(("Something went wrong, causing the square " +\
-                    "root of the covariance matrix of this " +\
+                raise ValueError(("Something went wrong, causing the " +\
+                    "square root of the covariance matrix of this " +\
                     "GaussianJumpingDistribution to have at least one " +\
                     "complex element. The eigenvalues of the covariance " +\
                     "matrix are {!s}.").format(eigenvalues))
@@ -223,6 +222,68 @@ class GaussianDistribution(Distribution):
             self._square_root_covariance =\
                 np.dot(eigenvectors * eigenvalues[None,:], eigenvectors.T)
         return self._square_root_covariance
+    
+    def __matmul__(self, other):
+        """
+        Computes the Kullback-Leibler divergence between this distribution and
+        other.
+        
+        other: a GaussianDistribution object
+        
+        returns: scalar value of the Kullback-Leibler divergence
+        """
+        return GaussianDistribution.kullback_leibler_divergence(self, other)
+    
+    @staticmethod
+    def kullback_leibler_divergence(first, second):
+        """
+        Computes the Kullback-Leibler divergence between two distributions
+        represented by GaussianDistribution objects.
+        
+        first, second: Can be GaussianDistribution objects or 2D numpy.ndarrays
+                       representing covariance matrices (if only covariance
+                       matrices are given, then the term corresponding to the
+                       mean difference is omitted)
+        
+        returns: the Kullback-Leibler divergence from first to second
+        """
+        if isinstance(first, GaussianDistribution) and\
+            isinstance(second, GaussianDistribution):
+            if first.numparams == second.numparams:
+                dimension = first.numparams
+                delta = first.mean.A[0] - second.mean.A[0]
+                sigma_Q_inverse = la.inv(second.covariance.A)
+                sigma_P_times_sigma_Q_inverse =\
+                    np.dot(first.covariance.A, sigma_Q_inverse)
+                return ((np.sum(np.diag(sigma_P_times_sigma_Q_inverse)) -\
+                    dimension - la.slogdet(sigma_P_times_sigma_Q_inverse)[1] +\
+                    np.dot(delta, np.dot(sigma_Q_inverse, delta))) / 2)
+            else:
+                raise ValueError("The two given distributions do not have " +\
+                    "the same numbers of parameters.")
+        elif isinstance(first, np.ndarray) and isinstance(second, np.ndarray):
+            if first.shape == second.shape:
+                if (first.ndim == 2) and (first.shape[0] == first.shape[1]):
+                    mean = np.zeros(first.shape[0])
+                    first_distribution = GaussianDistribution(mean, first)
+                    second_distribution = GaussianDistribution(mean, second)
+                    return GaussianDistribution.kullback_leibler_divergence(\
+                        first_distribution, second_distribution)
+                else:
+                    raise ValueError("The covariance matrices given to the " +\
+                        "GaussianDistribution class' " +\
+                        "kullback_leibler_divergence function were not 2D " +\
+                        "square.")
+            else:
+                raise ValueError("The shapes of the two covariance " +\
+                    "matrices given to the GaussianDistribution class' " +\
+                    "kullback_leibler_divergence function were not of the " +\
+                    "same shape.")
+        else:
+            raise TypeError("At least one of the distributions given to " +\
+                "the kullback_leibler_divergence static method of the " +\
+                "GaussianDistribution class was not a GaussianDistribution " +\
+                "object.")
 
     def draw(self, shape=None, random=rand):
         """
@@ -332,7 +393,7 @@ class GaussianDistribution(Distribution):
             for index in np.arange(self.numparams)\
             if index not in known_indices])
         new_covariance =\
-            npla.inv(self.invcov.A[:,remaining_indices][remaining_indices])
+            la.inv(self.invcov.A[:,remaining_indices][remaining_indices])
         known_mean_displacement = values - self.mean.A[0][known_indices]
         new_mean = self.mean.A[0][remaining_indices] - np.dot(new_covariance,\
             np.dot(self.invcov.A[:,known_indices][remaining_indices],\
