@@ -29,21 +29,22 @@ t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
     'sech-squared distribution.').format(time.time() - t0, sample_size))
-pl.figure()
-pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
-    label='sampled', normed=True)
+fig = pl.figure()
+ax = fig.add_subplot(111)
+ax.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
+    label='sampled', density=True)
 xs = np.arange(5., 20., 0.01)
-pl.plot(xs, list(map((lambda x : np.exp(distribution.log_value(x))), xs)),\
-    linewidth=2, color='r', label='e^(log_prior)')
-ylim = pl.ylim()
+distribution.plot(xs, ax=ax, show=False, linewidth=2, color='r',\
+    label='e^(log_value)')
+ylim = ax.get_ylim()
 for xval in distribution.central_confidence_interval(0.6827):
-    pl.plot(2 * [xval], ylim, color='k')
-pl.ylim(ylim)
-pl.title('sech-squared distribution with mean={0!s} and variance={1!s}'.format(\
-    umean, uvar), size='xx-large')
-pl.xlabel('Value', size='xx-large')
-pl.ylabel('PDF', size='xx-large')
-pl.tick_params(labelsize='xx-large', width=2, length=6)
-pl.legend(fontsize='xx-large')
+    ax.plot(2 * [xval], ylim, color='k')
+ax.set_ylim(ylim)
+ax.set_title(('sech-squared distribution with mean={0!s} and ' +\
+    'variance={1!s}').format(umean, uvar), size='xx-large')
+ax.set_xlabel('Value', size='xx-large')
+ax.set_ylabel('PDF', size='xx-large')
+ax.tick_params(labelsize='xx-large', width=2, length=6)
+ax.legend(fontsize='xx-large')
 pl.show()
 

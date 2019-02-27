@@ -117,7 +117,7 @@ def get_hdf5_value(obj):
              given object
     """
     try:
-        return obj.value
+        return obj[()]
     except:
         if ('__isregionref__' in obj.attrs) and obj.attrs['__isregionref__']:
             refpath = obj.attrs['__refpath__']
@@ -196,7 +196,7 @@ def load_dictionary(group, **classes_to_load):
     for key in group:
         value = group[key]
         if isinstance(value, h5py.Dataset):
-            dictionary[key] = value.value
+            dictionary[key] = value[()]
         elif isinstance(value, h5py.Group):
             if '__isdictionary__' in value.attrs:
                 dictionary[key] = load_dictionary(value)

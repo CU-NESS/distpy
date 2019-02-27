@@ -1,3 +1,12 @@
+"""
+File: examples/distribution/load_distribution.py
+Author: Keith Tauscher
+Date: 26 Feb 2019
+
+Description: Example script showing how distributions can be anonymously loaded
+             using the load_distribution_from_hdf5_file function, even if the
+             class of the distribution is unknown.
+"""
 import os
 from distpy import UniformDistribution, load_distribution_from_hdf5_file
 

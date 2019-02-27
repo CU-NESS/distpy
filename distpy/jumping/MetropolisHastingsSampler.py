@@ -184,7 +184,7 @@ class MetropolisHastingsSampler(emceeSampler):
         
         value: a positive integer
         """
-        if isinstance(value, int):
+        if type(value) in int_types:
             if value > 0:
                 self._nwalkers = value
             else:

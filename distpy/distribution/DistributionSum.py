@@ -297,7 +297,7 @@ class DistributionSum(Distribution):
             raise ValueError("The given group does not appear to contain a " +\
                 "DistributionSum object.")
         metadata = Distribution.load_metadata(group)
-        weights = group['weights'].value
+        weights = group['weights'][()]
         subgroup = group['distributions']
         distributions = []
         for (icls, cls) in enumerate(distribution_classes):

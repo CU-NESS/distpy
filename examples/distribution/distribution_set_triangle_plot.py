@@ -6,7 +6,9 @@ Date: 22 Nov 2018
 Description: Example script showing how to quickly create a triangle plot from
              a DistributionSet object.
 """
+import time
 import numpy as np
+import matplotlib.pyplot as pl
 from distpy import TransformList, GaussianDistribution, DistributionSet
 
 ndraw = int(1e5)
@@ -20,8 +22,17 @@ distribution = GaussianDistribution(mean, covariance)
 transform_list = TransformList(None, None, 'log10')
 distribution_set =\
     DistributionSet([(distribution, parameters, transform_list)])
-distribution_set.triangle_plot(ndraw, nbins=nbins, show=True,\
+start_time = time.time()
+distribution_set.triangle_plot(ndraw, nbins=nbins, show=False,\
     in_transformed_space=True, reference_value_mean=mean,\
     reference_value_covariance=(number_of_sigma**2)*covariance,\
     contour_confidence_levels=contour_confidence_levels,\
     parameter_renamer=(lambda x: '${!s}$'.format(x)))
+end_time = time.time()
+duration = end_time - start_time
+print(("It took {0:.5f} s to assemble a triangle plot for a 3D " +\
+    "GaussianDistribution with two non-transformed variables and one " +\
+    "log-transformed variables with a sample of size {1:d}.").format(duration,\
+    ndraw))
+pl.show()
+

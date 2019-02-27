@@ -33,19 +33,21 @@ ndraw = int(1e4)
 t0 = time.time()
 draws = distribution.draw(ndraw)
 t1 = time.time()
-print(("It took {0:.5g} s to draw {1:d} samples from a 1D custom discrete " +\
+print(("It took {0:.5f} s to draw {1:d} samples from a 1D custom discrete " +\
     "distribution with {2:d} possible values.").format(t1 - t0, ndraw,\
     nvalues))
 
-log_values = np.array([distribution.log_value(x_val) for x_val in x_values])
-
-pl.figure(figsize=(12, 10))
-pl.hist(draws, bins=bins, color='r', histtype='step', normed=True)
-pl.scatter(x_values, np.exp(log_values), color='r')
-pl.xlim(xlim)
-pl.tick_params(width=2.5, length=7.5, labelsize=fontsize)
-pl.xlabel('x', size=fontsize)
-pl.ylabel('Probability', size=fontsize)
-pl.title('Observed and expected cumulative mass function', size=fontsize)
+fig = pl.figure(figsize=(12, 10))
+ax = fig.add_subplot(111)
+ax.hist(draws, bins=bins, color='r', histtype='step', density=True,\
+    label='observed')
+distribution.plot(x_values, ax=ax, show=False, color='r',\
+    label='e^(log_value)')
+ax.set_xlim(xlim)
+ax.tick_params(width=2.5, length=7.5, labelsize=fontsize)
+ax.set_xlabel('x', size=fontsize)
+ax.set_ylabel('Probability', size=fontsize)
+ax.set_title('Observed and expected cumulative mass function', size=fontsize)
+ax.legend(fontsize=fontsize)
 pl.show()
 

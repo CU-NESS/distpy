@@ -7,7 +7,8 @@ Description: File containing a class representing a custom n-dimensional
              discrete distribution with finite support.
 """
 import numpy as np
-from ..util import sequence_types, create_hdf5_dataset, get_hdf5_value
+from ..util import int_types, sequence_types, create_hdf5_dataset,\
+    get_hdf5_value
 from .Distribution import Distribution
 
 class CustomDiscreteDistribution(Distribution):
@@ -148,7 +149,7 @@ class CustomDiscreteDistribution(Distribution):
         none_shape = (shape is None)
         if none_shape:
             shape = 1
-        if isinstance(shape, int):
+        if type(shape) in int_types:
             shape = (shape,)
         random_values = random.rand(*shape)
         flattened_locations = np.searchsorted(\

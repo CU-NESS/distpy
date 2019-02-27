@@ -5,6 +5,7 @@ Date: 12 Feb 2018
 
 Description: File containing class representing an exponential distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
 from ..util import numerical_types
@@ -24,21 +25,74 @@ class ExponentialDistribution(Distribution):
              exponent of pdf) (must be greater than 0)
         shift lower limit of the support of the distribution (defaults to 0)
         """
-        if type(rate) in numerical_types:
-            if rate > 0:
-                self.rate = (rate * 1.)
-            else:
-                raise ValueError('The rate parameter given to an ' +\
-                    'ExponentialDistribution was not positive.')
-        else:
-            raise ValueError('The rate parameter given to an ' +\
-                'ExponentialDistribution was not of a numerical type.')
-        if type(shift) in numerical_types:
-            self.shift = (1. * shift)
-        else:
-            raise ValueError('The shift given to an ' +\
-                'ExponentialDistribution was not of numerical type.')
+        self.rate = rate
+        self.shift = shift
         self.metadata = metadata
+    
+    @property
+    def rate(self):
+        """
+        Property storing the rate parameter (often denoted lambda) of this
+        distribution.
+        """
+        if not hasattr(self, '_rate'):
+            raise AttributeError("rate was referenced before it was set.")
+        return self._rate
+    
+    @rate.setter
+    def rate(self, value):
+        """
+        Setter for the rate of this distribution.
+        
+        value: single positive number
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._rate = value
+            else:
+                raise ValueError("rate property of ExponentialDistribution " +\
+                    "was set to a non-positive number.")
+        else:
+            raise TypeError("rate property of ExponentialDistribution was " +\
+                "set to a non-number.")
+    
+    @property
+    def shift(self):
+        """
+        Property storing the shift parameter (i.e. the left endpoint of this
+        distribution's domain of support).
+        """
+        if not hasattr(self, '_shift'):
+            raise AttributeError("shift was referenced before it was set.")
+        return self._shift
+    
+    @shift.setter
+    def shift(self, value):
+        """
+        Setter for the shift of this distribution.
+        
+        value: single real number
+        """
+        if type(value) in numerical_types:
+            self._shift = value
+        else:
+            raise TypeError("shift property of ExponentialDistribution was " +\
+                "set to a non-number.")
+    
+    @staticmethod
+    def create_from_mean_and_variance(mean, variance, metadata=None):
+        """
+        Creates a new ExponentialDistribution from the mean and variance
+        instead of the rate and shift parameters.
+        
+        mean: number equal to the mean of the desired distribution
+        variance: number equal to the variance of the desired distribution
+        metadata: data to be stored alongside distribution, should be hdf5-able
+        """
+        standard_deviation = np.sqrt(variance)
+        rate = (1 / standard_deviation)
+        shift = (mean - standard_deviation)
+        return ExponentialDistribution(rate, shift=shift, metadata=None)
     
     @property
     def numparams(self):
@@ -62,7 +116,7 @@ class ExponentialDistribution(Distribution):
         random: the random number generator to use (default: numpy.random)
         """
         return\
-            random.exponential(scale=(1. / self.rate), size=shape) + self.shift
+            random.exponential(scale=(1 / self.rate), size=shape) + self.shift
     
     def log_value(self, point):
         """

@@ -6,7 +6,7 @@ Date: 12 Feb 2018
 Description: File containing a class representing a list of Transform objects.
 """
 from __future__ import division
-from ..util import sequence_types, Savable, Loadable
+from ..util import int_types, sequence_types, Savable, Loadable
 from .NullTransform import NullTransform
 from .CompositeTransform import CompositeTransform
 from .CastTransform import cast_to_transform, castable_to_transform
@@ -617,12 +617,12 @@ class TransformList(Savable, Loadable):
         
         returns: a Transform object or a TransformList object
         """
-        if isinstance(index, int):
+        if type(index) in int_types:
             return self.transforms[index]
         elif isinstance(index, slice):
             return TransformList(*self.transforms[index])
         elif type(index) in sequence_types:
-            if all([isinstance(element, int) for element in index]):
+            if all([type(element) in int_types for element in index]):
                 return TransformList(*[self.transforms[element]\
                     for element in index])
             else:

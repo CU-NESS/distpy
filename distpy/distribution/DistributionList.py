@@ -143,7 +143,7 @@ class DistributionList(Distribution):
         none_shape = (shape is None)
         if none_shape:
             shape = 1
-        if isinstance(shape, int):
+        if type(shape) in int_types:
             shape = (shape,)
         point = np.ndarray(shape+(self.numparams,))
         params_included = 0
@@ -270,10 +270,11 @@ class DistributionList(Distribution):
             self._minimum = []
             for (distribution, transforms) in self._data:
                 if distribution.numparams == 1:
-                    self._minimum.append(transforms[0].I(distribution.minimum))
+                    self._minimum.append(transforms[0].untransform_minimum(\
+                        distribution.minimum))
                 else:
-                    self._minimum.extend([transform.I(minimum)\
-                        for (minimum, transform) in\
+                    self._minimum.extend([transform.untransform_minimum(\
+                        minimum) for (minimum, transform) in\
                         zip(distribution.minimum, transforms)])
         return self._minimum
     
@@ -286,10 +287,11 @@ class DistributionList(Distribution):
             self._maximum = []
             for (distribution, transforms) in self._data:
                 if distribution.numparams == 1:
-                    self._maximum.append(transforms[0].I(distribution.maximum))
+                    self._maximum.append(transforms[0].untransform_maximum(\
+                        distribution.maximum))
                 else:
-                    self._maximum.extend([transform.I(maximum)\
-                        for (maximum, transform) in\
+                    self._maximum.extend([transform.untransform_maximum(\
+                        maximum) for (maximum, transform) in\
                         zip(distribution.maximum, transforms)])
         return self._maximum
     

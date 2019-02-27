@@ -281,7 +281,7 @@ class JumpingDistributionSum(JumpingDistribution):
         except:
             raise ValueError("The given group does not appear to contain a " +\
                 "JumpingDistributionSum object.")
-        weights = group['weights'].value
+        weights = group['weights'][()]
         subgroup = group['jumping_distributions']
         jumping_distributions = []
         for (icls, cls) in enumerate(jumping_distribution_classes):

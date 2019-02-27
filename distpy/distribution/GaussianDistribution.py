@@ -385,7 +385,7 @@ class GaussianDistribution(Distribution):
         """
         if isinstance(known_indices, slice):
             known_indices = np.arange(*known_indices.indices(self.numparams))
-        elif isinstance(known_indices, int):
+        elif type(known_indices) in int_types:
             known_indices = np.array([known_indices])
         elif type(known_indices) in sequence_types:
             known_indices = np.array(known_indices)

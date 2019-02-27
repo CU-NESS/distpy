@@ -327,7 +327,7 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
         except:
             raise ValueError("The given group does not seem to contain a " +\
                 "SourceDependentGaussianJumpingDistribution.")
-        points = [point for point in group['points'].value]
-        covariances = [covariance for covariance in group['covariances'].value]
+        points = [point for point in group['points'][()]]
+        covariances = [covariance for covariance in group['covariances'][()]]
         return SourceDependentGaussianJumpingDistribution(points, covariances)
 

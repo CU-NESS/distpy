@@ -33,7 +33,7 @@ print(('It took {0:.5f} s to draw {1} points from a 1-parameter lognormal ' +\
     'distribution.').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=np.arange(0., 1501., 15.), histtype='step',\
-    color='b', linewidth=2, label='sampled', normed=True)
+    color='b', linewidth=2, label='sampled', density=True)
 xs = np.arange(0.1, 1500., 0.1)
 pl.plot(xs,\
     list(map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs)),\

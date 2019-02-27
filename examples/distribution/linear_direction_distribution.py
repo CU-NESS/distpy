@@ -7,7 +7,7 @@ Description: File containing example of using the GaussianDirectionDistribution
              class.
 """
 from __future__ import division
-import os
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import healpy as hp
@@ -35,7 +35,12 @@ else:
     os.remove(hdf5_file_name)
 
 ndraws = int(1e6)
+start_time = time.time()
 draws = distribution.draw(ndraws)
+end_time = time.time()
+duration = end_time - start_time
+print(("It took {0:.5f} s to draw a sample of size {1:d} from a " +\
+    "LinearDirectiondistribution.").format(duration, ndraws))
 lons = draws[:,1]
 lats = draws[:,0]
 
@@ -46,8 +51,6 @@ for ipixel in range(len(unique)):
     histogram[unique[ipixel]] = counts[ipixel]
 histogram = histogram / (4 * np.pi * np.mean(histogram))
 hp.mollview(histogram, title='Histogram of draws')
-
-print(distribution.to_string())
 
 pl.figure()
 pl.hist(lons, bins=10)

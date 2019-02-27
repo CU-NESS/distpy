@@ -44,7 +44,8 @@ x1s = np.linspace(xlim1[0], xlim1[1], 100)
 y1s = np.linspace(ylim1[0], ylim1[1], 100)
 extent1 = [np.min(x1s), np.max(x1s), np.min(y1s), np.max(y1s)]
 (x1s, y1s) = np.meshgrid(x1s, y1s)
-z1s = np.exp(np.reshape([distribution.log_value(umean1, np.array([x, y])) for (x, y) in zip(x1s.flatten(), y1s.flatten())], (100, 100)))
+z1s = np.exp(np.reshape([distribution.log_value(umean1, np.array([x, y]))\
+    for (x, y) in zip(x1s.flatten(), y1s.flatten())], (100, 100)))
 pl.figure()
 pl.imshow(z1s, cmap=cmap, extent=extent1)
 pl.title('Centered on {} (expected)'.format(umean1), size='xx-large')

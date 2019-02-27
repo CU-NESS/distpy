@@ -166,7 +166,7 @@ class GriddedDistribution(Distribution):
         returns the log of the pdf associated with the pixel containing point
         """
         index = self._packed_index_from_point(point)
-        if index is None:
+        if (index is None) or (self.pdf[index] == 0):
             return -np.inf
         return np.log(self.pdf[index])
 
@@ -203,13 +203,10 @@ class GriddedDistribution(Distribution):
         # Constructs the cdf array.
         #
         running_sum = 0.
-        print('initializing cdf')
         self.cdf = np.ndarray(len(self.pdf))
-        print('filling cdf')
         for i in range(len(self.pdf)):
             self.cdf[i] = running_sum
             running_sum += (self.pdf[i] * self._pixel_area(i))
-        print('renormalizing pdf and cdf')
         self.cdf = self.cdf / self.cdf[-1]
         self.pdf = self.pdf / self.cdf[-1]
 

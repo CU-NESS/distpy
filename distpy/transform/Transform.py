@@ -5,6 +5,7 @@ Date: 12 Feb 2018
 
 Description: File containing base class for all built-in transformations.
 """
+import numpy as np
 from ..util import Savable
 
 class Transform(Savable):
@@ -119,6 +120,86 @@ class Transform(Savable):
         returns: value which, when this transform is applied to it, gives value
         """
         return self.apply_inverse(value)
+    
+    def untransform_minimum(self, transformed_minimum):
+        """
+        Untransforms the given minimum.
+        
+        transformed_minimum: the minimum in transformed space,
+                             None represents -np.inf
+        
+        returns: if untransformed_minimum is finite, it is returned. Otherwise,
+                 None is returned to indicate that the untransformed_minimum is
+                 minus infinity
+        """
+        if transformed_minimum is None:
+            untransformed_minimum = self.apply_inverse(-np.inf)
+        else:
+            untransformed_minimum = self.apply_inverse(transformed_minimum)
+        if np.isfinite(untransformed_minimum):
+            return untransformed_minimum
+        else:
+            return None
+    
+    def untransform_maximum(self, transformed_maximum):
+        """
+        Untransforms the given maximum.
+        
+        transformed_maximum: the maximum in transformed space,
+                             None represents +np.inf
+        
+        returns: if untransformed_maximum is finite, it is returned. Otherwise,
+                 None is returned to indicate that the untransformed_maximum is
+                 infinite
+        """
+        if transformed_maximum is None:
+            untransformed_maximum = self.apply_inverse(np.inf)
+        else:
+            untransformed_maximum = self.apply_inverse(transformed_maximum)
+        if np.isfinite(untransformed_maximum):
+            return untransformed_maximum
+        else:
+            return None
+    
+    def transform_minimum(self, untransformed_minimum):
+        """
+        Transforms the given minimum.
+        
+        untransformed_minimum: the minimum in untransformed space,
+                               None represents -np.inf
+        
+        returns: if transformed_minimum is finite, it is returned. Otherwise,
+                 None is returned to indicate that the transformed_minimum is
+                 minus infinity
+        """
+        if untransformed_minimum is None:
+            transformed_minimum = self.apply(-np.inf)
+        else:
+            transformed_minimum = self.apply(untransformed_minimum)
+        if np.isfinite(transformed_minimum):
+            return transformed_minimum
+        else:
+            return None
+    
+    def transform_maximum(self, untransformed_maximum):
+        """
+        Transforms the given maximum.
+        
+        untransformed_maximum: the maximum in untransformed space,
+                               None represents +np.inf
+        
+        returns: if transformed_maximum is finite, it is returned. Otherwise,
+                 None is returned to indicate that the transformed_maximum is
+                 infinite
+        """
+        if untransformed_maximum is None:
+            transformed_maximum = self.apply(np.inf)
+        else:
+            transformed_maximum = self.apply(untransformed_maximum)
+        if np.isfinite(transformed_maximum):
+            return transformed_maximum
+        else:
+            return None
     
     def to_string(self):
         """

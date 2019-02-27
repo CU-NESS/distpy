@@ -52,12 +52,13 @@ class GridHopJumpingDistribution(JumpingDistribution):
         
         value: a positive integer
         """
-        if isinstance(value, int):
+        if type(value) in int_types:
             if value > 0:
                 self._ndim = value
             else:
                 raise ValueError("ndim was set to a non-positive integer.")
         else:
+            print('type(value)={}'.format(type(value)))
             raise TypeError("ndim was set to a non-integer.")
     
     @property
@@ -124,7 +125,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
         value: sequence of either None or minimal allowable values
         """
         if type(value) in sequence_types:
-            if all([((element is None) or isinstance(element, int))\
+            if all([((element is None) or (type(element) in int_types))\
                 for element in value]):
                 self._minima = np.array(\
                     [(-np.inf if (element is None) else element)\
@@ -152,7 +153,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
         value: sequence of either None or maximal allowable values
         """
         if type(value) in sequence_types:
-            if all([((element is None) or isinstance(element, int))\
+            if all([((element is None) or (type(element) in int_types))\
                 for element in value]):
                 self._maxima = np.array(\
                     [(np.inf if (element is None) else element)\
@@ -394,9 +395,9 @@ class GridHopJumpingDistribution(JumpingDistribution):
         ndim = group.attrs['ndim']
         jumping_probability = group.attrs['jumping_probability']
         minima = [None if (minimum == -np.inf) else minimum\
-            for minimum in group['minima'].value]
+            for minimum in group['minima'][()]]
         maxima = [None if (maximum == np.inf) else maximum\
-            for maximum in group['maxima'].value]
+            for maximum in group['maxima'][()]]
         return GridHopJumpingDistribution(ndim=ndim,\
             jumping_probability=jumping_probability, minima=minima,\
             maxima=maxima)

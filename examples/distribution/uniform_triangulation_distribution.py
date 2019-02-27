@@ -12,7 +12,7 @@ import matplotlib.cm as cm
 from distpy import UniformTriangulationDistribution
 
 def_cm = cm.bone
-sample_size = int(1e5)
+sample_size = int(1e4)
 
 points = np.array([[0, 0], [-1, 1], [1, 1]])
 distribution = UniformTriangulationDistribution(points=points)
@@ -45,8 +45,8 @@ min_x = np.min(points[:,0])
 max_x = np.max(points[:,0])
 min_y = np.min(points[:,1])
 max_y = np.max(points[:,1])
-xs = np.linspace(min_x, max_x, 1000)
-ys = np.linspace(min_y, max_y, 1000)
+xs = np.linspace(min_x, max_x, 50)
+ys = np.linspace(min_y, max_y, 50)
 (xs, ys) = np.meshgrid(xs, ys)
 (x_size, y_size) = xs.shape
 logvalues = np.ndarray(xs.shape)

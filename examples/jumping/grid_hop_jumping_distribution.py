@@ -8,7 +8,7 @@ Description: Script showing an example of the use of the
              discrete space which have taxi cab distance 0 or 1 and does not
              favor any given direction.
 """
-import os
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import GridHopJumpingDistribution,\
@@ -38,7 +38,13 @@ else:
 
 sources = np.array([(1, 3), (4, 4), (5, 5)])
 
+start_time = time.time()
 samples = [distribution.draw(source, shape=ndraw) for source in sources]
+end_time = time.time()
+duration = end_time - start_time
+print(("It took {0:.5f} s to draw {1:d} samples of size {2:d} from a " +\
+    "GridHopJumpingDistribution in {3:d} dimensions.").format(duration,\
+    len(sources), ndraw, ndim))
 num_samples = len(samples)
 
 fig = pl.figure(figsize=(27,9))

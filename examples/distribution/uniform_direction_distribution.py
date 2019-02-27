@@ -6,7 +6,7 @@ Date: 10 Aug 2017
 Description: File containing example of using the UniformDirectionDistribution
              class.
 """
-import os
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 import healpy as hp
@@ -22,14 +22,21 @@ distribution = UniformDirectionDistribution(pointing_center=pointing_center,\
 hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
 distribution.save(hdf5_file_name)
 try:
-    distribution == UniformDirectionDistribution.load(hdf5_file_name)
+    assert(distribution == UniformDirectionDistribution.load(hdf5_file_name))
+    assert(distribution.to_string() ==\
+        'UniformDirection((0, 0), 0, 1.57, 0, 6.28)')
 except:
     os.remove(hdf5_file_name)
     raise
 else:
     os.remove(hdf5_file_name)
 ndraws = int(1e6)
+start_time = time.time()
 draws = distribution.draw(ndraws)
+end_time = time.time()
+duration = end_time - start_time
+print(("It took {0:.5f} s to draw a sample of size {1:d} from a " +\
+    "UniformDirectionDistribution.").format(duration, ndraws))
 lons = draws[:,1]
 lats = draws[:,0]
 alpha = 0.1
@@ -48,8 +55,6 @@ for ipixel in range(len(unique)):
     histogram[unique[ipixel]] = counts[ipixel]
 histogram = histogram / (4 * np.pi * np.mean(histogram))
 hp.mollview(histogram, title='Histogram of draws')
-
-print(distribution.to_string())
 
 pl.figure()
 pl.hist(lons, bins=10)

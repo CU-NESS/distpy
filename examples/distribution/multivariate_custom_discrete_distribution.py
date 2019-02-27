@@ -45,7 +45,7 @@ ndraw = int(1e6)
 t0 = time.time()
 draws = distribution.draw(ndraw)
 t1 = time.time()
-print(("It took {0:.5g} s to draw {1:d} samples from a 2D custom discrete " +\
+print(("It took {0:.5f} s to draw {1:d} samples from a 2D custom discrete " +\
     "distribution with {2:d} pixels.").format(t1 - t0, ndraw,\
     nxvalues * nyvalues))
 

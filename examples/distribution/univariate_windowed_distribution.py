@@ -10,6 +10,7 @@ Description: Example script illustrating use of WindowedDistribution alongside
              distribution, it is more efficient to use the
              TruncatedGaussianDistribution class).
 """
+import time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import UniformDistribution, GaussianDistribution,\
@@ -25,24 +26,24 @@ distribution =\
 equivalent_truncated_gaussian_distribution =\
     TruncatedGaussianDistribution(-10, 4, -12, -7)
 
+start_time = time.time()
 sample = distribution.draw(ndraw)
+end_time = time.time()
+duration = end_time - start_time
+print(("It took {0:.5f} s to draw {1:d} points from a WindowedDistribution " +\
+    "with a GaussianDistribution background_distribution and a " +\
+    "UniformDistribution foreground_distribution.").format(duration, ndraw))
 
 fig = pl.figure(figsize=(12,9))
 ax = fig.add_subplot(111)
-
-ax.hist(sample, histtype='step', bins=nbins, color='k', normed=True)
+ax.hist(sample, histtype='step', bins=nbins, color='k', density=True)
 num_x_values = 100
 x_values =\
     np.linspace(*([element for element in ax.get_xlim()] + [num_x_values]))
-proportional_y_values =\
-    np.exp([distribution.log_value(x_value) for x_value in x_values])
-equal_y_values =\
-    np.exp([equivalent_truncated_gaussian_distribution.log_value(x_value)\
-    for x_value in x_values])
-ax.plot(x_values, equal_y_values, label='TruncatedGaussianDistribution',\
-    color='b')
-ax.plot(x_values, proportional_y_values, label='WindowedDistribution',\
-    color='g')
+equivalent_truncated_gaussian_distribution.plot(x_values, ax=ax, show=False,\
+    color='b', label='TruncatedGaussianDistribution')
+distribution.plot(x_values, ax=ax, show=False, color='g',\
+    label='WindowedDistribution')
 ax.legend()
 
 pl.show()

@@ -39,9 +39,9 @@ print(('It took {0:.5f} s for two samples of size {1} to be drawn from a ' +\
     time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample1, bins=100, histtype='step', color='b', linewidth=2,\
-    label='sampled', normed=True)
+    label='sampled', density=True)
 pl.hist(sample2, bins=100, histtype='step', color='b', linewidth=2,\
-    label='sampled', normed=True)
+    label='sampled', density=True)
 xlim = pl.xlim()
 xs = np.linspace(xlim[0], xlim[1], 1000)
 y1s = list(map((lambda x : np.exp(distribution.log_value(umean1, x))), xs))

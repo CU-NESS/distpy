@@ -1,4 +1,13 @@
-import os
+"""
+File: examples/distribution/distribution_sum.py
+Author: Keith Tauscher
+Date: 26 Feb 2019
+
+Description: Example script showing how to generate and use a DistributionSum
+             object, which allows for multiple unrelated distributions to be
+             summed together consistently.
+"""
+import os, time
 import numpy as np
 import matplotlib.pyplot as pl
 from distpy import GaussianDistribution, UniformDistribution,\
@@ -27,13 +36,19 @@ except:
 else:
     os.remove(hdf5_file_name)
 
+start_time = time.time()
 draws = distribution.draw(ndraw)
+end_time = time.time()
+duration = end_time - start_time
+print(("It took {0:.5f} s to draw a sample of size {1:d} from a " +\
+    "DistributionSum of a UniformDistribution and a " +\
+    "GaussianDistribution.").format(duration, ndraw))
 
 xs = np.linspace(-8, 8, 1000)
 ys = np.array([np.exp(distribution.log_value(x)) for x in xs])
 
-pl.hist(draws, histtype='stepfilled', normed=True, label='sampled', bins=xs)
-pl.plot(xs, ys, label='exp(log_value)')
-pl.legend()
-pl.show()
+fig = pl.figure()
+ax = fig.add_subplot(111)
+ax.hist(draws, histtype='stepfilled', density=True, label='sampled', bins=xs)
+distribution.plot(xs, ax=ax, show=True, label='e^(log_value)')
 

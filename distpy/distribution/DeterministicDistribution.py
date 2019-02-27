@@ -262,7 +262,7 @@ class DeterministicDistribution(Distribution):
         returns: a Distribution object created from the information in the
                  given group
         """
-        points = group['points'].value
+        points = group['points'][()]
         metadata = Distribution.load_metadata(group)
         return DeterministicDistribution(points, metadata=metadata)
     

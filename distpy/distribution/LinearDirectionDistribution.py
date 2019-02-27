@@ -9,7 +9,7 @@ Description: File containing a class representing a linear distribution
 import numpy as np
 import numpy.random as rand
 import healpy as hp
-from ..util import sequence_types, numerical_types
+from ..util import int_types, sequence_types, numerical_types
 from .Distribution import Distribution
 
 class LinearDirectionDistribution(Distribution):
@@ -187,7 +187,7 @@ class LinearDirectionDistribution(Distribution):
         none_shape = (shape is None)
         if none_shape:
             shape = 1
-        if isinstance(shape, int):
+        if type(shape) in int_types:
             shape = (shape,)
         shape_1D = (len(shape) == 1)
         prodshape = (np.prod(shape),)

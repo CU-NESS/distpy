@@ -46,15 +46,15 @@ print(('It took {0:.5f} s for five samples of size {1} to be drawn from a ' +\
 pl.figure()
 bins = np.arange(minimum - 0.5, maximum + 1.5)
 pl.hist(sample1, bins=bins, histtype='step', color='C0', linewidth=2,\
-    label='source={} (sampled)'.format(source1), normed=True)
+    label='source={} (sampled)'.format(source1), density=True)
 pl.hist(sample2, bins=bins, histtype='step', color='C1', linewidth=2,\
-    label='source={} (sampled)'.format(source2), normed=True)
+    label='source={} (sampled)'.format(source2), density=True)
 pl.hist(sample3, bins=bins, histtype='step', color='C2', linewidth=2,\
-    label='source={} (sampled)'.format(source3), normed=True)
+    label='source={} (sampled)'.format(source3), density=True)
 pl.hist(sample4, bins=bins, histtype='step', color='C3', linewidth=2,\
-    label='source={} (sampled)'.format(source4), normed=True)
+    label='source={} (sampled)'.format(source4), density=True)
 pl.hist(sample5, bins=bins, histtype='step', color='C4', linewidth=2,\
-    label='source={} (sampled)'.format(source5), normed=True)
+    label='source={} (sampled)'.format(source5), density=True)
 xs = np.arange(minimum, maximum + 1)
 y1s = list(map((lambda x : np.exp(distribution.log_value(source1, x))), xs))
 y2s = list(map((lambda x : np.exp(distribution.log_value(source2, x))), xs))

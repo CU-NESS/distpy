@@ -36,7 +36,6 @@ else:
     os.remove(hdf5_file_name)
 t0 = time.time()
 sample = distribution_list.draw(sample_size)
-print("sample.shape={}".format(sample.shape))
 print(('It took {0:.5f} s to draw {1} points from a mixed distribution ' +\
     'with 7 parameters, in groups of 3, 2, 1, and 1.').format(\
     time.time() - t0, sample_size))

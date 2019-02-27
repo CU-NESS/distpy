@@ -10,6 +10,7 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as rand
 from scipy.spatial import Delaunay
+from ..util import int_types
 from .Distribution import Distribution
 
 class UniformTriangulationDistribution(Distribution):
@@ -146,7 +147,7 @@ class UniformTriangulationDistribution(Distribution):
         """
         if shape is None:
             shape = 1
-        int_shape = isinstance(shape, int)
+        int_shape = type(shape) in int_types
         if int_shape:
             shape = (shape,)
         total_number = np.prod(shape)
@@ -265,7 +266,7 @@ class UniformTriangulationDistribution(Distribution):
             raise TypeError("The given hdf5 file doesn't seem to contain a " +\
                 "UniformTriangulationDistribution.")
         metadata = Distribution.load_metadata(group)
-        points = group['points'].value
+        points = group['points'][()]
         return\
             UniformTriangulationDistribution(points=points, metadata=metadata)
     

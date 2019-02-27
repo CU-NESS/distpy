@@ -5,6 +5,7 @@ Date: 12 Feb 2018
 
 Description: File containing class representing a beta distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
 from scipy.special import beta as beta_func
@@ -26,21 +27,106 @@ class BetaDistribution(Distribution):
         alpha, beta parameters representing number of successes/failures
                     (both must be greater than 0)
         """
-        if (type(alpha) in numerical_types) and\
-            (type(beta) in numerical_types):
-            if (alpha >= 0) and (beta >= 0):
-                self.alpha = (alpha * 1.)
-                self.beta  = (beta * 1.)
-                self._alpha_min_one = self.alpha - 1.
-                self._beta_min_one = self.beta - 1.
-            else:
-                raise ValueError('The alpha or beta parameter given to a ' +\
-                    'Beta was not non-negative.')
-        else:
-            raise ValueError('The alpha or beta parameter given to a Beta ' +\
-                'were not of a numerical type.')
-        self.const_lp_term = -np.log(beta_func(self.alpha, self.beta))
+        self.alpha = alpha
+        self.beta = beta
         self.metadata = metadata
+    
+    @staticmethod
+    def create_from_mean_and_variance(mean, variance, metadata=None):
+        """
+        Creates a new BetaDistribution with the given mean and variance.
+        
+        mean: the mean of the desired distribution, must satisfy 0<mean<1
+        variance: the variance of the desired distribution,
+                  must satisfy 0<variance<(mean*(1-mean))
+        metadata: data to store alongside distribution, should be hdf5-able
+        """
+        if (mean <= 0) or (mean >= 1):
+            raise ValueError("The mean of a BetaDistribution must be " +\
+                "between 0 and 1 (exclusive)")
+        if (variance <= 0) or (variance >= (mean * (1 - mean))):
+            raise ValueError("The variance of a BetaDistribution must be " +\
+                "less than mean*(1-mean).")
+        alpha_plus_beta = (((mean * (1 - mean)) / variance) - 1)
+        alpha = (mean * alpha_plus_beta)
+        beta = ((1 - mean) * alpha_plus_beta)
+        return BetaDistribution(alpha, beta, metadata=metadata)
+    
+    @property
+    def alpha(self):
+        """
+        Property storing the alpha parameter of this distribution.
+        """
+        if not hasattr(self, '_alpha'):
+            raise AttributeError("alpha was referenced before it was set.")
+        return self._alpha
+    
+    @alpha.setter
+    def alpha(self, value):
+        """
+        Setter for the alpha parameter of this distribution.
+        
+        value: positive number
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._alpha = value
+            else:
+                raise ValueError("alpha was set to a non-positive number.")
+        else:
+            raise TypeError("alpha was set to a non-number.")
+    
+    @property
+    def alpha_minus_one(self):
+        """
+        Property storing alpha-1.
+        """
+        if not hasattr(self, '_alpha_minus_one'):
+            self._alpha_minus_one = self.alpha - 1
+        return self._alpha_minus_one
+    
+    @property
+    def beta(self):
+        """
+        Property storing the beta parameter of this distribution.
+        """
+        if not hasattr(self, '_beta'):
+            raise AttributeError("beta was referenced before it was set.")
+        return self._beta
+    
+    @beta.setter
+    def beta(self, value):
+        """
+        Setter for the beta parameter of this distribution.
+        
+        value: positive number
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._beta = value
+            else:
+                raise ValueError("beta was set to a non-positive number.")
+        else:
+            raise TypeError("beta was set to a non-number.")
+    
+    @property
+    def beta_minus_one(self):
+        """
+        Property storing beta-1.
+        """
+        if not hasattr(self, '_beta_minus_one'):
+            self._beta_minus_one = self.beta - 1
+        return self._beta_minus_one
+    
+    @property
+    def const_lp_term(self):
+        """
+        Property storing the constant term in the log of the pdf of this
+        distribution.
+        """
+        if not hasattr(self, '_const_lp_term'):
+            self._const_lp_term = -np.log(beta_func(self.alpha, self.beta))
+        return self._const_lp_term
     
     @property
     def numparams(self):
@@ -73,8 +159,8 @@ class BetaDistribution(Distribution):
         """
         if (point <= 0) or (point >= 1):
             return -np.inf
-        return self.const_lp_term + (self._alpha_min_one * np.log(point)) +\
-               (self._beta_min_one * np.log(1. - point))
+        return self.const_lp_term + (self.alpha_minus_one * np.log(point)) +\
+               (self.beta_minus_one * np.log(1. - point))
     
     def to_string(self):
         """

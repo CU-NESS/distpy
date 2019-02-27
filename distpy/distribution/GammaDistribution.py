@@ -35,6 +35,24 @@ class GammaDistribution(Distribution):
         self.power = power
         self.metadata = metadata
     
+    @staticmethod
+    def create_from_mean_and_variance(mean, variance, metadata=None):
+        """
+        Creates a new GammaDistribution from the mean and variance (assuming
+        power=1) instead of through the conventional shape and scale
+        parameters.
+        
+        mean: positive number equal to mean of desired distribution
+        variance: positive number equal to variance of desired distribution
+        metadata: data to store with this distribution, should be hdf5-able
+        
+        returns: new GammaDistribution object encoding the desired distribution
+        """
+        shape = ((mean ** 2) / variance)
+        scale = (variance / mean)
+        return\
+            GammaDistribution(shape, scale=scale, power=1, metadata=metadata)
+    
     @property
     def shape(self):
         """

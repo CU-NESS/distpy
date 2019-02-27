@@ -34,8 +34,8 @@ t0 = time.time()
 samples = [distribution_set.draw({'x': source}, shape=sample_size)['x']\
     for source in sources]
 t1 = time.time()
-print(("It took {} s to draw {} samples from a GaussianJumpingDistribution " +\
-    "in log space.").format(t1 - t0, sample_size))
+print(("It took {0:.5f} s to draw {1:d} samples from a " +\
+    "GaussianJumpingDistribution in log space.").format(t1 - t0, sample_size))
 
 for (isample, sample) in enumerate(samples):
     pl.hist(sample, bins=100, histtype='step', color='C{}'.format(isample))

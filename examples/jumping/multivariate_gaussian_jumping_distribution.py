@@ -33,7 +33,8 @@ t0 = time.time()
 sample1 = distribution.draw(umean1, sample_size)
 sample2 = distribution.draw(umean2, sample_size)
 print(('It took {0:.5f} s for two samples of size {1} to be drawn from a ' +\
-    '2D Gaussian jumping distribution.').format(time.time() - t0, sample_size))
+    '2D source-independent Gaussian jumping distribution.').format(\
+    time.time() - t0, sample_size))
 pl.figure()
 pl.hist2d(sample1[:,0], sample1[:,1], cmap=cmap, bins=100)
 pl.title('Centered on {} (sampled)'.format(umean1), size='xx-large')
@@ -43,7 +44,8 @@ x1s = np.linspace(xlim1[0], xlim1[1], 100)
 y1s = np.linspace(ylim1[0], ylim1[1], 100)
 extent1 = [np.min(x1s), np.max(x1s), np.min(y1s), np.max(y1s)]
 (x1s, y1s) = np.meshgrid(x1s, y1s)
-z1s = np.exp(np.reshape([distribution.log_value(umean1, np.array([x, y])) for (x, y) in zip(x1s.flatten(), y1s.flatten())], (100, 100)))
+z1s = np.exp(np.reshape([distribution.log_value(umean1, np.array([x, y]))\
+    for (x, y) in zip(x1s.flatten(), y1s.flatten())], (100, 100)))
 pl.figure()
 pl.imshow(z1s, cmap=cmap, extent=extent1)
 pl.title('Centered on {} (expected)'.format(umean1), size='xx-large')

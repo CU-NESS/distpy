@@ -32,7 +32,7 @@ print(('It took {0:.5f} s to draw {1} points from a 1D uniform ' +\
     'distribution (in arcsin space).').format(time.time() - t0, sample_size))
 pl.figure()
 pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
-    label='sampled', normed=True)
+    label='sampled', density=True)
 xs = np.linspace(0.001, 0.999, 999)
 pl.plot(xs,\
     list(map(lambda x : np.exp(distribution_set.log_value({'x': x})), xs)),\
