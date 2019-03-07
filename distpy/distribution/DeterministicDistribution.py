@@ -8,23 +8,26 @@ Description: File containing a class for a pseudo-distribution, characterized
 """
 import numpy as np
 from .Distribution import Distribution
-from ..util import int_types, sequence_types
+from ..util import int_types, sequence_types, bool_types
 
 class DeterministicDistribution(Distribution):
     """
     Class representing a deterministic distribution which simply yields draws
     which come from an array given at initialization.
     """
-    def __init__(self, points, metadata=None):
+    def __init__(self, points, is_discrete=False, metadata=None):
         """
         Initializes a new DeterministicDistribution based around the given
         points.
         
         points: 1D (only if this distribution is 1D) or 2D array of points to
                 return (in order)
+        is_discrete: boolean describing whether the underlying distribution
+                     from which points was sampled is discrete or continuous
         metadata: data to store alongside the distribution
         """
         self.points = points
+        self.is_discrete = is_discrete
         self.metadata = metadata
     
     @property
@@ -232,7 +235,23 @@ class DeterministicDistribution(Distribution):
         Property storing a boolean describing whether this distribution is
         discrete (True) or continuous (False).
         """
-        return True
+        if not hasattr(self, '_is_discrete'):
+            raise AttributeError("is_discrete was referenced before it was " +\
+                "set.")
+        return self._is_discrete
+    
+    @is_discrete.setter
+    def is_discrete(self, value):
+        """
+        Setter of whether the underlying distribution exists on a discrete
+        domain.
+        
+        value: True or False
+        """
+        if type(value) in bool_types:
+            self._is_discrete = value
+        else:
+            raise TypeError("is_discrete was set to a non-bool.")
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """

@@ -14,7 +14,7 @@ from distpy import DeterministicDistribution, load_distribution_from_hdf5_file
 
 def_cm = cm.bone
 
-repeats = 200
+repeats = 2000
 nbins = 5
 points = np.array([[0, 0], [-1, 1], [1, 1], [1, -1], [-1, -1]])
 sample_size = points.shape[0] * repeats
