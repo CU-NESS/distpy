@@ -7,6 +7,7 @@ Description: File containing class implementing the abstract Sampler class from
              emcee using distpy's JumpingDistributionSet objects for the
              storing of proposal distributions.
 """
+from __future__ import division
 import numpy as np
 from emcee import Sampler as emceeSampler
 from ..util import int_types
@@ -115,7 +116,7 @@ class MetropolisHastingsSampler(emceeSampler):
                                   log probability function
         nthreads: the number of threads to use in log likelihood calculations
                   for walkers. Default: 1, 1 is best unless loglikelihood is
-                  very slow
+                  slow (meaning taking many ms)
         args: extra positional arguments to pass to logprobability
         kwargs: extra keyword arguments to pass to logprobability
         """
@@ -280,7 +281,7 @@ class MetropolisHastingsSampler(emceeSampler):
                 If lnprob is not provided, the initial value is calculated.
         rstate0: (optional) the state of the random number generator. See the
                  :func:`random_state` property for details.
-        iterations: (optional) the number of steps to run.
+        iterations: (optional) integer number of steps to run.
         thin: (optional) if you only want to store and yield every thin samples
               in the chain, set thin to an integer greater than 1.
         storechain: (optional) by default, the sampler stores (in memory) the
@@ -301,7 +302,7 @@ class MetropolisHastingsSampler(emceeSampler):
                 for iwalker in range(self.nwalkers)])
         # Resize the chain in advance.
         if storechain:
-            nlinks = int(iterations / thin)
+            nlinks = (iterations // thin)
             chain_shape = (self.nwalkers, nlinks, self.num_parameters)
             self._chain =\
                 np.concatenate((self._chain, np.zeros(chain_shape)), axis=1)
@@ -309,7 +310,7 @@ class MetropolisHastingsSampler(emceeSampler):
             self._lnprob = np.concatenate((self._lnprob,\
                 np.zeros(likelihood_shape)), axis=1)
         i0 = self.iterations
-        for i in range(int(iterations)):
+        for i in range(iterations):
             self.iterations += 1
             randoms = [np.random.RandomState(\
                 seed=self._random.randint(2 ** 32))\
@@ -326,7 +327,7 @@ class MetropolisHastingsSampler(emceeSampler):
             lnprob = np.array(newlnprobs)
             self.naccepted = self.naccepted + np.array(accepted).astype(int)
             if storechain and (i % thin) == 0:
-                ind = i0 + int(i / thin)
+                ind = i0 + (i // thin)
                 self._chain[:,ind,:] = point
                 self._lnprob[:,ind] = lnprob
             yield point, lnprob, self.random_state
