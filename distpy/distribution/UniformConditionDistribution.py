@@ -1,54 +1,86 @@
 """
-File: distpy/distribution/InfiniteUniformDistribution.py
+File: distpy/distribution/UniformConditionDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: 13 Mar 2019
 
-Description: File containing class representing an improper uniform
-             "distribution". This Distribution cannot be drawn from as there is
-             zero probability of its variate appearing in any given finite
-             interval.
+Description: File containing class representing a distribution which takes on
+             the log_value 0 (unnormalized) when a condition  is met and -inf
+             when the condition is not met.
 """
-from ..util import int_types, bool_types
+import numpy as np
+from ..util import int_types, bool_types, Expression
 from .Distribution import Distribution
 
-class InfiniteUniformDistribution(Distribution):
+class UniformConditionDistribution(Distribution):
     """
-    A class representing a uniform distribution over all possible inputs (this
-    is not a "proper" prior; it cannot be drawn from).
+    A class representing a distribution which takes on the log_value 0
+    (unnormalized) when a condition  is met and -inf when the condition is not
+    met.
     """
-    def __init__(self, ndim=1, is_discrete=False, metadata=None):
+    def __init__(self, expression, metadata=None, is_discrete=False):
         """
-        Initializes a new InfiniteUniformDistribution
+        Initializes a new UniformConditionDistribution
         
-        ndim: the dimension of this distribution, default 1
+        expression: the condition which defines where the log_value of this
+                    distribution is finite. expression.num_arguments is the
+                    dimension of this distribution
+        metadata: data to store alongside this distribution
         is_discrete: True if the variable underlying this distribution is
                      discrete. False otherwise (default False)
-        metadata: data to store alongside this distribution
         """
-        self.numparams = ndim
+        self.expression = expression
         self.is_discrete = is_discrete
         self.metadata = metadata
+    
+    @property
+    def expression(self):
+        """
+        Property storing the Expression object which takes parameters as inputs
+        and produces the model output.
+        """
+        if not hasattr(self, '_expression'):
+            raise AttributeError("expression referenced before it was set.")
+        return self._expression
+    
+    @expression.setter
+    def expression(self, value):
+        """
+        Setter for the Expression object at the core of this model.
+        
+        value: must be an Expression object
+        """
+        if isinstance(value, Expression):
+            self._expression = value
+        else:
+            raise TypeError("expression was not an Expression object.")
     
     def draw(self, shape=None, random=None):
         """
         Draws a point from the distribution. Since this Distribution cannot be
         drawn from, this throws a NotImplementedError.
         """
-        raise NotImplementedError("InfiniteUniformDistribution objects " +\
+        raise NotImplementedError("UniformConditionDistribution objects " +\
             "cannot be drawn from because there is zero probability of its " +\
             "variate appearing in any given finite interval.")
     
     def log_value(self, point):
         """
         Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
+        point.
         
         point: either single value (if distribution is 1D) or array of values
         
         returns: single number, logarithm of value of this distribution at the
-                 given point
+                 given point. This distribution is not normalized because that
+                 would require knowing the exact region in which the condition
+                 at the heart of this distribution is True. If one knew that,
+                 they wouldn't be using the UniformConditionDistribution class,
+                 they'd use a more specific class.
         """
-        return 0.
+        if self.numparams == 1:
+            return (0. if self.expression(point) else -np.inf)
+        else:
+            return (0. if self.expression(*point) else -np.inf)
     
     @property
     def gradient_computable(self):
@@ -102,31 +134,8 @@ class InfiniteUniformDistribution(Distribution):
         distribution.
         """
         if not hasattr(self, '_numparams'):
-            raise AttributeError("numparams referenced before it was set.")
+            self._numparams = self.expression.num_arguments
         return self._numparams
-    
-    @numparams.setter
-    def numparams(self, value):
-        """
-        Setter for the dimension of this Distribution.
-        
-        value: a positive integer
-        """
-        if type(value) in int_types:
-            if value > 0:
-                self._numparams = value
-            else:
-                raise ValueError("numparams was set to a non-positive " +\
-                    "integer.")
-        else:
-            raise TypeError("numparams was set to a non-integer.")
-    
-    def to_string(self):
-        """
-        Returns a string representation of this distribution. It must be
-        implemented by all subclasses.
-        """
-        return 'InfiniteUniform'
     
     def __eq__(self, other):
         """
@@ -137,7 +146,9 @@ class InfiniteUniformDistribution(Distribution):
         
         returns: True or False
         """
-        if not isinstance(other, InfiniteUniformDistribution):
+        if not isinstance(other, UniformConditionDistribution):
+            return False
+        if self.expression != other.expression:
             return False
         if self.is_discrete != other.is_discrete:
             return False
@@ -177,38 +188,39 @@ class InfiniteUniformDistribution(Distribution):
                                 distribution and throws error if it fails
                        if False, metadata is ignored in saving process
         """
-        group.attrs['class'] = 'InfiniteUniformDistribution'
+        group.attrs['class'] = 'UniformConditionDistribution'
         group.attrs['is_discrete'] = self.is_discrete
-        group.attrs['ndim'] = self.numparams
+        self.expression.fill_hdf5_group(group.create_group('expression'))
         if save_metadata:
             self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads an InfiniteUniformDistribution from the given hdf5 file group.
+        Loads a UniformConditionDistribution from the given hdf5 file group.
         
         group: the same hdf5 file group which fill_hdf5_group was called on
                when this Distribution was saved
         
-        returns: an InfiniteUniformDistribution object created from the
+        returns: a UniformConditionDistribution object created from the
                  information in the given group
         """
         try:
-            assert group.attrs['class'] == 'InfiniteUniformDistribution'
+            assert group.attrs['class'] == 'UniformConditionDistribution'
         except:
             raise TypeError("The given hdf5 file doesn't seem to contain a " +\
-                "InfiniteUniformDistribution.")
+                "UniformConditionDistribution.")
         metadata = Distribution.load_metadata(group)
+        expression = Expression.load_from_hdf5_group(group['expression'])
         is_discrete = group.attrs['is_discrete']
-        ndim = group.attrs['ndim']
-        return InfiniteUniformDistribution(ndim, is_discrete=is_discrete,\
-            metadata=metadata)
+        return UniformConditionDistribution(expression,\
+            is_discrete=is_discrete, metadata=metadata)
     
     @property
     def minimum(self):
         """
         Property storing the minimum allowable value(s) in this distribution.
+        The one for this Distribution is not known, so it set to None.
         """
         return None
     
@@ -216,6 +228,7 @@ class InfiniteUniformDistribution(Distribution):
     def maximum(self):
         """
         Property storing the maximum allowable value(s) in this distribution.
+        The one for this Distribution is not known, so it set to None.
         """
         return None
     
@@ -229,9 +242,8 @@ class InfiniteUniformDistribution(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Returns a copy of this Distribution. This function ignores metadata.
         """
-        return InfiniteUniformDistribution(self.numparams,\
+        return UniformConditionDistribution(self.expression,\
             is_dicrete=self.is_discrete)
 

@@ -10,7 +10,7 @@ from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
     save_dictionary, load_dictionary, Savable, Loadable, bool_types,\
     int_types, float_types, real_numerical_types, complex_numerical_types,\
     numerical_types, sequence_types, univariate_histogram,\
-    confidence_contour_2D, bivariate_histogram, triangle_plot
+    confidence_contour_2D, bivariate_histogram, triangle_plot, Expression
 from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
     LogTransform, ArsinhTransform, ExponentialTransform, Exp10Transform,\
     Log10Transform, SquareTransform, ArcsinTransform, LogisticTransform,\
@@ -27,13 +27,13 @@ from distpy.distribution import Distribution, WindowedDistribution,\
     GriddedDistribution, ParallelepipedDistribution, PoissonDistribution,\
     KroneckerDeltaDistribution, UniformDistribution,\
     TruncatedGaussianDistribution, InfiniteUniformDistribution,\
-    WeibullDistribution, LinkedDistribution, SequentialDistribution,\
-    DirectionDistribution, UniformDirectionDistribution,\
-    GeneralizedParetoDistribution, GaussianDirectionDistribution,\
-    LinearDirectionDistribution, UniformTriangulationDistribution,\
-    DiscreteUniformDistribution, CustomDiscreteDistribution,\
-    DeterministicDistribution, DistributionSum, DistributionSet,\
-    DistributionList, load_distribution_from_hdf5_group,\
+    UniformConditionDistribution, WeibullDistribution, LinkedDistribution,\
+    SequentialDistribution, DirectionDistribution,\
+    UniformDirectionDistribution, GeneralizedParetoDistribution,\
+    GaussianDirectionDistribution, LinearDirectionDistribution,\
+    UniformTriangulationDistribution, DiscreteUniformDistribution,\
+    CustomDiscreteDistribution, DeterministicDistribution, DistributionSum,\
+    DistributionSet, DistributionList, load_distribution_from_hdf5_group,\
     load_distribution_from_hdf5_file, DistributionHarmonizer
 from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     SourceDependentGaussianJumpingDistribution, UniformJumpingDistribution,\

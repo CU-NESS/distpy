@@ -15,4 +15,5 @@ from distpy.util.h5py_extensions import create_hdf5_dataset, get_hdf5_value,\
     HDF5Link, save_dictionary, load_dictionary
 from distpy.util.TrianglePlot import univariate_histogram,\
     confidence_contour_2D, bivariate_histogram, triangle_plot
+from distpy.util.Expression import Expression
 

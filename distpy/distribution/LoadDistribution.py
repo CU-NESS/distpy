@@ -23,6 +23,7 @@ from .DoubleSidedExponentialDistribution import\
 from .WeibullDistribution import WeibullDistribution
 from .KroneckerDeltaDistribution import KroneckerDeltaDistribution
 from .InfiniteUniformDistribution import InfiniteUniformDistribution
+from .UniformConditionDistribution import UniformConditionDistribution
 from .EllipticalUniformDistribution import EllipticalUniformDistribution
 from .TruncatedGaussianDistribution import TruncatedGaussianDistribution
 from .SechDistribution import SechDistribution
