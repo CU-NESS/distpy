@@ -31,7 +31,7 @@ mean = np.array([1, 2, 4])
 nwalkers = 4
 numsteps = 10
 rstate = None
-wait_time = 1
+wait_time = 0.1
 
 def logprobability(pars):
     time.sleep(wait_time)
