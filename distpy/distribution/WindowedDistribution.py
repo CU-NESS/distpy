@@ -7,6 +7,7 @@ Description: File containing distribution which is similar to a given one but,
              when drawing from them, only points which exist where a different
              distribution is nonzero.
 """
+from __future__ import division
 import numpy as np
 from ..util import int_types
 from .Distribution import Distribution
@@ -134,6 +135,43 @@ class WindowedDistribution(Distribution):
             return points[0]
         else:
             return points
+    
+    def approximate_acceptance_fraction(self, num_to_draw):
+        """
+        Approximates the fraction of draws from this Distribution's
+        background_distribution that are accepted by the
+        foreground_distribution. In the ideal case (i.e. when num_to_draw is,
+        impossibly, infinite), this is equal to the fraction of probability of
+        the background_distribution which has a log value of 0 when
+        evaluated with the foreground_distribution.
+        
+        num_to_draw: integer number of draws to make when approximating. The
+                     larger this number the better the approximation.
+        
+        returns: single number between 0 and 1 which is a multiple of
+                 1/num_to_draw
+        """
+        draws = self.background_distribution.draw(num_to_draw)
+        foreground_log_values =\
+            [self.foreground_distribution.log_value(draw) for draw in draws]
+        return np.sum(np.isfinite(foreground_log_values)) / num_to_draw
+    
+    def approximate_rejection_fraction(self, num_to_draw):
+        """
+        Approximates the fraction of draws from this Distribution's
+        background_distribution that are rejected by the
+        foreground_distribution. In the ideal case (i.e. when num_to_draw is,
+        impossibly, infinite), this is equal to the fraction of probability of
+        the background_distribution which has a log value of -np.inf when
+        evaluated with the foreground_distribution.
+        
+        num_to_draw: integer number of draws to make when approximating. The
+                     larger this number the better the approximation.
+        
+        returns: single number between 0 and 1 which is a multiple of
+                 1/num_to_draw
+        """
+        return 1 - self.approximate_acceptance_fraction(num_to_draw)
 
     def log_value(self, point):
         """

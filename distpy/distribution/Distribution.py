@@ -390,13 +390,15 @@ class Distribution(Savable, Loadable):
         """
         pass
     
-    def plot(self, x_values, xlabel='', ylabel='', title='', fontsize=24,\
-        ax=None, show=False, **kwargs):
+    def plot(self, x_values, scale_factor=1, xlabel='', ylabel='', title='',\
+        fontsize=24, ax=None, show=False, **kwargs):
         """
         Plots the PDF of this distribution evaluated at the given x values.
         
         x_values: 1D numpy.ndarray of sorted x values at which to evaluate this
                   distribution
+        scale_factor: allows for the pdf values to be scaled by a constant
+                      (default 1)
         xlabel: label to place on x axis
         ylabel: label to place on y axis
         title: title to place on top of plot
@@ -421,9 +423,9 @@ class Distribution(Savable, Loadable):
             fig = pl.figure(figsize=(12,9))
             ax = fig.add_subplot(111)
         if self.is_discrete:
-            ax.scatter(x_values, y_values, **kwargs)
+            ax.scatter(x_values, y_values * scale_factor, **kwargs)
         else:
-            ax.plot(x_values, y_values, **kwargs)
+            ax.plot(x_values, y_values * scale_factor, **kwargs)
         ax.set_xlabel(xlabel, size=fontsize)
         ax.set_ylabel(ylabel, size=fontsize)
         ax.set_title(title, size=fontsize)

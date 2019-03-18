@@ -10,6 +10,7 @@ Description: Example script illustrating use of WindowedDistribution alongside
              distribution, it is more efficient to use the
              TruncatedGaussianDistribution class).
 """
+from __future__ import division
 import time
 import numpy as np
 import matplotlib.pyplot as pl
@@ -42,8 +43,9 @@ x_values =\
     np.linspace(*([element for element in ax.get_xlim()] + [num_x_values]))
 equivalent_truncated_gaussian_distribution.plot(x_values, ax=ax, show=False,\
     color='b', label='TruncatedGaussianDistribution')
-distribution.plot(x_values, ax=ax, show=False, color='g',\
-    label='WindowedDistribution')
+scale_factor = 1 / distribution.approximate_acceptance_fraction(ndraw)
+distribution.plot(x_values, scale_factor=scale_factor, ax=ax, show=False,\
+    color='g', label='scaled WindowedDistribution')
 ax.legend()
 
 pl.show()
