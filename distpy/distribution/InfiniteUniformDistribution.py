@@ -1,14 +1,15 @@
 """
 File: distpy/distribution/InfiniteUniformDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: 25 Mar 2019
 
 Description: File containing class representing an improper uniform
              "distribution". This Distribution cannot be drawn from as there is
              zero probability of its variate appearing in any given finite
              interval.
 """
-from ..util import int_types, bool_types
+import numpy as np
+from ..util import int_types, bool_types, numerical_types, sequence_types
 from .Distribution import Distribution
 
 class InfiniteUniformDistribution(Distribution):
@@ -16,18 +17,163 @@ class InfiniteUniformDistribution(Distribution):
     A class representing a uniform distribution over all possible inputs (this
     is not a "proper" prior; it cannot be drawn from).
     """
-    def __init__(self, ndim=1, is_discrete=False, metadata=None):
+    def __init__(self, ndim=1, minima=None, maxima=None,\
+        is_discrete=False, metadata=None):
         """
         Initializes a new InfiniteUniformDistribution
         
         ndim: the dimension of this distribution, default 1
+        minima: if None, no lower bound is used for any parameters
+                if a number, that is the number used as a lower bound for all
+                             parameters
+                otherwise (only if numparams > 1), must be a sequence of length
+                                                   numparams containing None's
+                                                   and/or numbers containing
+                                                   lower bounds
+        maxima: if None, no upper bound is used for any parameters
+                if a number, that is the number used as a upper bound for all
+                             parameters
+                otherwise (only if numparams > 1), must be a sequence of length
+                                                   numparams containing None's
+                                                   and/or numbers containing
+                                                   upper bounds
         is_discrete: True if the variable underlying this distribution is
                      discrete. False otherwise (default False)
         metadata: data to store alongside this distribution
         """
         self.numparams = ndim
+        self.minima = minima
+        self.maxima = maxima
         self.is_discrete = is_discrete
         self.metadata = metadata
+    
+    @property
+    def minima(self):
+        """
+        Property storing the minimum variable value(s) in an array.
+        """
+        if not hasattr(self, '_minima'):
+            raise AttributeError("minima was referenced before it was set.")
+        return self._minima
+    
+    @minima.setter
+    def minima(self, value):
+        """
+        Setter for the minimum value(s) of this distribution.
+        
+        value: if None, no lower bound is used for any parameters
+               if a number, that is the number used as a lower bound for all
+                            parameters
+               otherwise (only if numparams > 1), must be a sequence of length
+                                                  numparams containing None's
+                                                  and/or numbers containing
+                                                  lower bounds
+        """
+        if self.numparams == 1:
+            if value is None:
+                self._minima = -np.inf
+            elif type(value) in numerical_types:
+                self._minima = value
+            else:
+                raise TypeError("minima was set to neither None nor a number.")
+        elif value is None:
+            self._minima = np.ones((self.numparams,)) * (-np.inf)
+        elif type(value) in numerical_types:
+            self._minima = np.ones((self.numparams,)) * value
+        elif type(value) in sequence_types:
+            if len(value) == self.numparams:
+                self._minima = np.array([((-np.inf)\
+                    if (element is None) else element) for element in value])
+            else:
+                raise ValueError("The sequence of minima given to an " +\
+                    "InfiniteUniformDistribution object was not of length " +\
+                    "ndim.")
+        else:
+            raise TypeError("minima was set to neither None nor a number " +\
+                "or sequence.")
+    
+    @property
+    def maxima(self):
+        """
+        Property storing the maximum variable value(s) in an array.
+        """
+        if not hasattr(self, '_maxima'):
+            raise AttributeError("maxima was referenced before it was set.")
+        return self._maxima
+    
+    @maxima.setter
+    def maxima(self, value):
+        """
+        Setter for the maximum value(s) of this distribution.
+        
+        value: if None, no upper bound is used for any parameters
+               if a number, that is the number used as a upper bound for all
+                            parameters
+               otherwise (only if numparams > 1), must be a sequence of length
+                                                  numparams containing None's
+                                                  and/or numbers containing
+                                                  upper bounds
+        """
+        if self.numparams == 1:
+            if value is None:
+                self._maxima = np.inf
+            elif type(value) in numerical_types:
+                self._maxima = value
+            else:
+                raise TypeError("maxima was set to neither None nor a number.")
+        elif value is None:
+            self._maxima = np.ones((self.numparams,)) * (np.inf)
+        elif type(value) in numerical_types:
+            self._maxima = np.ones((self.numparams,)) * value
+        elif type(value) in sequence_types:
+            if len(value) == self.numparams:
+                self._maxima = np.array([(np.inf\
+                    if (element is None) else element) for element in value])
+            else:
+                raise ValueError("The sequence of maxima given to an " +\
+                    "InfiniteUniformDistribution object was not of length " +\
+                    "ndim.")
+        else:
+            raise TypeError("maxima was set to neither None nor a number " +\
+                "or sequence.")
+        if np.any(np.isfinite(self.minima + self._maxima)):
+            raise ValueError("At least one parameter of an " +\
+                "InfiniteUniformDistribution had both upper and lower " +\
+                "bounds, meaning it would be better for it to be " +\
+                "encapsulated with a regular UniformDistribution instead " +\
+                "of an InfiniteUniformDistribution.")
+    
+    @property
+    def all_left_infinite(self):
+        """
+        Property storing whether all parameters of this distribution have no
+        lower bound.
+        """
+        if not hasattr(self, '_all_left_infinite'):
+            self._all_left_infinite = (not np.any(np.isfinite(self.minima)))
+        return self._all_left_infinite
+    
+    @property
+    def all_right_infinite(self):
+        """
+        Property storing whether all parameters of this distribution have no
+        upper bound.
+        """
+        if not hasattr(self, '_all_right_infinite'):
+            self._all_right_infinite = (not np.any(np.isfinite(self.maxima)))
+        return self._all_right_infinite
+    
+    @property
+    def all_doubly_infinite(self):
+        """
+        Property storing whether this distribution is doubly infinite in all of
+        its parameters. In this case, no comparison is done when this
+        distribution is called.
+        """
+        if not hasattr(self, '_all_doubly_infinite'):
+            self._all_doubly_infinite =\
+                (self.all_left_infinite and self.all_right_infinite)
+        return self._all_doubly_infinite
     
     def draw(self, shape=None, random=None):
         """
@@ -48,7 +194,11 @@ class InfiniteUniformDistribution(Distribution):
         returns: single number, logarithm of value of this distribution at the
                  given point
         """
-        return 0.
+        if ((self.all_left_infinite or np.all(point > self.minima)) and\
+            (self.all_right_infinite or np.all(point < self.maxima))):
+            return 0.
+        else:
+            return (-np.inf)
     
     @property
     def gradient_computable(self):
@@ -141,6 +291,10 @@ class InfiniteUniformDistribution(Distribution):
             return False
         if self.is_discrete != other.is_discrete:
             return False
+        if np.any(self.minima != other.minima):
+            return False
+        if np.any(self.maxima != other.maxima):
+            return False
         return self.metadata_equal(other)
     
     @property
@@ -180,6 +334,8 @@ class InfiniteUniformDistribution(Distribution):
         group.attrs['class'] = 'InfiniteUniformDistribution'
         group.attrs['is_discrete'] = self.is_discrete
         group.attrs['ndim'] = self.numparams
+        group.attrs['minima'] = self.minima
+        group.attrs['maxima'] = self.maxima
         if save_metadata:
             self.save_metadata(group)
     
@@ -202,22 +358,24 @@ class InfiniteUniformDistribution(Distribution):
         metadata = Distribution.load_metadata(group)
         is_discrete = group.attrs['is_discrete']
         ndim = group.attrs['ndim']
-        return InfiniteUniformDistribution(ndim, is_discrete=is_discrete,\
-            metadata=metadata)
+        minima = group.attrs['minima']
+        maxima = group.attrs['maxima']
+        return InfiniteUniformDistribution(ndim, minima=minima, maxima=maxima,\
+            is_discrete=is_discrete, metadata=metadata)
     
     @property
     def minimum(self):
         """
         Property storing the minimum allowable value(s) in this distribution.
         """
-        return None
+        return self.minima
     
     @property
     def maximum(self):
         """
         Property storing the maximum allowable value(s) in this distribution.
         """
-        return None
+        return self.maxima
     
     @property
     def can_give_confidence_intervals(self):
@@ -233,5 +391,6 @@ class InfiniteUniformDistribution(Distribution):
         metadata.
         """
         return InfiniteUniformDistribution(self.numparams,\
-            is_dicrete=self.is_discrete)
+            minima=self.minima, maxima=self.maxima,\
+            is_discrete=self.is_discrete)
 
