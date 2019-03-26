@@ -8,9 +8,14 @@ Description: File containing a class representing a linear distribution
 """
 import numpy as np
 import numpy.random as rand
-import healpy as hp
 from ..util import int_types, sequence_types, numerical_types
 from .Distribution import Distribution
+try:
+    import healpy as hp
+except:
+    have_healpy = False
+else:
+    have_healpy = True
 
 class LinearDirectionDistribution(Distribution):
     """
@@ -30,6 +35,9 @@ class LinearDirectionDistribution(Distribution):
                             delayed pointing
         metadata: any data wished to be stored alongside this distribution
         """
+        if not have_healpy:
+            raise RuntimeError("LinearDirectionDistribution cannot be " +\
+                "initialized unless healpy is installed.")
         self.central_pointing = central_pointing
         self.phase_delayed_pointing = phase_delayed_pointing
         self.angle_distribution = angle_distribution
