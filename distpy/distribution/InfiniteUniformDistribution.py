@@ -356,10 +356,19 @@ class InfiniteUniformDistribution(Distribution):
             raise TypeError("The given hdf5 file doesn't seem to contain a " +\
                 "InfiniteUniformDistribution.")
         metadata = Distribution.load_metadata(group)
-        is_discrete = group.attrs['is_discrete']
         ndim = group.attrs['ndim']
-        minima = group.attrs['minima']
-        maxima = group.attrs['maxima']
+        if 'is_discrete' in group.attrs:
+            is_discrete = group.attrs['is_discrete']
+        else:
+            is_discrete = False
+        if 'minima' in group.attrs:
+            minima = group.attrs['minima']
+        else:
+            minima = None
+        if 'maxima' in group.attrs:
+            maxima = group.attrs['maxima']
+        else:
+            maxima = None
         return InfiniteUniformDistribution(ndim, minima=minima, maxima=maxima,\
             is_discrete=is_discrete, metadata=metadata)
     
@@ -368,14 +377,16 @@ class InfiniteUniformDistribution(Distribution):
         """
         Property storing the minimum allowable value(s) in this distribution.
         """
-        return self.minima
+        return [(element if np.isfinite(element) else None)\
+            for element in self.minima]
     
     @property
     def maximum(self):
         """
         Property storing the maximum allowable value(s) in this distribution.
         """
-        return self.maxima
+        return [(element if np.isfinite(element) else None)\
+            for element in self.maxima]
     
     @property
     def can_give_confidence_intervals(self):
