@@ -7,10 +7,9 @@ Description: File containing class which represents a weighted sum of
              distributions.
 """
 import numpy as np
+import numpy.random as rand
 from ..util import int_types, sequence_types
 from .Distribution import Distribution
-
-rand = np.random
 
 class DistributionSum(Distribution):
     """

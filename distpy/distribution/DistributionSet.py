@@ -17,6 +17,7 @@ Description: A container which can hold an arbitrary number of distributions,
              functions for further details.
 """
 import numpy as np
+import numpy.random as rand
 from ..util import Savable, Loadable, int_types, sequence_types,\
     univariate_histogram, bivariate_histogram, triangle_plot
 from ..transform import cast_to_transform_list, TransformList, TransformSet,\
@@ -268,7 +269,7 @@ class DistributionSet(Savable, Loadable):
         self._data = [(distribution, list(map(function, params)), transforms)\
             for (distribution, params, transforms) in self._data]
 
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws a point from all distributions.
         

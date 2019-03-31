@@ -520,7 +520,8 @@ class TransformList(Savable, Loadable):
             raise TypeError("Given transform was neither a Transform " +\
                 "object nor an object which could be cast to a Transform " +\
                 "object.")
-        del self._num_transforms
+        if hasattr(self, '_num_transforms'):
+            delattr(self, '_num_transforms')
     
     def extend(self, transform_list):
         """
@@ -593,11 +594,11 @@ class TransformList(Savable, Loadable):
                  holding the inner transform and other holding outer transforms
         """
         if not isinstance(other, TransformList):
-            raise TypeError("TransformList objects can only be added to " +\
-                "other TransformList objects.")
+            raise TypeError("TransformList objects can only be multiplied " +\
+                "by other TransformList objects.")
         if self.num_transforms != other.num_transforms:
-            raise ValueError("TransformList objects can only be added to " +\
-                "TransformList objects of the same length.")
+            raise ValueError("TransformList objects can only be multiplied " +\
+                "by TransformList objects of the same length.")
         transforms = []
         for (inner, outer) in zip(self.transforms, other.transforms):
             if isinstance(inner, NullTransform):

@@ -7,6 +7,7 @@ Description: File containing class representing uniform distribution on the
              (2D) surface of the sphere.
 """
 import numpy as np
+import numpy.random as rand
 from ..util import int_types, numerical_types
 from .DirectionDistribution import DirectionDistribution
 from .UniformDistribution import UniformDistribution
@@ -226,7 +227,7 @@ class UniformDirectionDistribution(DirectionDistribution):
             self._const_log_value = -np.log(self.delta_omega)
         return self._const_log_value
 
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws a direction from this distribution.
         

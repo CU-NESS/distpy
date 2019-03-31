@@ -7,6 +7,7 @@ Description: File containing distribution which has a 1D form but manifests in
              the form of a sorted tuple.
 """
 import numpy as np
+import numpy.random as rand
 from scipy.special import gammaln as log_gamma
 from ..util import int_types, numerical_types, sequence_types
 from .Distribution import Distribution
@@ -55,7 +56,7 @@ class SequentialDistribution(Distribution):
         """
         return self._numparams
     
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws values from shared_distribution and sorts them.
         

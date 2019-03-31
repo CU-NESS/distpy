@@ -7,6 +7,7 @@ Description: File containing a class representing a custom n-dimensional
              discrete distribution with finite support.
 """
 import numpy as np
+import numpy.random as rand
 from ..util import int_types, sequence_types, create_hdf5_dataset,\
     get_hdf5_value
 from .Distribution import Distribution
@@ -130,7 +131,7 @@ class CustomDiscreteDistribution(Distribution):
                 "referenced before it was set.")
         return self._flattened_cumulative_mass_function
     
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws a point from the distribution. Must be implemented by any base
         class.

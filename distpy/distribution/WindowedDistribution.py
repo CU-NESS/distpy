@@ -9,6 +9,7 @@ Description: File containing distribution which is similar to a given one but,
 """
 from __future__ import division
 import numpy as np
+import numpy.random as rand
 from ..util import int_types
 from .Distribution import Distribution
 
@@ -93,7 +94,7 @@ class WindowedDistribution(Distribution):
         """
         return self.background_distribution.numparams
     
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws values from background_distribution, replacing points which are
         drawn in places of zero probability under foreground_distribution.

@@ -18,6 +18,7 @@ Description: A container which can hold an arbitrary number of distributions,
              functions for further details.
 """
 import numpy as np
+import numpy.random as rand
 from ..util import int_types, sequence_types
 from ..transform import cast_to_transform_list, TransformList, NullTransform
 from .Distribution import Distribution
@@ -130,7 +131,7 @@ class DistributionList(Distribution):
             raise TypeError("DistributionList objects can only have other " +\
                 "DistributionList objects added to them.")
     
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws a point from this distribution by drawing points from all
         component distributions.

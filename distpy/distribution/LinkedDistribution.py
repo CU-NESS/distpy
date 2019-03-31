@@ -7,6 +7,7 @@ Description: File containing class representing distribution of many random
              variates which must all be equal.
 """
 import numpy as np
+import numpy.random as rand
 from ..util import int_types, numerical_types, sequence_types
 from .Distribution import Distribution
 
@@ -57,7 +58,7 @@ class LinkedDistribution(Distribution):
         """
         return self._numparams
 
-    def draw(self, shape=None, random=np.random):
+    def draw(self, shape=None, random=rand):
         """
         Draws value from shared_distribution and assigns that value to all
         parameters.

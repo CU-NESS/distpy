@@ -136,7 +136,8 @@ class InfiniteUniformDistribution(Distribution):
         else:
             raise TypeError("maxima was set to neither None nor a number " +\
                 "or sequence.")
-        if np.any(np.isfinite(self.minima + self._maxima)):
+        if np.any(np.all(np.isfinite(np.array([self.minima, self._maxima])),\
+            axis=0)):
             raise ValueError("At least one parameter of an " +\
                 "InfiniteUniformDistribution had both upper and lower " +\
                 "bounds, meaning it would be better for it to be " +\
