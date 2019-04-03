@@ -48,7 +48,7 @@ def test_transform(transform, x_values, function, derivative, log_derivative,\
         np.allclose(transform.second_derivative_of_log_derivative(x_values),\
             second_derivative_of_log_derivative(x_values), **tol_kwargs)\
     ]
-    if inverse_function is not None:
+    if type(inverse_function) is not type(None):
         conditions.append(np.allclose(transform.apply_inverse(y_values),\
             inverse_function(y_values), **tol_kwargs))
     if not all(conditions):

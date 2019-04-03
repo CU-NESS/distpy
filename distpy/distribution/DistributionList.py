@@ -141,7 +141,7 @@ class DistributionList(Distribution):
         
         returns a numpy.ndarray with shape given by shape+(numparams,)
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             shape = 1
         if type(shape) in int_types:

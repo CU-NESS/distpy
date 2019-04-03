@@ -163,7 +163,7 @@ class ParallelepipedDistribution(Distribution):
         
         returns random draw in form of numpy.ndarray
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             shape = (1,)
         elif type(shape) in int_types:

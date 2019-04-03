@@ -74,7 +74,7 @@ class LinkedDistribution(Distribution):
         
         returns numpy.ndarray of values (all are equal by design)
         """
-        if shape is None:
+        if type(shape) is type(None):
             return np.ones(self.numparams) *\
                 self.shared_distribution.draw(random=random)
         else:

@@ -304,7 +304,7 @@ class GaussianDistribution(Distribution):
             loc = self.mean.A[0,0]
             scale = np.sqrt(self.covariance.A[0,0])
             return random.normal(loc=loc, scale=scale, size=shape)
-        elif shape is None:
+        elif type(shape) is type(None):
             return self.mean.A[0] + np.dot(self.square_root_covariance,\
                 random.normal(0, 1, size=self.numparams))
         else:

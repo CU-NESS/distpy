@@ -50,7 +50,7 @@ def univariate_histogram(sample, reference_value=None, bins=None,\
     """
     if not have_matplotlib:
         raise no_matplotlib_error
-    if ax is None:
+    if type(ax) is type(None):
         fig = pl.figure()
         ax = fig.add_subplot(111)
     (nums, bins) = np.histogram(sample, bins=bins)
@@ -98,7 +98,7 @@ def univariate_histogram(sample, reference_value=None, bins=None,\
     else:
         raise ValueError("matplotlib_function not recognized.")
     ax.set_ylim(ylim)
-    if reference_value is not None:
+    if type(reference_value) is not type(None):
         ax.plot([reference_value] * 2, ylim, color='r', linewidth=1,\
             linestyle='--')
         ax.set_ylim(ylim)
@@ -128,7 +128,7 @@ def confidence_contour_2D(xsample, ysample, nums=None,\
     
     returns: 1D array of confidence contours
     """
-    if nums is None:
+    if type(nums) is type(None):
         (nums, xedges, yedges) =\
             np.histogram2d(xsample, ysample, **hist_kwargs)
     nums = np.sort(nums.flatten())
@@ -183,7 +183,7 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     """
     if not have_matplotlib:
         raise no_matplotlib_error
-    if ax is None:
+    if type(ax) is type(None):
         fig = pl.figure()
         ax = fig.add_subplot(111)
     (nums, xbins, ybins) = np.histogram2d(xsample, ysample, bins=bins)
@@ -209,16 +209,16 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
                 **kwargs)
         else:
             raise ValueError("matplotlib_function not recognized.")
-    if reference_value_mean is not None:
-        if reference_value_mean[0] is not None:
+    if type(reference_value_mean) is not type(None):
+        if type(reference_value_mean[0]) is not type(None):
             ax.plot([reference_value_mean[0]] * 2, ylim,\
                 color=reference_color, linewidth=1, linestyle='--')
-        if reference_value_mean[1] is not None:
+        if type(reference_value_mean[1]) is not type(None):
             ax.plot(xlim, [reference_value_mean[1]] * 2,\
                 color=reference_color, linewidth=1, linestyle='--')
-        if (reference_value_mean[0] is not None) and\
-            (reference_value_mean[1] is not None) and\
-            (reference_value_covariance is not None):
+        if (type(reference_value_mean[0]) is not type(None)) and\
+            (type(reference_value_mean[1]) is not type(None)) and\
+            (type(reference_value_covariance) is not type(None)):
             reference_value_mean = np.array(reference_value_mean)
             sqrt_covariance_matrix = scila.sqrtm(reference_value_covariance)
             angles = np.linspace(0, 2 * np.pi, num=1000, endpoint=False)
@@ -284,7 +284,7 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     """
     if not have_matplotlib:
         raise no_matplotlib_error
-    if fig is None:
+    if type(fig) is type(None):
         fig = pl.figure(figsize=figsize)
     existing_plots = bool(fig.axes)
     samples = np.array(samples)
@@ -316,8 +316,8 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     for (isample, sample) in enumerate(samples):
         min_to_include = np.min(sample)
         max_to_include = np.max(sample)
-        if (reference_value_mean is not None) and\
-            (reference_value_mean[isample] is not None):
+        if (type(reference_value_mean) is not type(None)) and\
+            (type(reference_value_mean[isample]) is not type(None)):
             min_to_include =\
                 min(min_to_include, reference_value_mean[isample])
             max_to_include =\
@@ -331,7 +331,7 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     tick_label_formatter = StrMethodFormatter('{x:.3g}')
     for (column, column_sample) in enumerate(samples):
         column_label = labels[column]
-        if reference_value_mean is None:
+        if type(reference_value_mean) is type(None):
             reference_value_x = None
         else:
             reference_value_x = reference_value_mean[column]
@@ -353,13 +353,13 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                     show_intervals=False, xlabel='', ylabel='', title='',\
                     fontsize=fontsize, ax=ax, show=False, **full_kwargs_1D)
             else:
-                if reference_value_mean is None:
+                if type(reference_value_mean) is type(None):
                     reference_value_y = None
                 else:
                     reference_value_y = reference_value_mean[row]
                 reference_value_submean =\
                     (reference_value_x, reference_value_y)
-                if reference_value_covariance is None:
+                if type(reference_value_covariance) is type(None):
                     reference_value_subcovariance = None
                 else:
                     indices = np.array([column, row])

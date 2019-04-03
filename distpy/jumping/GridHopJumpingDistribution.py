@@ -125,10 +125,10 @@ class GridHopJumpingDistribution(JumpingDistribution):
         value: sequence of either None or minimal allowable values
         """
         if type(value) in sequence_types:
-            if all([((element is None) or (type(element) in int_types))\
-                for element in value]):
+            if all([((type(element) is type(None)) or\
+                (type(element) in int_types)) for element in value]):
                 self._minima = np.array(\
-                    [(-np.inf if (element is None) else element)\
+                    [(-np.inf if (type(element) is type(None)) else element)\
                     for element in value])
             else:
                 raise ValueError("At least one element of minima was " +\
@@ -153,10 +153,10 @@ class GridHopJumpingDistribution(JumpingDistribution):
         value: sequence of either None or maximal allowable values
         """
         if type(value) in sequence_types:
-            if all([((element is None) or (type(element) in int_types))\
-                for element in value]):
+            if all([((type(element) is type(None)) or\
+                (type(element) in int_types)) for element in value]):
                 self._maxima = np.array(\
-                    [(np.inf if (element is None) else element)\
+                    [(np.inf if (type(element) is type(None)) else element)\
                     for element in value])
                 if np.any(self.maxima <= self.minima):
                     raise ValueError("minima and maxima were not all " +\
@@ -263,7 +263,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
         
         returns: random values (type/shape determined by shape argument)
         """
-        if shape is None:
+        if type(shape) is type(None):
             return self.draw_single_value(source, random=random)
         if type(shape) in int_types:
             shape = (shape,)

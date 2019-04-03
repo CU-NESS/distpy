@@ -16,14 +16,16 @@ def cast_to_transform_list(key, num_transforms=None):
     function can also cast to a TransformList object of a specific length.
     """
     if isinstance(key, TransformList):
-        if (num_transforms is not None) and (len(key) != num_transforms):
+        if (type(num_transforms) is not type(None)) and\
+            (len(key) != num_transforms):
             raise ValueError("The given TransformList was not of the " +\
                 "specified length. So, it could not be cast successfully " +\
                 "into a TransformList of the desired size.")
         else:
             return key
     elif type(key) in sequence_types:
-        if (num_transforms is not None) and (len(key) != num_transforms):
+        if (type(num_transforms) is not type(None)) and\
+            (len(key) != num_transforms):
             raise ValueError("The given sequence was not of the specified " +\
                 "length. So, it could not be cast successfully into a " +\
                 "TransformList of the desired size.")
@@ -31,7 +33,7 @@ def cast_to_transform_list(key, num_transforms=None):
             return TransformList(*key)
     elif castable_to_transform(key):
         transform = cast_to_transform(key)
-        if num_transforms is None:
+        if type(num_transforms) is type(None):
             return TransformList(transform)
         else:
             return TransformList(*([transform] * num_transforms))

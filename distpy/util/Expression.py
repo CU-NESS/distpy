@@ -117,7 +117,7 @@ class Expression(Savable, Loadable):
         
         value: non-negative integer
         """
-        if value is None:
+        if type(value) is type(None):
             return
         elif (type(value) in int_types) and (value >= 0):
             self._num_arguments = value
@@ -216,7 +216,7 @@ class Expression(Savable, Loadable):
         for (iimport_string, import_string) in enumerate(self.import_strings):
             subgroup.attrs['{}'.format(iimport_string)] = import_string
         subgroup = group.create_group('kwargs')
-        if kwargs_links is None:
+        if type(kwargs_links) is type(None):
             kwargs_links = {}
         for key in self.kwargs:
             value = self.kwargs[key]

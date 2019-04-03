@@ -151,7 +151,7 @@ class JumpingDistributionSum(JumpingDistribution):
         
         returns: either single value (if distribution is 1D) or array of values
         """
-        if shape is None:
+        if type(shape) is type(None):
             uniform = random.uniform()
             idistribution = np.argmax(self.discrete_cdf_values > uniform)
             jumping_distribution = self.jumping_distributions[idistribution]

@@ -102,7 +102,7 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         
         value: either None or the minimum allowable integer
         """
-        if (value is None) or (type(value) in int_types):
+        if (type(value) is type(None)) or (type(value) in int_types):
             self._minimum = value
         else:
             raise TypeError("minimum was set to a non-int.")
@@ -125,10 +125,10 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         
         value: either None or the maximum allowable integer
         """
-        if value is None:
+        if type(value) is type(None):
             self._maximum = value
         elif type(value) in int_types:
-            if (self.minimum  is None) or (value > self.minimum):
+            if (type(self.minimum) is type(None)) or (value > self.minimum):
                 self._maximum = value
             else:
                 raise ValueError("maximum wasn't greater than minimum.")
@@ -191,7 +191,7 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         
         returns: random values (type/shape determined by shape argument)
         """
-        if shape is None:
+        if type(shape) is type(None):
             return self.draw_single_value(source, random=random)
         if type(shape) in int_types:
             shape = (shape,)
@@ -302,9 +302,9 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         """
         group.attrs['class'] = 'AdjacencyJumpingDistribution'
         group.attrs['jumping_probability'] = self.jumping_probability
-        if self.minimum is not None:
+        if type(self.minimum) is not type(None):
             group.attrs['minimum'] = self.minimum
-        if self.maximum is not None:
+        if type(self.maximum) is not type(None):
             group.attrs['maximum'] = self.maximum
     
     @staticmethod

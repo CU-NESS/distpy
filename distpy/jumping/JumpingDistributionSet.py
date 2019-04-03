@@ -247,7 +247,7 @@ class JumpingDistributionSet(Savable, Loadable):
                     for (param, transform) in zip(params, transforms)])
                 this_draw = distribution.draw(transformed_source, shape=shape,\
                     random=random)
-                if shape is None:
+                if type(shape) is type(None):
                     for iparam in range(len(params)):
                         point[params[iparam]] =\
                             transforms[iparam].apply_inverse(this_draw[iparam])
@@ -609,7 +609,7 @@ class JumpingDistributionSet(Savable, Loadable):
                                    number or sequence of numbers
         """
         samples = self.draw(source, ndraw)
-        if parameters is None:
+        if type(parameters) is type(None):
             parameters = self.params
         if in_transformed_space:
             samples = [self.transform_set[parameter](samples[parameter])\

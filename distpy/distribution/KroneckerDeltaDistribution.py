@@ -74,7 +74,7 @@ class KroneckerDeltaDistribution(Distribution):
         returns: either single value (if distribution is 1D) or array of values
         """
         
-        if shape is None:
+        if type(shape) is type(None):
             return_value = self.value
         else:
             if type(shape) in int_types:

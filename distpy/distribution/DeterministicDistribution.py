@@ -120,7 +120,7 @@ class DeterministicDistribution(Distribution):
         
         returns: either single value (if distribution is 1D) or array of values
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             shape = 1
         if type(shape) in int_types:
@@ -350,7 +350,7 @@ class DeterministicDistribution(Distribution):
         """
         product_distribution = None
         for distribution in distributions:
-            if product_distribution is None:
+            if type(product_distribution) is type(None):
                 product_distribution = distribution
             else:
                 product_distribution = product_distribution * distribution

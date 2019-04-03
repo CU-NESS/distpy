@@ -224,7 +224,7 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
         if self.numparams == 1:
             return random.normal(source,\
                 self.standard_deviations[point_index], size=shape)
-        elif shape is None:
+        elif type(shape) is type(None):
             return source + np.dot(self.square_root_covariances[point_index],\
                 random.normal(0, 1, size=self.numparams))
         else:

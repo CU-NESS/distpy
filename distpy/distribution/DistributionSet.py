@@ -887,7 +887,7 @@ class DistributionSet(Savable, Loadable):
                                    number or sequence of numbers
         """
         samples = self.draw(ndraw)
-        if parameters is None:
+        if type(parameters) is type(None):
             parameters = self.params
         if in_transformed_space:
             samples = [self.transform_set[parameter](samples[parameter])\

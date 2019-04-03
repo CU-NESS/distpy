@@ -79,8 +79,8 @@ def create_hdf5_dataset(group, name, data=None, link=None):
     returns h5py.Dataset object if one is newly created here
             HDF5Link object otherwise
     """
-    if link is None:
-        if data is None:
+    if type(link) is type(None):
+        if type(data) is type(None):
             raise ValueError("No data or link to data was given!")
         else:
             return group.create_dataset(name, data=data)
@@ -89,8 +89,8 @@ def create_hdf5_dataset(group, name, data=None, link=None):
             link = HDF5Link(*link)
         else:
             link = HDF5Link(link)
-    if link.slices is None:
-        if link.hard_link is None:
+    if type(link.slices) is type(None):
+        if type(link.hard_link) is type(None):
             group[name] = h5py.SoftLink(link.soft_link)
         else:
             group[name] = link.hard_link
@@ -101,7 +101,7 @@ def create_hdf5_dataset(group, name, data=None, link=None):
             subsubgroup = subgroup.create_group('dimension_{}'.format(islice))
             for attribute in ['start', 'stop', 'step']:
                 attribute_value = getattr(link_slice, attribute)
-                if attribute_value is not None:
+                if type(attribute_value) is not type(None):
                     subsubgroup.attrs[attribute] = attribute_value
         subgroup.attrs['__refpath__'] = link.soft_link
     return link

@@ -236,7 +236,7 @@ class UniformDirectionDistribution(DirectionDistribution):
                if tuple of n ints, (n+1)-D array
         random: the random number generator to use (default: numpy.random)
         """
-        if shape is None:
+        if type(shape) is type(None):
             phi_draw = self.phi_distribution.draw(random=random)
             theta_draw =\
                 np.arccos(self.cos_theta_distribution.draw(random=random))
@@ -248,7 +248,7 @@ class UniformDirectionDistribution(DirectionDistribution):
             theta_draw = np.arccos(self.cos_theta_distribution.draw(\
                 shape=shape).flatten())
         (theta, phi) = self.rotator(theta_draw, phi_draw)
-        if shape is not None:
+        if type(shape) is not type(None):
             (theta, phi) = (np.reshape(theta, shape), np.reshape(phi, shape))
         return np.stack([90 - np.degrees(theta), np.degrees(phi)], axis=-1)
     

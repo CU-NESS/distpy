@@ -77,7 +77,7 @@ class GriddedDistribution(Distribution):
             self.shape =\
                 tuple([len(variables[i]) for i in range(self.numparams)])
             self.size = np.prod(self.shape)
-            if pdf is None:
+            if type(pdf) is type(None):
                 self.pdf = np.ones(self.shape)
             elif type(pdf) in sequence_types:
                 arrpdf = np.array(pdf)
@@ -127,7 +127,7 @@ class GriddedDistribution(Distribution):
                                    (n+1)-D array for multivariate
         random: the random number generator to use (default: numpy.random)
         """
-        if shape is None:
+        if type(shape) is type(None):
             shape = ()
         if type(shape) in int_types:
             shape = (shape,)
@@ -166,7 +166,7 @@ class GriddedDistribution(Distribution):
         returns the log of the pdf associated with the pixel containing point
         """
         index = self._packed_index_from_point(point)
-        if (index is None) or (self.pdf[index] == 0):
+        if (type(index) is type(None)) or (self.pdf[index] == 0):
             return -np.inf
         return np.log(self.pdf[index])
 
@@ -214,7 +214,7 @@ class GriddedDistribution(Distribution):
         #
         # Finds N-dimensional index corresponding to given index.
         #
-        if index is None:
+        if type(index) is type(None):
             return None
         inds_in_reverse = []
         running_product = self.shape[self._N - 1]
@@ -230,7 +230,7 @@ class GriddedDistribution(Distribution):
         # Finds single index which is the packed version
         # of unpacked_indices (which should be a list)
         #
-        if unpacked_indices is None:
+        if type(unpacked_indices) is type(None):
             return None
         cumulative_index = 0
         running_product = 1

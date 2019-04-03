@@ -123,7 +123,7 @@ class GeneralizedParetoDistribution(Distribution):
                                    (n+1)-D array for multivariate
         random: the random number generator to use (default: numpy.random)
         """
-        if shape is None:
+        if type(shape) is type(None):
             shape = ()
         if type(shape) in int_types:
             shape = (shape,)

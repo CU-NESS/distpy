@@ -117,7 +117,7 @@ class GaussianDirectionDistribution(DirectionDistribution):
                if tuple of n ints, (n+1)-D array
         """
         psi_draw = self.psi_distribution.draw(shape=shape, random=random)
-        if shape is None:
+        if type(shape) is type(None):
             gamma_draw =\
                 self.sigma * np.sqrt(-2 * np.log(1 - random.rand()))
         else:

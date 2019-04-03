@@ -30,14 +30,14 @@ class TruncatedGaussianDistribution(Distribution):
         """
         self.mean = float(mean)
         self.var = float(var)
-        if low is None:
+        if type(low) is type(None):
             self.lo = None
             self._lo_term = -1.
         else:
             self.lo = float(low)
             self._lo_term = erf((self.lo - self.mean) / np.sqrt(2 * self.var))
 
-        if high is None:
+        if type(high) is type(None):
             self.hi = None
             self._hi_term = 1.
         else:
@@ -69,7 +69,7 @@ class TruncatedGaussianDistribution(Distribution):
                                    (n+1)-D array for multivariate
         random: the random number generator to use (default: numpy.random)
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             shape = (1,)
         elif type(shape) in int_types:
@@ -90,8 +90,8 @@ class TruncatedGaussianDistribution(Distribution):
         
         point: numerical value of the variable
         """
-        if (self.lo is not None and point < self.lo) or\
-                (self.hi is not None and point > self.hi):
+        if (type(self.lo) is not type(None) and point < self.lo) or\
+                (type(self.hi) is not type(None) and point > self.hi):
             return -np.inf
         return self._cons_lp_term - ((point - self.mean) ** 2) / (2 * self.var)
 
@@ -99,11 +99,11 @@ class TruncatedGaussianDistribution(Distribution):
         """
         Finds and returns string representation of this distribution.
         """
-        if self.lo is None:
+        if type(self.lo) is type(None):
             low_string = "-inf"
         else:
             low_string = "{:.1g}".format(self.lo)
-        if self.hi is None:
+        if type(self.hi) is type(None):
             high_string = "inf"
         else:
             high_string = "{:.1g}".format(self.hi)
@@ -120,16 +120,16 @@ class TruncatedGaussianDistribution(Distribution):
         if isinstance(other, TruncatedGaussianDistribution):
             mean_close = np.isclose(self.mean, other.mean, rtol=0, atol=1e-9)
             var_close = np.isclose(self.var, other.var, rtol=1e-12, atol=0)
-            if self.hi is None:
-                hi_close = (other.hi is None)
-            elif other.hi is not None:
+            if type(self.hi) is type(None):
+                hi_close = (type(other.hi) is type(None))
+            elif type(other.hi) is not type(None):
                 hi_close = np.isclose(self.hi, other.hi, rtol=0, atol=1e-9)
             else:
                 # since self.hi is not None in this block, just return False
                 return False
-            if self.lo is None:
-                lo_close = (other.lo is None)
-            elif other.lo is not None:
+            if type(self.lo) is type(None):
+                lo_close = (type(other.lo) is type(None))
+            elif type(other.lo) is not type(None):
                 lo_close = np.isclose(self.lo, other.lo, rtol=0, atol=1e-9)
             else:
                 return False
@@ -182,9 +182,9 @@ class TruncatedGaussianDistribution(Distribution):
                        if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'TruncatedGaussianDistribution'
-        if self.lo is not None:
+        if type(self.lo) is not type(None):
             group.attrs['low'] = self.lo
-        if self.hi is not None:
+        if type(self.hi) is not type(None):
             group.attrs['high'] = self.hi
         group.attrs['mean'] = self.mean
         group.attrs['variance'] = self.var

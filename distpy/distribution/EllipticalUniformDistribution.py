@@ -86,7 +86,7 @@ class EllipticalUniformDistribution(Distribution):
         
         returns numpy.ndarray of containing random variates for each parameter
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             shape = (1,)
         elif type(shape) in int_types:

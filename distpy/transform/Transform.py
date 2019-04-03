@@ -132,7 +132,7 @@ class Transform(Savable):
                  None is returned to indicate that the untransformed_minimum is
                  minus infinity
         """
-        if transformed_minimum is None:
+        if type(transformed_minimum) is type(None):
             untransformed_minimum = self.apply_inverse(-np.inf)
         else:
             untransformed_minimum = self.apply_inverse(transformed_minimum)
@@ -152,7 +152,7 @@ class Transform(Savable):
                  None is returned to indicate that the untransformed_maximum is
                  infinite
         """
-        if transformed_maximum is None:
+        if type(transformed_maximum) is type(None):
             untransformed_maximum = self.apply_inverse(np.inf)
         else:
             untransformed_maximum = self.apply_inverse(transformed_maximum)
@@ -172,7 +172,7 @@ class Transform(Savable):
                  None is returned to indicate that the transformed_minimum is
                  minus infinity
         """
-        if untransformed_minimum is None:
+        if type(untransformed_minimum) is type(None):
             transformed_minimum = self.apply(-np.inf)
         else:
             transformed_minimum = self.apply(untransformed_minimum)
@@ -192,7 +192,7 @@ class Transform(Savable):
                  None is returned to indicate that the transformed_maximum is
                  infinite
         """
-        if untransformed_maximum is None:
+        if type(untransformed_maximum) is type(None):
             transformed_maximum = self.apply(np.inf)
         else:
             transformed_maximum = self.apply(untransformed_maximum)

@@ -70,20 +70,21 @@ class InfiniteUniformDistribution(Distribution):
                                                   lower bounds
         """
         if self.numparams == 1:
-            if value is None:
+            if type(value) is type(None):
                 self._minima = -np.inf
             elif type(value) in numerical_types:
                 self._minima = value
             else:
                 raise TypeError("minima was set to neither None nor a number.")
-        elif value is None:
+        elif type(value) is type(None):
             self._minima = np.ones((self.numparams,)) * (-np.inf)
         elif type(value) in numerical_types:
             self._minima = np.ones((self.numparams,)) * value
         elif type(value) in sequence_types:
             if len(value) == self.numparams:
                 self._minima = np.array([((-np.inf)\
-                    if (element is None) else element) for element in value])
+                    if (type(element) is type(None)) else element)\
+                    for element in value])
             else:
                 raise ValueError("The sequence of minima given to an " +\
                     "InfiniteUniformDistribution object was not of length " +\
@@ -115,20 +116,21 @@ class InfiniteUniformDistribution(Distribution):
                                                   upper bounds
         """
         if self.numparams == 1:
-            if value is None:
+            if type(value) is type(None):
                 self._maxima = np.inf
             elif type(value) in numerical_types:
                 self._maxima = value
             else:
                 raise TypeError("maxima was set to neither None nor a number.")
-        elif value is None:
+        elif type(value) is type(None):
             self._maxima = np.ones((self.numparams,)) * (np.inf)
         elif type(value) in numerical_types:
             self._maxima = np.ones((self.numparams,)) * value
         elif type(value) in sequence_types:
             if len(value) == self.numparams:
                 self._maxima = np.array([(np.inf\
-                    if (element is None) else element) for element in value])
+                    if (type(element) is type(None)) else element)\
+                    for element in value])
             else:
                 raise ValueError("The sequence of maxima given to an " +\
                     "InfiniteUniformDistribution object was not of length " +\

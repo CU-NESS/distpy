@@ -107,7 +107,7 @@ class UniformJumpingDistribution(JumpingDistribution):
             return random.uniform(source - self.half_span,\
                 source + self.half_span, size=shape)
         else:
-            none_shape = (shape is None)
+            none_shape = (type(shape) is type(None))
             if none_shape:
                 shape = (1,)
             elif type(shape) in int_types:

@@ -297,7 +297,7 @@ class MetropolisHastingsSampler(emceeSampler):
         """
         self.random_state = randomstate
         point = np.array(point)
-        if lnprob is None:
+        if type(lnprob) is type(None):
             lnprob = np.array([self.get_lnprob(point[iwalker])\
                 for iwalker in range(self.nwalkers)])
         # Resize the chain in advance.

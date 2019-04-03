@@ -88,7 +88,7 @@ class DistributionHarmonizer(object):
                which decribe the parameters whose distribution is known
                (and/or) assumed
         """
-        if value is None:
+        if type(value) is type(None):
             self._known_distribution_set = DistributionSet()
         elif isinstance(value, DistributionSet):
             self._known_distribution_set = value

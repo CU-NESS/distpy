@@ -96,7 +96,7 @@ class GeometricDistribution(Distribution):
                         large
                otherwise, maximum should be an integer greater than minimum
         """
-        if value is None:
+        if type(value) is type(None):
             self._maximum = None
         elif type(value) in int_types:
             if value >= self.minimum:
@@ -113,7 +113,7 @@ class GeometricDistribution(Distribution):
         maximum.
         """
         if not hasattr(self, '_range'):
-            if self.maximum is None:
+            if type(self.maximum) is type(None):
                 self._range = None
             else:
                 self._range = (self.maximum - self.minimum + 1)
@@ -127,7 +127,7 @@ class GeometricDistribution(Distribution):
         """
         if not hasattr(self, '_constant_in_log_value'):
             self._constant_in_log_value = np.log(1 - self.common_ratio)
-            if self.range is not None:
+            if type(self.range) is not type(None):
                 self._constant_in_log_value -=\
                     np.log(1 - (self.common_ratio ** self.range))
         return self._constant_in_log_value
@@ -163,7 +163,7 @@ class GeometricDistribution(Distribution):
         random: the random number generator to use (default: numpy.random)
         """
         uniforms = random.uniform(size=shape)
-        if self.range is None:
+        if type(self.range) is type(None):
             log_argument = uniforms
         else:
             log_argument =\
@@ -180,7 +180,8 @@ class GeometricDistribution(Distribution):
         """
         if type(point) in int_types:
             if point >= self.minimum:
-                if (self.maximum is not None) and (point > self.maximum):
+                if (type(self.maximum) is not type(None)) and\
+                    (point > self.maximum):
                     return -np.inf
                 else:
                     return self.constant_in_log_value +\
@@ -240,7 +241,7 @@ class GeometricDistribution(Distribution):
         group.attrs['class'] = 'GeometricDistribution'
         group.attrs['common_ratio'] = self.common_ratio
         group.attrs['minimum'] = self.minimum
-        if self.maximum is not None:
+        if type(self.maximum) is not type(None):
             group.attrs['maximum'] = self.maximum
         if save_metadata:
             self.save_metadata(group)

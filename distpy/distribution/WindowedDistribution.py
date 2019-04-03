@@ -110,7 +110,7 @@ class WindowedDistribution(Distribution):
         
         returns numpy.ndarray of values (sorted by design)
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             shape = 1
         if type(shape) in int_types:

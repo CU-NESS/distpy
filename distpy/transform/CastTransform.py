@@ -40,7 +40,7 @@ def cast_to_transform(key):
     
     returns: Transform object of the correct type
     """
-    if key is None:
+    if type(key) is type(None):
         return NullTransform()
     elif isinstance(key, basestring):
         key_not_understood_error = ValueError(("transform could not be " +\

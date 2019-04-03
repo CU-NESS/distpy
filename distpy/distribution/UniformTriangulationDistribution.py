@@ -29,8 +29,8 @@ class UniformTriangulationDistribution(Distribution):
         points: only used if triangulation is None, points with which to
                 compute triangulation
         """
-        if triangulation is None:
-            if points is None:
+        if type(triangulation) is type(None):
+            if type(points) is type(None):
                 raise ValueError("If triangulation is not given, points " +\
                     "must be given. Neither were given.")
             else:
@@ -145,7 +145,7 @@ class UniformTriangulationDistribution(Distribution):
                                    n-D array for univariate ;
                                    (n+1)-D array for multivariate
         """
-        if shape is None:
+        if type(shape) is type(None):
             shape = 1
         int_shape = type(shape) in int_types
         if int_shape:

@@ -46,7 +46,7 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
         
         value: either None (if there is no low endpoint) or a real number
         """
-        if value is None:
+        if type(value) is type(None):
             self._low = -np.inf
         elif type(value) in numerical_types:
             self._low = value
@@ -71,7 +71,7 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
         value: either None (if there is no high endpoint) or a real number
                larger than low
         """
-        if value is None:
+        if type(value) is type(None):
             self._high = np.inf
         elif type(value) in numerical_types:
             if value > self.low:

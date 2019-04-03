@@ -46,7 +46,7 @@ class TransformSet(Savable, Loadable):
                 {parameter: cast_to_transform(transforms[parameter])\
                 for parameter in transforms}
         elif type(transforms) in sequence_types:
-            if parameters is None:
+            if type(parameters) is type(None):
                 raise ValueError("parameters must be a sequence if " +\
                     "transforms is a sequence.")
             elif type(parameters) not in sequence_types:

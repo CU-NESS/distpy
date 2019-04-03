@@ -242,7 +242,7 @@ class Distribution(Savable, Loadable):
         group: the same group with which fill_hdf5_group is being called on a
                Distribution subclass
         """
-        if self.metadata is not None:
+        if type(self.metadata) is not type(None):
             save_dictionary({'metadata': self.metadata},\
                 group.create_group('metadata'))
     
@@ -351,7 +351,7 @@ class Distribution(Savable, Loadable):
         value: any object, but if saving to hdf5 file is desired check
                description above for acceptable types
         """
-        if value is not None:
+        if type(value) is not type(None):
             is_string = isinstance(value, basestring)
             is_number = (type(value) in numerical_types)
             is_bool = (type(value) in bool_types)
@@ -419,7 +419,7 @@ class Distribution(Savable, Loadable):
                 'distributions.')
         y_values = np.exp([self.log_value(x_value) for x_value in x_values])
         xlim = (x_values[0], x_values[-1])
-        if ax is None:
+        if type(ax) is type(None):
             fig = pl.figure(figsize=(12,9))
             ax = fig.add_subplot(111)
         if self.is_discrete:

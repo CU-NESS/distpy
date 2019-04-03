@@ -123,7 +123,7 @@ class GaussianJumpingDistribution(JumpingDistribution):
         """
         if self.numparams == 1:
             return random.normal(source, self.standard_deviation, size=shape)
-        elif shape is None:
+        elif type(shape) is type(None):
             return source + np.dot(self.square_root_covariance,\
                 random.normal(0, 1, size=(self.numparams)))
         else:

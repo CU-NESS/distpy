@@ -71,7 +71,7 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
         returns: either single value (if distribution is 1D and shape is None)
                  or array of values
         """
-        none_shape = (shape is None)
+        none_shape = (type(shape) is type(None))
         if none_shape:
             return source + self.distribution.draw(random=random)
         elif type(shape) in int_types:
