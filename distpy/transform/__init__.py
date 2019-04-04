@@ -14,7 +14,8 @@ from distpy.transform.ArsinhTransform import ArsinhTransform
 from distpy.transform.ExponentialTransform import ExponentialTransform
 from distpy.transform.Exp10Transform import Exp10Transform
 from distpy.transform.Log10Transform import Log10Transform
-from distpy.transform.SquareTransform import SquareTransform
+from distpy.transform.PowerTransform import PowerTransform
+from distpy.transform.SineTransform import SineTransform
 from distpy.transform.ArcsinTransform import ArcsinTransform
 from distpy.transform.LogisticTransform import LogisticTransform
 from distpy.transform.AffineTransform import AffineTransform
@@ -28,6 +29,7 @@ from distpy.transform.CastTransform import cast_to_transform,\
     castable_to_transform
 from distpy.transform.LoadTransform import load_transform_from_hdf5_group,\
     load_transform_from_hdf5_file
+from distpy.transform.InvertTransform import invert_transform
 from distpy.transform.TransformList import TransformList
 from distpy.transform.CastTransformList import castable_to_transform_list,\
     cast_to_transform_list

@@ -13,7 +13,8 @@ from .ArsinhTransform import ArsinhTransform
 from .ExponentialTransform import ExponentialTransform
 from .Exp10Transform import Exp10Transform
 from .Log10Transform import Log10Transform
-from .SquareTransform import SquareTransform
+from .PowerTransform import PowerTransform
+from .SineTransform import SineTransform
 from .ArcsinTransform import ArcsinTransform
 from .LogisticTransform import LogisticTransform
 from .AffineTransform import AffineTransform
@@ -53,8 +54,7 @@ def load_transform_from_hdf5_group(group):
         return BoxCoxTransform(power, offset=offset)
     elif class_name == 'ArsinhTransform':
         shape = group.attrs['shape']
-        offset = group.attrs['offset']
-        return ArsinhTransform(shape, offset=offset)
+        return ArsinhTransform(shape)
     elif class_name == 'AffineTransform':
         scale_factor = group.attrs['scale_factor']
         translation = group.attrs['translation']
@@ -63,8 +63,8 @@ def load_transform_from_hdf5_group(group):
         return LogTransform()
     elif class_name == 'Log10Transform':
         return Log10Transform()
-    elif class_name == 'SquareTransform':
-        return SquareTransform()
+    elif class_name == 'SineTransform':
+        return SineTransform()
     elif class_name == 'ArcsinTransform':
         return ArcsinTransform()
     elif class_name == 'LogisticTransform':
@@ -73,6 +73,8 @@ def load_transform_from_hdf5_group(group):
         return ExponentialTransform()
     elif class_name == 'Exp10Transform':
         return Exp10Transform()
+    elif class_name == 'PowerTransform':
+        return PowerTransform(group.attrs['power'])
     elif class_name == 'ReciprocalTransform':
         transform = load_transform_from_hdf5_group(group['transform'])
         return ReciprocalTransform(transform)

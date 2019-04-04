@@ -19,7 +19,8 @@ from .ArsinhTransform import ArsinhTransform
 from .ExponentialTransform import ExponentialTransform
 from .Exp10Transform import Exp10Transform
 from .Log10Transform import Log10Transform
-from .SquareTransform import SquareTransform
+from .PowerTransform import PowerTransform
+from .SineTransform import SineTransform
 from .ArcsinTransform import ArcsinTransform
 from .LogisticTransform import LogisticTransform
 from .ReciprocalTransform import ReciprocalTransform
@@ -56,8 +57,8 @@ def cast_to_transform(key):
                 return LogTransform()
             elif lower_cased_key == 'log10':
                 return Log10Transform()
-            elif lower_cased_key == 'square':
-                return SquareTransform()
+            elif lower_cased_key == 'sine':
+                return SineTransform()
             elif lower_cased_key == 'arcsin':
                 return ArcsinTransform()
             elif lower_cased_key == 'logistic':
@@ -79,8 +80,9 @@ def cast_to_transform(key):
                 return\
                     BoxCoxTransform(float(split_lower_cased_key[1]), offset=0)
             elif split_lower_cased_key[0] == 'arsinh':
-                return\
-                    ArsinhTransform(float(split_lower_cased_key[1]), offset=0)
+                return ArsinhTransform(float(split_lower_cased_key[1]))
+            elif split_lower_cased_key[0] == 'power':
+                return PowerTransform(float(split_lower_cased_key[1]))
             else:
                 raise key_not_understood_error
         elif num_tokens == 3:
@@ -90,9 +92,6 @@ def cast_to_transform(key):
                 return AffineTransform(scale_factor, translation)
             elif split_lower_cased_key[0] in ['boxcox', 'box-cox']:
                 return BoxCoxTransform(float(split_lower_cased_key[1]),\
-                    offset=float(split_lower_cased_key[2]))
-            elif split_lower_cased_key[0] == 'arsinh':
-                return ArsinhTransform(float(split_lower_cased_key[1]),\
                     offset=float(split_lower_cased_key[2]))
             else:
                 raise key_not_understood_error

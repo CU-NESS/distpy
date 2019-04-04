@@ -7,7 +7,7 @@ Description: Example showing how to use, save, and load TransformSet objects.
 """
 import os
 from distpy import TransformSet, NullTransform, Log10Transform,\
-    ArcsinTransform
+    Exp10Transform, ArcsinTransform, SineTransform
 
 transform_set = TransformSet(['log10', None, 'arcsin'], ['a', 'b', 'c'])
 transform_set2 = TransformSet({'a': 'log10', 'b': None, 'c': 'arcsin'})
@@ -25,3 +25,7 @@ else:
 assert transform_set['a'] == Log10Transform()
 assert transform_set['b'] == NullTransform()
 assert transform_set['c'] == ArcsinTransform()
+
+assert transform_set.inverse['a'] == Exp10Transform()
+assert transform_set.inverse['b'] == NullTransform()
+assert transform_set.inverse['c'] == SineTransform()

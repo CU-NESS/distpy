@@ -1,18 +1,61 @@
 """
-File: distpy/transform/SquareTransform.py
+File: distpy/transform/PowerTransform.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: 3 Apr 2019
 
-Description: File containing class representing transforms which take the
-             square of the their inputs.
+Description: File containing class representing transforms which take a power
+             of the their inputs.
 """
+from __future__ import division
 import numpy as np
+from ..util import real_numerical_types
 from .Transform import Transform
 
-class SquareTransform(Transform):
+class PowerTransform(Transform):
     """
-    Class representing a transform based on the square function.
+    Class representing a transform based on the power function.
     """
+    def __init__(self, power):
+        """
+        Initializes a PowerTransform.
+        
+        power: positive number to which power inputs are put
+        """
+        self.power = power
+    
+    @property
+    def power(self):
+        """
+        Property storing the power at the heart of this distribution.
+        """
+        if not hasattr(self, '_power'):
+            raise AttributeError("power was referenced before it was set.")
+        return self._power
+    
+    @power.setter
+    def power(self, value):
+        """
+        Setter for the power at the heart of this distribution.
+        
+        value: a positive number
+        """
+        if type(value) in real_numerical_types:
+            if value > 0:
+                self._power = value
+            else:
+                raise ValueError("power was not a positive number.")
+        else:
+            raise TypeError("power was not a real number.")
+    
+    @property
+    def log_power(self):
+        """
+        Property storing the natural logarithm of the power property.
+        """
+        if not hasattr(self, '_log_power'):
+            self._log_power = np.log(self.power)
+        return self._log_power
+    
     def derivative(self, value):
         """
         Computes the derivative of the function underlying this Transform at
@@ -22,7 +65,7 @@ class SquareTransform(Transform):
         
         returns: value of derivative in same format as value
         """
-        return 2. * value
+        return self.power * np.power(value, self.power - 1)
     
     def second_derivative(self, value):
         """
@@ -33,7 +76,8 @@ class SquareTransform(Transform):
         
         returns: value of second derivative in same format as value
         """
-        return (0. * value) + 2.
+        return\
+            (self.power * (self.power - 1) * np.power(value, self.power - 2))
     
     def third_derivative(self, value):
         """
@@ -44,7 +88,8 @@ class SquareTransform(Transform):
         
         returns: value of third derivative in same format as value
         """
-        return 0. * value
+        return (self.power * (self.power - 1) * (self.power - 2) *\
+            np.power(value, self.power - 3))
     
     def log_derivative(self, value):
         """
@@ -55,7 +100,7 @@ class SquareTransform(Transform):
         
         returns: value of log derivative in same format as value
         """
-        return np.log(2 * value)
+        return (self.log_power + ((self.power - 1) * np.log(value)))
     
     def derivative_of_log_derivative(self, value):
         """
@@ -66,7 +111,7 @@ class SquareTransform(Transform):
         
         returns: value of derivative of log derivative in same format as value
         """
-        return (1. / value)
+        return ((self.power - 1) / value)
     
     def second_derivative_of_log_derivative(self, value):
         """
@@ -79,7 +124,7 @@ class SquareTransform(Transform):
         returns: value of second derivative of log derivative in same format as
                  value
         """
-        return -np.power(value, -2)
+        return ((1 - self.power) / (value ** 2))
     
     def apply(self, value):
         """
@@ -89,7 +134,7 @@ class SquareTransform(Transform):
         
         returns: value of function in same format as value
         """
-        return np.power(value, 2)
+        return np.power(value, self.power)
     
     def apply_inverse(self, value):
         """
@@ -99,14 +144,17 @@ class SquareTransform(Transform):
         
         returns: value of inverse function in same format as value
         """
-        return np.sqrt(value)
+        return np.power(value, 1 / self.power)
     
     def __eq__(self, other):
         """
         Checks for equality with other. Returns True iff other is a
-        SquareTransform.
+        PowerTransform with the same power.
         """
-        return isinstance(other, SquareTransform)
+        if isinstance(other, PowerTransform):
+            return (self.power == other.power)
+        else:
+            return False
     
     def to_string(self):
         """
@@ -114,7 +162,7 @@ class SquareTransform(Transform):
         
         returns: value which can be cast into this Transform
         """
-        return 'square'
+        return 'Power {:.2g}'.format(self.power)
     
     def fill_hdf5_group(self, group):
         """
@@ -122,5 +170,6 @@ class SquareTransform(Transform):
         
         group: hdf5 file group to which to write data about this transform
         """
-        group.attrs['class'] = 'SquareTransform'
+        group.attrs['class'] = 'PowerTransform'
+        group.attrs['power'] = self.power
 

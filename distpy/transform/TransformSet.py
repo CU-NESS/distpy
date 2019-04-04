@@ -9,6 +9,7 @@ Description: File containing a class representing an unordered set of Transform
 from ..util import sequence_types, Savable, Loadable
 from .CastTransform import cast_to_transform, castable_to_transform
 from .LoadTransform import load_transform_from_hdf5_group
+from .InvertTransform import invert_transform
 from .TransformList import TransformList
 
 try:
@@ -72,6 +73,18 @@ class TransformSet(Savable, Loadable):
         if not hasattr(self, '_transforms'):
             raise AttributeError("transforms referenced before it was set.")
         return self._transforms
+    
+    @property
+    def inverse(self):
+        """
+        Property storing a TransformSet with the same keys and inverse
+        transforms.
+        """
+        if not hasattr(self, '_inverse'):
+            self._inverse = TransformSet(\
+                {key: invert_transform(self.transforms[key])\
+                for key in self.transforms})
+        return self._inverse
     
     def __getitem__(self, key):
         """

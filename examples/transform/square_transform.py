@@ -6,10 +6,10 @@ Date: 11 Dec 2017
 Description: Example showing how to use the square transform.
 """
 import numpy as np
-from distpy import SquareTransform
+from distpy import PowerTransform
 from test_transform import test_transform
 
-transform = SquareTransform()
+transform = PowerTransform(2)
 x_values = np.linspace(1, 10, 91)
 func = (lambda x : (x ** 2))
 inv = (lambda y : (np.sqrt(y)))

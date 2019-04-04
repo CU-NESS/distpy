@@ -11,6 +11,7 @@ from .NullTransform import NullTransform
 from .CompositeTransform import CompositeTransform
 from .CastTransform import cast_to_transform, castable_to_transform
 from .LoadTransform import load_transform_from_hdf5_group
+from .InvertTransform import invert_transform
 
 class TransformList(Savable, Loadable):
     """
@@ -539,6 +540,17 @@ class TransformList(Savable, Loadable):
                 "used to initialize a TransformList object.")
         if hasattr(self, '_num_transforms'):
             delattr(self, '_num_transforms')
+    
+    @property
+    def inverse(self):
+        """
+        Property storing the TransformList object storing the inverse of all of
+        the transforms in this TransformList.
+        """
+        if not hasattr(self, '_inverse'):
+            self._inverse = TransformList(*[invert_transform(transform)\
+                for transform in self.transforms])
+        return self._inverse
     
     def __add__(self, other):
         """

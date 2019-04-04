@@ -7,7 +7,7 @@ Description: Example showing how to use, save, and load TransformList objects.
 """
 import os
 from distpy import TransformList, NullTransform, Log10Transform,\
-    ArcsinTransform
+    Exp10Transform, ArcsinTransform, SineTransform
 
 transform_list = TransformList('log10', None, 'arcsin')
 hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
@@ -23,3 +23,7 @@ else:
 assert transform_list[0] == Log10Transform()
 assert transform_list[1] == NullTransform()
 assert transform_list[2] == ArcsinTransform()
+
+assert transform_list.inverse[0] == Exp10Transform()
+assert transform_list.inverse[1] == NullTransform()
+assert transform_list.inverse[2] == SineTransform()

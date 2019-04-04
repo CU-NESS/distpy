@@ -15,7 +15,7 @@ from distpy import DistributionSet, UniformDistribution
 sample_size = int(1e4)
 
 distribution_set = DistributionSet()
-distribution_set.add_distribution(UniformDistribution(1., 90.), 'x', 'square')
+distribution_set.add_distribution(UniformDistribution(1., 90.), 'x', 'power 2')
 hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
 distribution_set.save(hdf5_file_name)
 try:

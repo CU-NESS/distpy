@@ -13,11 +13,12 @@ from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
     confidence_contour_2D, bivariate_histogram, triangle_plot, Expression
 from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
     LogTransform, ArsinhTransform, ExponentialTransform, Exp10Transform,\
-    Log10Transform, SquareTransform, ArcsinTransform, LogisticTransform,\
-    AffineTransform, ReciprocalTransform, ExponentiatedTransform,\
-    LoggedTransform, SumTransform, ProductTransform, CompositeTransform,\
-    castable_to_transform, cast_to_transform, load_transform_from_hdf5_group,\
-    load_transform_from_hdf5_file, TransformList, castable_to_transform_list,\
+    Log10Transform, PowerTransform, SineTransform, ArcsinTransform,\
+    LogisticTransform, AffineTransform, ReciprocalTransform,\
+    ExponentiatedTransform, LoggedTransform, SumTransform, ProductTransform,\
+    CompositeTransform, castable_to_transform, cast_to_transform,\
+    load_transform_from_hdf5_group, load_transform_from_hdf5_file,\
+    invert_transform, TransformList, castable_to_transform_list,\
     cast_to_transform_list, TransformSet
 from distpy.distribution import Distribution, WindowedDistribution,\
     BetaDistribution, BinomialDistribution, ChiSquaredDistribution,\

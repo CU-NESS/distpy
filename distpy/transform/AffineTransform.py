@@ -6,6 +6,7 @@ Date: 12 Feb 2018
 Description: File containing class representing an affine transformation
              (linear transformations and translations).
 """
+from __future__ import division
 import numpy as np
 from ..util import numerical_types
 from .Transform import Transform
