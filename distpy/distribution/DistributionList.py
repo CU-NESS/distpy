@@ -131,6 +131,29 @@ class DistributionList(Distribution):
             raise TypeError("DistributionList objects can only have other " +\
                 "DistributionList objects added to them.")
     
+    def with_different_transforms(self, new_transform_list):
+        """
+        Finds a DistributionList with the same distributions but different
+        transforms. Draws from this DistributionList and the returned
+        DistributionList will differ by the given transforms.
+        
+        new_transform_list: TransformList (or something that can be cast into
+                            one) containing the new transforms
+        
+        returns: new DistributionList object with the same distribution but
+                 different transforms
+        """
+        new_transform_list =\
+            cast_to_transform_list(transforms, num_transforms=self.numparams)
+        (new_data, running_index) = ([], 0)
+        for (distribution, transforms) in self._data:
+            new_running_index = running_index + distribution.numparams
+            new_transforms =\
+                new_transform_list[running_index:new_running_index]
+            running_index = new_running_index
+            new_data.append((distribution, new_transforms))
+        return DistributionList(distribution_tuples=new_data)
+    
     def draw(self, shape=None, random=rand):
         """
         Draws a point from this distribution by drawing points from all

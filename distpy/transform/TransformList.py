@@ -644,6 +644,17 @@ class TransformList(Savable, Loadable):
         else:
             raise TypeError("index type not recognized.")
     
+    @property
+    def is_null(self):
+        """
+        Property storing whether this TransformList encodes the
+        len(self)-length null transformation.
+        """
+        for transform in self.transforms:
+            if not isinstance(transform, NullTransform):
+                return False
+        return True
+    
     def __eq__(self, other):
         """
         Checks if other is a TransformList with the same Transforms as this

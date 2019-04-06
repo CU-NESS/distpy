@@ -268,6 +268,31 @@ class DistributionSet(Savable, Loadable):
         self._continuous_params = list(map(function, self.continuous_params))
         self._data = [(distribution, list(map(function, params)), transforms)\
             for (distribution, params, transforms) in self._data]
+    
+    def with_different_transforms(self, **new_transforms):
+        """
+        Finds a DistributionSet with the same distribution and parameters but
+        different transforms. Draws from this DistributionSet and the returned
+        DistributionSet will differ by the given transforms.
+        
+        new_transforms: kwargs containing some or all parameters of this
+                        DistributionSet as keys and new Transforms (or things
+                        which can be cast to Transforms)
+        
+        returns: new DistributionSet object with the same distribution and
+                 parameters but different transforms
+        """
+        new_data = []
+        for (distribution, params, transforms) in self._data:
+            these_new_transforms = []
+            for (iparam, param) in enumerate(params):
+                if param in new_transforms:
+                    these_new_transforms.append(new_transforms[param])
+                else:
+                    these_new_transforms.append(transforms[iparam])
+            these_new_transforms = cast_to_transform_list(these_new_transforms)
+            new_data.append((distribution, params, these_new_transforms))
+        return DistributionSet(distribution_tuples=new_data)
 
     def draw(self, shape=None, random=rand):
         """

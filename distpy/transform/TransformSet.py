@@ -244,6 +244,17 @@ class TransformSet(Savable, Loadable):
         """
         return len(self.transforms)
     
+    @property
+    def is_null(self):
+        """
+        Property storing whether this TransformSet encodes the
+        len(self)-length null transformation.
+        """
+        for parameter in self.transforms:
+            if not isinstance(self.transforms[parameters], NullTransform):
+                return False
+        return True
+    
     def __eq__(self, other):
         """
         Checks to see if self and other are equal or unequal
