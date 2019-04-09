@@ -9,7 +9,7 @@ Description: File containing a jumping distribution which is Gaussian centered
 import numpy as np
 import numpy.linalg as la
 from scipy.special import erf, erfinv
-from ..util import create_hdf5_dataset, numerical_types, sequence_types
+from ..util import numerical_types, sequence_types
 from .JumpingDistribution import JumpingDistribution
 
 class TruncatedGaussianJumpingDistribution(JumpingDistribution):

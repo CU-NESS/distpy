@@ -10,7 +10,7 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as rand
 from scipy.spatial import Delaunay
-from ..util import int_types
+from ..util import int_types, create_hdf5_dataset, get_hdf5_value
 from .Distribution import Distribution
 
 class UniformTriangulationDistribution(Distribution):
@@ -244,7 +244,7 @@ class UniformTriangulationDistribution(Distribution):
                        if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'UniformTriangulationDistribution'
-        group.create_dataset('points', data=self.triangulation.points)
+        create_hdf5_dataset(group, 'points', data=self.triangulation.points)
         if save_metadata:
             self.save_metadata(group)
     
@@ -266,7 +266,7 @@ class UniformTriangulationDistribution(Distribution):
             raise TypeError("The given hdf5 file doesn't seem to contain a " +\
                 "UniformTriangulationDistribution.")
         metadata = Distribution.load_metadata(group)
-        points = group['points'][()]
+        points = get_hdf5_value(group['points'])
         return\
             UniformTriangulationDistribution(points=points, metadata=metadata)
     

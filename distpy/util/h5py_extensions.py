@@ -82,6 +82,10 @@ def create_hdf5_dataset(group, name, data=None, link=None):
     if type(link) is type(None):
         if type(data) is type(None):
             raise ValueError("No data or link to data was given!")
+        elif issubclass(np.array(data).dtype.type, basestring):
+            dataset = group.create_dataset(name, data=np.array([]))
+            dataset.attrs['__string_sequence_robust__'] = np.array(data)
+            return dataset
         else:
             return group.create_dataset(name, data=data)
     elif not isinstance(link, HDF5Link):
@@ -117,7 +121,10 @@ def get_hdf5_value(obj):
              given object
     """
     try:
-        return obj[()]
+        if '__string_sequence_robust__' in obj.attrs:
+            return obj.attrs['__string_sequence_robust__']
+        else:
+            return obj[()]
     except:
         if ('__isregionref__' in obj.attrs) and obj.attrs['__isregionref__']:
             refpath = obj.attrs['__refpath__']
@@ -159,7 +166,7 @@ def save_dictionary(dictionary, group):
                 (type(value) in (numerical_types + bool_types)):
                 group.attrs[key] = value
             elif isinstance(value, np.ndarray):
-                group.create_dataset(key, data=value)
+                create_hdf5_dataset(group, key, data=value)
             elif isinstance(value, dict):
                 save_dictionary(value, group.create_group(key))
             elif isinstance(value, Savable):
@@ -196,7 +203,7 @@ def load_dictionary(group, **classes_to_load):
     for key in group:
         value = group[key]
         if isinstance(value, h5py.Dataset):
-            dictionary[key] = value[()]
+            dictionary[key] = get_hdf5_value(value)
         elif isinstance(value, h5py.Group):
             if '__isdictionary__' in value.attrs:
                 dictionary[key] = load_dictionary(value)

@@ -9,7 +9,8 @@ Description: File containing a jumping distribution which is Gaussian centered
 """
 import numpy as np
 import numpy.linalg as npla
-from ..util import int_types, numerical_types, sequence_types
+from ..util import int_types, numerical_types, sequence_types,\
+    create_hdf5_dataset, get_hdf5_value
 from .JumpingDistribution import JumpingDistribution
 
 class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
@@ -306,8 +307,8 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
         group: hdf5 file group to fill
         """
         group.attrs['class'] = 'SourceDependentGaussianJumpingDistribution'
-        group.create_dataset('points', data=self.points)
-        group.create_dataset('covariances', data=self.covariances)
+        create_hdf5_dataset(group, 'points', data=self.points)
+        create_hdf5_dataset(group, 'covariances', data=self.covariances)
     
     @staticmethod
     def load_from_hdf5_group(group):
@@ -327,7 +328,8 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
         except:
             raise ValueError("The given group does not seem to contain a " +\
                 "SourceDependentGaussianJumpingDistribution.")
-        points = [point for point in group['points'][()]]
-        covariances = [covariance for covariance in group['covariances'][()]]
+        points = [point for point in get_hdf5_value(group['points'])]
+        covariances =\
+            [covariance for covariance in get_hdf5_value(group['covariances'])]
         return SourceDependentGaussianJumpingDistribution(points, covariances)
 

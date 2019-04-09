@@ -9,7 +9,7 @@ Description: File containing class representing an arbitrary dimensional
 import numpy as np
 import numpy.random as rand
 from ..util import int_types, sequence_types, numerical_types,\
-    create_hdf5_dataset
+    create_hdf5_dataset, get_hdf5_value
 from .Distribution import Distribution
 
 

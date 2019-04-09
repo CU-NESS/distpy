@@ -7,7 +7,8 @@ Description: File containing class which represents a weighted sum of
              distributions.
 """
 import numpy as np
-from ..util import int_types, sequence_types
+from ..util import int_types, sequence_types, create_hdf5_dataset,\
+    get_hdf5_value
 from .JumpingDistribution import JumpingDistribution
 
 rand = np.random
@@ -257,7 +258,7 @@ class JumpingDistributionSum(JumpingDistribution):
             enumerate(self.jumping_distributions):
             jumping_distribution.fill_hdf5_group(\
                 subgroup.create_group('{:d}'.format(idistribution)))
-        group.create_dataset('weights', data=self.weights)
+        create_hdf5_dataset(group, 'weights', data=self.weights)
     
     @staticmethod
     def load_from_hdf5_group(group, *jumping_distribution_classes):
@@ -281,7 +282,7 @@ class JumpingDistributionSum(JumpingDistribution):
         except:
             raise ValueError("The given group does not appear to contain a " +\
                 "JumpingDistributionSum object.")
-        weights = group['weights'][()]
+        weights = get_hdf5_value(group['weights'])
         subgroup = group['jumping_distributions']
         jumping_distributions = []
         for (icls, cls) in enumerate(jumping_distribution_classes):

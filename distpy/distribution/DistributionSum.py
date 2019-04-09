@@ -8,7 +8,8 @@ Description: File containing class which represents a weighted sum of
 """
 import numpy as np
 import numpy.random as rand
-from ..util import int_types, sequence_types
+from ..util import int_types, sequence_types, create_hdf5_dataset,\
+    get_hdf5_value
 from .Distribution import Distribution
 
 class DistributionSum(Distribution):
@@ -268,7 +269,7 @@ class DistributionSum(Distribution):
         for (idistribution, distribution) in enumerate(self.distributions):
             distribution.fill_hdf5_group(\
                 subgroup.create_group('{:d}'.format(idistribution)))
-        group.create_dataset('weights', data=self.weights)
+        create_hdf5_dataset(group, 'weights', data=self.weights)
         if save_metadata:
             self.save_metadata(group)
     
@@ -296,7 +297,7 @@ class DistributionSum(Distribution):
             raise ValueError("The given group does not appear to contain a " +\
                 "DistributionSum object.")
         metadata = Distribution.load_metadata(group)
-        weights = group['weights'][()]
+        weights = get_hdf5_value(group['weights'])
         subgroup = group['distributions']
         distributions = []
         for (icls, cls) in enumerate(distribution_classes):

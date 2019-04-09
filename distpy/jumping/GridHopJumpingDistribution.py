@@ -9,7 +9,8 @@ Description: File containing class representing a JumpingDistribution defined
              source and never jumps more than one space.
 """
 import numpy as np
-from ..util import int_types, numerical_types, sequence_types
+from ..util import int_types, numerical_types, sequence_types,\
+    create_hdf5_dataset, get_hdf5_value
 from .JumpingDistribution import JumpingDistribution
 
 class GridHopJumpingDistribution(JumpingDistribution):
@@ -373,8 +374,8 @@ class GridHopJumpingDistribution(JumpingDistribution):
         group.attrs['class'] = 'GridHopJumpingDistribution'
         group.attrs['jumping_probability'] = self.jumping_probability
         group.attrs['ndim'] = self.ndim
-        group.create_dataset('minima', data=self.minima)
-        group.create_dataset('maxima', data=self.maxima)
+        create_hdf5_dataset(group, 'minima', data=self.minima)
+        create_hdf5_dataset(group, 'maxima', data=self.maxima)
     
     @staticmethod
     def load_from_hdf5_group(group):
@@ -395,9 +396,9 @@ class GridHopJumpingDistribution(JumpingDistribution):
         ndim = group.attrs['ndim']
         jumping_probability = group.attrs['jumping_probability']
         minima = [None if (minimum == -np.inf) else minimum\
-            for minimum in group['minima'][()]]
+            for minimum in get_hdf5_value(group['minima'])]
         maxima = [None if (maximum == np.inf) else maximum\
-            for maximum in group['maxima'][()]]
+            for maximum in get_hdf5_value(group['maxima'])]
         return GridHopJumpingDistribution(ndim=ndim,\
             jumping_probability=jumping_probability, minima=minima,\
             maxima=maxima)

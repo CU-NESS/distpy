@@ -8,7 +8,8 @@ Description: File containing a class for a pseudo-distribution, characterized
 """
 import numpy as np
 from .Distribution import Distribution
-from ..util import int_types, sequence_types, bool_types
+from ..util import int_types, sequence_types, bool_types, create_hdf5_dataset,\
+    get_hdf5_value
 
 class DeterministicDistribution(Distribution):
     """
@@ -264,7 +265,7 @@ class DeterministicDistribution(Distribution):
                        if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DeterministicDistribution'
-        group.create_dataset('points', data=self.points)
+        create_hdf5_dataset(group, 'points', data=self.points)
         if save_metadata:
             self.save_metadata(group)
     
@@ -281,7 +282,7 @@ class DeterministicDistribution(Distribution):
         returns: a Distribution object created from the information in the
                  given group
         """
-        points = group['points'][()]
+        points = get_hdf5_value(group['points'])
         metadata = Distribution.load_metadata(group)
         return DeterministicDistribution(points, metadata=metadata)
     
