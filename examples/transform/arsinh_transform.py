@@ -26,7 +26,6 @@ else:
     os.remove(hdf5_file_name)
 
 assert(sinh_transform == cast_to_transform('arsinh 1'))
-assert(sinh_transform == cast_to_transform('arsinh 1 0'))
 
 assert(np.allclose(sinh_transform(x_values), np.sinh(x_values)))
 assert(np.allclose(sinh_transform.derivative(x_values), np.cosh(x_values)))
