@@ -70,6 +70,7 @@ class GaussianDistribution(Distribution):
                 "a recognizable type.")
         self.invcov = la.inv(self.covariance)
         self.logdetcov = la.slogdet(self.covariance)[1]
+        self.square_root_covariance
         self.metadata = metadata
     
     def _check_covariance_when_mean_has_size_1(self, true_mean, covariance):

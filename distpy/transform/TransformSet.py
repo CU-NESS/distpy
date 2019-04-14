@@ -7,6 +7,7 @@ Description: File containing a class representing an unordered set of Transform
              objects indexed by string parameters.
 """
 from ..util import sequence_types, Savable, Loadable
+from .NullTransform import NullTransform
 from .CastTransform import cast_to_transform, castable_to_transform
 from .LoadTransform import load_transform_from_hdf5_group
 from .InvertTransform import invert_transform
@@ -251,7 +252,7 @@ class TransformSet(Savable, Loadable):
         len(self)-length null transformation.
         """
         for parameter in self.transforms:
-            if not isinstance(self.transforms[parameters], NullTransform):
+            if not isinstance(self.transforms[parameter], NullTransform):
                 return False
         return True
     
