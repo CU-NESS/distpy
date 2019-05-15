@@ -141,9 +141,10 @@ class DeterministicDistribution(Distribution):
                 return np.reshape(to_return, shape)
         else:
             raise RuntimeError(("Not enough points remain in this " +\
-                "DeterministicDistribution to return the desired shape. " +\
-                "There are a total of {:d} points stored.").format(\
-                len(self.points)))
+                "DeterministicDistribution to return the desired shape, " +\
+                "which is {0}. There are a total of {1:d} points " +\
+                "stored and there are {2:d} remaining.").format(shape,\
+                self.num_points, self.num_points - self.current_index))
     
     def log_value(self, point):
         """

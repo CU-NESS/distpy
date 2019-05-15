@@ -257,7 +257,8 @@ def get_ax_with_geometry(fig, *geometry):
 def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100,\
     plot_type='contour', reference_value_mean=None,\
-    reference_value_covariance=None, contour_confidence_levels=0.95):
+    reference_value_covariance=None, contour_confidence_levels=0.95,\
+    tick_label_format_string='{x:.3g}'):
     """
     Makes a triangle plot out of N samples corresponding to (possibly
     correlated) random variables
@@ -281,6 +282,9 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                                bivariate histograms. Only used if plot_type is
                                'contour' or 'contourf'. Can be single number or
                                sequence of numbers
+    tick_label_format_string: format string that can be called using
+                              tick_label_format_string.format(x=loc) where loc
+                              is the location of the tick in data coordinates
     """
     if not have_matplotlib:
         raise no_matplotlib_error
@@ -328,7 +332,7 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
             max_to_include + (width / 10), nbins + 1))
         ticks.append(np.linspace(middle - (width / 2.5),\
             middle + (width / 2.5), 3))
-    tick_label_formatter = StrMethodFormatter('{x:.3g}')
+    tick_label_formatter = StrMethodFormatter(tick_label_format_string)
     for (column, column_sample) in enumerate(samples):
         column_label = labels[column]
         if type(reference_value_mean) is type(None):

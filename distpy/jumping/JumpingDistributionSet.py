@@ -581,7 +581,7 @@ class JumpingDistributionSet(Savable, Loadable):
         kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100,\
         plot_type='contour', reference_value_mean=None,\
         reference_value_covariance=None, contour_confidence_levels=0.95,\
-        parameter_renamer=(lambda x: x)):
+        parameter_renamer=(lambda x: x), tick_label_format_string='{x:.3g}'):
         """
         Makes a triangle plot out of ndraw samples from this distribution.
         
@@ -607,6 +607,10 @@ class JumpingDistributionSet(Savable, Loadable):
                                    bivariate histograms. Only used if plot_type
                                    is 'contour' or 'contourf'. Can be single
                                    number or sequence of numbers
+        tick_label_format_string: format string that can be called using
+                                  tick_label_format_string.format(x=loc) where
+                                  loc is the location of the tick in data
+                                  coordinates
         """
         samples = self.draw(source, ndraw)
         if type(parameters) is type(None):
@@ -622,5 +626,6 @@ class JumpingDistributionSet(Savable, Loadable):
             fontsize=fontsize, nbins=nbins, plot_type=plot_type,\
             reference_value_mean=reference_value_mean,\
             reference_value_covariance=reference_value_covariance,\
-            contour_confidence_levels=contour_confidence_levels)
+            contour_confidence_levels=contour_confidence_levels,\
+            tick_label_format_string=tick_label_format_string)
 
