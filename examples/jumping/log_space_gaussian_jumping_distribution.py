@@ -37,8 +37,10 @@ t1 = time.time()
 print(("It took {0:.5f} s to draw {1:d} samples from a " +\
     "GaussianJumpingDistribution in log space.").format(t1 - t0, sample_size))
 
-for (isample, sample) in enumerate(samples):
-    pl.hist(sample, bins=100, histtype='step', color='C{}'.format(isample))
+fig = pl.figure(figsize=(12,9))
+ax = fig.add_subplot(111)
+for (index, (source, sample)) in enumerate(zip(sources, samples)):
+    ax.hist(sample, bins=100, histtype='step', color='C{}'.format(index))
 
 pl.show()
 

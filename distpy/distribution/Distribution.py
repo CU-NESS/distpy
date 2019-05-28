@@ -150,6 +150,14 @@ class Distribution(Savable, Loadable):
         """
         raise cannot_instantiate_distribution_error
     
+    def __len__(self):
+        """
+        Returns the number of parameters in a Distribution so that
+        len(distribution) can be used to get the number of parameters of a
+        Distribution object without explicitly referencing numparams.
+        """
+        return self.numparams
+    
     def to_string(self):
         """
         Returns a string representation of this distribution. It must be

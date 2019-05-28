@@ -21,12 +21,12 @@ from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
     invert_transform, TransformList, castable_to_transform_list,\
     cast_to_transform_list, TransformSet
 from distpy.distribution import Distribution, WindowedDistribution,\
-    BetaDistribution, BinomialDistribution, ChiSquaredDistribution,\
-    DoubleSidedExponentialDistribution, EllipticalUniformDistribution,\
-    ExponentialDistribution, GammaDistribution, SechDistribution,\
-    SechSquaredDistribution, GaussianDistribution, GeometricDistribution,\
-    GriddedDistribution, ParallelepipedDistribution, PoissonDistribution,\
-    KroneckerDeltaDistribution, UniformDistribution,\
+    BetaDistribution, BernoulliDistribution, BinomialDistribution,\
+    ChiSquaredDistribution, DoubleSidedExponentialDistribution,\
+    EllipticalUniformDistribution, ExponentialDistribution, GammaDistribution,\
+    SechDistribution, SechSquaredDistribution, GaussianDistribution,\
+    GeometricDistribution, GriddedDistribution, ParallelepipedDistribution,\
+    PoissonDistribution, KroneckerDeltaDistribution, UniformDistribution,\
     TruncatedGaussianDistribution, InfiniteUniformDistribution,\
     UniformConditionDistribution, WeibullDistribution, LinkedDistribution,\
     SequentialDistribution, DirectionDistribution,\
@@ -42,7 +42,7 @@ from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     AdjacencyJumpingDistribution, GridHopJumpingDistribution,\
     SourceIndependentJumpingDistribution,\
     LocaleIndependentJumpingDistribution, JumpingDistributionSum,\
-    JumpingDistributionSet, load_jumping_distribution_from_hdf5_group,\
-    load_jumping_distribution_from_hdf5_file,\
-    MetropolisHastingsSampler
+    JumpingDistributionList, JumpingDistributionSet,\
+    load_jumping_distribution_from_hdf5_group,\
+    load_jumping_distribution_from_hdf5_file, MetropolisHastingsSampler
 

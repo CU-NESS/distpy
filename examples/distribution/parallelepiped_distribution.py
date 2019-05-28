@@ -16,9 +16,8 @@ sample_size = int(1e5)
 
 center = [-15., 20.]
 face_directions = [[1., 1.], [1., -1.]]
-distances = [10., 1.]
-distribution = ParallelepipedDistribution(center, face_directions, distances,\
-    norm_dirs=False)
+distances = np.array([10., 1.]) / np.sqrt(2)
+distribution = ParallelepipedDistribution(center, face_directions, distances)
 hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
 distribution.save(hdf5_file_name)
 try:

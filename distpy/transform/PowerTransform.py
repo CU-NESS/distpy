@@ -48,13 +48,13 @@ class PowerTransform(Transform):
             raise TypeError("power was not a real number.")
     
     @property
-    def log_power(self):
+    def log_abs_power(self):
         """
         Property storing the natural logarithm of the power property.
         """
-        if not hasattr(self, '_log_power'):
-            self._log_power = np.log(self.power)
-        return self._log_power
+        if not hasattr(self, '_log_abs_power'):
+            self._log_abs_power = np.log(np.abs(self.power))
+        return self._log_abs_power
     
     def derivative(self, value):
         """
@@ -100,7 +100,7 @@ class PowerTransform(Transform):
         
         returns: value of log derivative in same format as value
         """
-        return (self.log_power + ((self.power - 1) * np.log(value)))
+        return (self.log_abs_power + ((self.power - 1) * np.log(value)))
     
     def derivative_of_log_derivative(self, value):
         """

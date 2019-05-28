@@ -22,16 +22,34 @@ class PoissonDistribution(Distribution):
         
         scale: mean and variance of distribution (must be positive)
         """
-        if type(scale) in numerical_types:
-            if scale > 0:
-                self.scale = (scale * 1.)
+        self.scale = scale
+        self.metadata = metadata
+    
+    @property
+    def scale(self):
+        """
+        Property storing the scale parameter of this Poisson distribution.
+        """
+        if not hasattr(self, '_scale'):
+            raise AttributeError("scale was referenced before it was set.")
+        return self._scale
+    
+    @scale.setter
+    def scale(self, value):
+        """
+        Setter for the scale parameter of this Poisson distribution.
+        
+        value: positive number, both mean and variance of this distribution
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._scale = (value * 1.)
             else:
                 raise ValueError("scale given to PoissonDistribution was " +\
                     "not positive.")
         else:
             raise ValueError("scale given to PoissonDistribution was not a " +\
                 "number.")
-        self.metadata = metadata
     
     @property
     def numparams(self):

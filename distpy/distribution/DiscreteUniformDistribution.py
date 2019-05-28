@@ -8,7 +8,7 @@ Description: File containing a class representing a discrete uniform
 """
 import numpy as np
 import numpy.random as rand
-from ..util import int_types
+from ..util import int_types, sequence_types
 from .Distribution import Distribution
 
 class DiscreteUniformDistribution(Distribution):
@@ -25,18 +25,65 @@ class DiscreteUniformDistribution(Distribution):
         high: upper limit of pdf (if not given, left endpoint is zero and right
               endpoint is low)
         """
-        if (type(low) in int_types) and (type(high) in int_types):
-            if low <= high:
-                self.low = low
-                self.high = high
-            else:
-                self.low = high
-                self.high = low
-        else:
-            raise ValueError('Either the low or high endpoint of a ' +\
-                'UniformDistribution was not of a numerical type.')
-        self._log_P = - np.log(self.high - self.low + 1)
+        self.bounds = (low, high)
         self.metadata = metadata
+    
+    @property
+    def bounds(self):
+        """
+        Property storing a tuple of lowest and highest returnable values.
+        """
+        if not hasattr(self, '_bounds'):
+            raise AttributeError("bounds was referenced before it was set.")
+        return self._bounds
+    
+    @bounds.setter
+    def bounds(self, value):
+        """
+        Setter for the lowest and highest values returned by this distribution.
+        
+        value: tuple of integers (minimum, maximum)
+        """
+        if type(value) in sequence_types:
+            if len(value) == 2:
+                if all([(type(element) in int_types) for element in value]):
+                    if value[0] == value[1]:
+                        raise ValueError("The lower and upper bounds were " +\
+                            "set to the same number.")
+                    else:
+                        self._bounds = (min(value), max(value))
+                else:
+                    raise TypeError("Not all elements of bounds were " +\
+                        "integers.")
+            else:
+                raise ValueError("bounds was set to a sequence of a length " +\
+                    "that isn't two.")
+        else:
+            raise TypeError("bounds was set to a non-sequence.")
+    
+    @property
+    def low(self):
+        """
+        Property storing the lowest returnable value of this distribution.
+        """
+        return self.bounds[0]
+    
+    @property
+    def high(self):
+        """
+        Property storing the highest returnable value of this distribution.
+        """
+        return self.bounds[1]
+    
+    @property
+    def log_probability(self):
+        """
+        Property storing the logarithm of the probability mass when called
+        between low and high.
+        """
+        if not hasattr(self, '_log_probability'):
+            self._log_probability = ((-1) * np.log(self.high - self.low + 1))
+        return self._log_probability
     
     @property
     def numparams(self):
@@ -70,7 +117,7 @@ class DiscreteUniformDistribution(Distribution):
         """
         if (abs(point - int(round(point))) < 1e-9) and (point >= self.low) and\
             (point <= self.high):
-            return self._log_P
+            return self.log_probability
         return -np.inf
     
     def to_string(self):

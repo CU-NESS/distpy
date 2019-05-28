@@ -20,7 +20,7 @@ def _normed(vec):
     vec: 1D sequence of numbers
     """
     arrvec = np.array(vec)
-    return (arrvec / lalg.norm(arrvec))
+    return (arrvec / np.sqrt(np.dot(arrvec, arrvec)))
 
 class ParallelepipedDistribution(Distribution):
     """
@@ -28,64 +28,119 @@ class ParallelepipedDistribution(Distribution):
     region. The region is defined by constraints on linear combinations of the
     variables. See __init__ for more details.
     """
-    def __init__(self, center, face_directions, distances, norm_dirs=True,\
-        metadata=None):
+    def __init__(self, center, face_directions, distances, metadata=None):
         """
         Initializes a new ParallelepipedDistribution.
         
-        center the vector to the center of the region
-        face_directions list of directions to the faces of the parallelepiped
-        distances distances from center in given directions
-        norm_dirs if True, then face_directions are normalized. This means that
-                           the distances provided to this
-                           method are "true distances"
-                  if False, then face_directions are not normalized so the
-                            region condition
-                            dot(face_directions[i], from_center) < distances[i]
-                            implies that distances are measured "in terms of
-                            the combined quantity"
-                            dot(face_directions[i], from_center)
+        center: the vector to the center of the region
+        face_directions: list of directions to the faces of the parallelepiped.
+                         These will be normalized
+        distances: distances from center in given directions
         """
-        if (type(center) in sequence_types):
-            to_set = np.array(center)
-            if (to_set.ndim == 1):
-                self.center = to_set
-                self._numparams = len(self.center)
+        self.center = center
+        self.face_directions = face_directions
+        self.distances = distances
+        self.metadata = metadata
+    
+    @property
+    def center(self):
+        """
+        Property storing the center point of the parallelepiped.
+        """
+        if not hasattr(self, '_center'):
+            raise AttributeError("center was referenced before it was set.")
+        return self._center
+    
+    @center.setter
+    def center(self, value):
+        """
+        Setter for the center point of the parallelepiped.
+        
+        value: 1D numpy.ndarray of length numparams
+        """
+        if (type(value) in sequence_types):
+            value = np.array(value)
+            if (value.ndim == 1):
+                self._center = value
             else:
                 raise ValueError(('The number of dimensions of the center ' +\
                     'given to a ParallelepipedDistribution is not 1. It ' +\
-                    'is {}-dimensional.').format(to_set.ndim))
+                    'is {}-dimensional.').format(value.ndim))
         else:
             raise ValueError('A ParallelepipedDistribution was given with ' +\
                 'a center of an unrecognizable type.')
-        if (type(face_directions) in sequence_types):
-            to_set = np.matrix(face_directions)
-            if (to_set.shape == ((self.numparams,) * 2)):
-                if norm_dirs:
-                    self.face_directions =\
-                        np.matrix([_normed(face_directions[i])\
-                                   for i in range(self.numparams)])
-                else:
-                    self.face_directions =\
-                        np.matrix([face_directions[i]\
-                                   for i in range(self.numparams)])
+    
+    @property
+    def face_directions(self):
+        """
+        Property storing a matrix encoding the directions to each face of the
+        parallelepiped.
+        """
+        if not hasattr(self, '_face_directions'):
+            raise AttributeError("face_directions was referenced before it " +\
+                "was set.")
+        return self._face_directions
+    
+    @face_directions.setter
+    def face_directions(self, value):
+        """
+        Setter for the directions to each face of the parallelepiped.
+        
+        value: list of directions to the faces of the parallelepiped. These
+               will be normalized
+        """
+        if (type(value) in sequence_types):
+            value = np.array(value)
+            if (value.shape == ((self.numparams,) * 2)):
+                self._face_directions = [_normed(value[i])\
+                    for i in range(self.numparams)]
+                self._face_directions = np.matrix(self._face_directions)
             else:
-                raise ValueError('The shape of the face directions in ' +\
-                    'matrix form was not the expected value, which is ' +\
-                    '(self.numparams, self.numparams).')
+                raise ValueError("The shape of the face_directions in " +\
+                    "matrix form was not the expected value, which is " +\
+                    "(self.numparams, self.numparams).")
         else:
-            raise ValueError('A ParallelepipedDistribution was given ' +\
-                'face_directions of an unrecognizable type.')
-        if (type(distances) in sequence_types):
-            arrdists = np.array(distances)
-            if (arrdists.ndim == 1) and (len(arrdists) == self.numparams):
-                self.distances = arrdists
+            raise ValueError("A ParallelepipedDistribution was given " +\
+                "face_directions of an unrecognizable type.")
+    
+    @property
+    def distances(self):
+        """
+        Property storing the distances to each face of the parallelepiped.
+        """
+        if not hasattr(self, '_distances'):
+            raise AttributeError("distances was referenced before it was set.")
+        return self._distances
+    
+    @distances.setter
+    def distances(self, value):
+        """
+        Setter for the distances to each face of the parallelepiped.
+        
+        value: 1D array of positive numbers with the same shape as center
+        """
+        if (type(value) in sequence_types):
+            value = np.array(value)
+            if value.shape == (self.numparams,):
+                if np.all(value > 0):
+                    self._distances = value
+                else:
+                    raise ValueError("Not all distances were positive.")
             else:
-                raise ValueError('distances given to ' +\
-                    'ParallelepipedDistribution are either of the wrong ' +\
-                    'dimension or the wrong length.')
-        self.inv_face_directions = lalg.inv(self.face_directions)
-        self.metadata = metadata
+                raise ValueError("distances given to " +\
+                    "ParallelepipedDistribution have the wrong shape.")
+        else:
+            raise TypeError("distances was set to a non-sequence.")
+    
+    @property
+    def inv_face_directions(self):
+        """
+        Property storing the inverse of the matrix describing the directions to
+        the faces of the parallelepiped.
+        """
+        if not hasattr(self, '_inv_face_directions'):
+            self._inv_face_directions = lalg.inv(self.face_directions)
+        return self._inv_face_directions
 
     @property
     def numparams(self):
@@ -94,8 +149,7 @@ class ParallelepipedDistribution(Distribution):
         ParallelepipedDistribution applies.
         """
         if not hasattr(self, '_numparams'):
-            raise AttributeError("For some reason, I don't know how many " +\
-                "params this ParallelepipedDistribution describes!")
+            self._numparams = len(self.center)
         return self._numparams
 
     @property
@@ -311,7 +365,7 @@ class ParallelepipedDistribution(Distribution):
         face_directions = get_hdf5_value(group['face_directions'])
         distances = get_hdf5_value(group['distances'])
         return ParallelepipedDistribution(center, face_directions, distances,\
-            norm_dirs=False, metadata=metadata)
+            metadata=metadata)
     
     @property
     def gradient_computable(self):

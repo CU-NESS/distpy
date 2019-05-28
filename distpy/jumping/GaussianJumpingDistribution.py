@@ -123,15 +123,14 @@ class GaussianJumpingDistribution(JumpingDistribution):
         """
         if self.numparams == 1:
             return random.normal(source, self.standard_deviation, size=shape)
-        elif type(shape) is type(None):
-            return source + np.dot(self.square_root_covariance,\
-                random.normal(0, 1, size=(self.numparams)))
         else:
+            if type(shape) is type(None):
+                shape = ()
             if type(shape) in int_types:
                 shape = (shape,)
-            random_vector = random.normal(0, 1, size=shape+(1, self.numparams))
-            return source +\
-                np.sum(random_vector * self.square_root_covariance, axis=-1)
+            return source[((np.newaxis,) * len(shape)) + (slice(None),)] +\
+                np.dot(random.normal(0, 1, size=shape+(self.numparams,)),\
+                self.square_root_covariance)
     
     def log_value(self, source, destination):
         """

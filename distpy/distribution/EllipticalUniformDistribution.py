@@ -6,12 +6,14 @@ Date: 12 Feb 2018
 Description: File containing class representing an elliptical uniform
              multivariate distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
 import numpy.linalg as lalg
 import scipy.linalg as slalg
 from scipy.special import gammaln as log_gamma
-from ..util import int_types, create_hdf5_dataset, get_hdf5_value
+from ..util import int_types, sequence_types, numerical_types,\
+    create_hdf5_dataset, get_hdf5_value
 from .Distribution import Distribution
 
 class EllipticalUniformDistribution(Distribution):
@@ -20,46 +22,110 @@ class EllipticalUniformDistribution(Distribution):
     to be at any point within an ellipsoid (defined by mean and cov). It is a
     uniform distribution over an arbitrary ellipsoid.
     """
-    def __init__(self, mean, cov, metadata=None):
+    def __init__(self, mean, covariance, metadata=None):
         """
         Initializes this EllipticalUniformDistribution using properties of the
         ellipsoid defining it.
         
         mean the center of the ellipse defining this distribution
-        cov the covariance describing the ellipse defining this distribution. A
-            consequence of this definition is that, in order for a point, x, to
-            be in the ellipse, (x-mean)^T*cov^-1*(x-mean) < N+2 must be
-            satisfied
+        covariance the covariance describing the ellipse defining this
+                   distribution. A consequence of this definition is that, in
+                   order for a point, x, to be in the ellipse,
+                   (x-mean)^T*cov^-1*(x-mean) < N+2 must be satisfied
         """
-        try:
-            self.mean = np.array(mean)
-        except:
-            raise TypeError("mean given to EllipticalUniformDistribution " +\
-                "could not be cast as a numpy.ndarray.")
-        try:
-            self.cov = np.array(cov)
-        except:
-            raise TypeError("cov given to EllipticalUniformDistribution " +\
-                "could not be cast as a numpy.ndarray.")
-        if (self.cov.shape != (2 * self.mean.shape)) or (self.mean.ndim != 1):
-            raise ValueError("The shapes of the mean and cov given to " +\
-                "EllipticalUniformDistribution did not make sense. They " +\
-                "should fit the following pattern: mean.shape=(rank,) and " +\
-                "cov.shape=(rank,rank).")
-        self._numparams = self.mean.shape[0]
-        if self.numparams < 2:
-            raise NotImplementedError("The EllipticalUniformDistribution " +\
-                "doesn't take single variable random variates since, in " +\
-                "the 1D case, it is the same as a simple uniform " +\
-                "distribution; so, using the EllipticalUniformDistribution " +\
-                "class would involve far too much computational overhead.")
-        half_rank = self.numparams / 2.
-        self.invcov = lalg.inv(self.cov)
-        self.const_log_value = log_gamma(half_rank + 1) -\
-            (half_rank * (np.log(np.pi) + np.log(self.numparams + 2))) -\
-            (lalg.slogdet(self.cov)[1] / 2.)
-        self.sqrtcov = slalg.sqrtm(self.cov)
+        self.mean = mean
+        self.covariance = covariance
+        self.square_root_covariance
         self.metadata = metadata
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean/center of this ellipse.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean was referenced before it was set.")
+        return self._mean
+    
+    @mean.setter
+    def mean(self, value):
+        """
+        Setter for the mean/center of this ellipse.
+        
+        value: sequence of numbers
+        """
+        if type(value) in sequence_types:
+            value = np.array(value)
+            if all([(type(element) in numerical_types) for element in value]):
+                if len(value) > 1:
+                    self._mean = value
+                else:
+                    raise ValueError("mean is only univariate. Use the " +\
+                        "UniformDistribution class instead.")
+            else:
+                raise TypeError("Not all elements of mean were numbers.")
+        else:
+            raise TypeError("mean was set to a non-sequence.")
+    
+    @property
+    def covariance(self):
+        """
+        Property storing the covariance defining this ellipse.
+        """
+        if not hasattr(self, '_covariance'):
+            raise AttributeError("covariance was referenced before it was " +\
+                "set.")
+        return self._covariance
+    
+    @covariance.setter
+    def covariance(self, value):
+        """
+        Setter for the covariance defining this ellipse.
+        
+        value: square positive definite matrix of rank numparams
+        """
+        if type(value) in sequence_types:
+            value = np.array(value)
+            if value.shape == self.mean.shape:
+                self._covariance = np.diag(value)
+            elif value.shape == (2 * self.mean.shape):
+                self._covariance = value
+            else:
+                raise ValueError("covariance was neither a vector of " +\
+                    "variances nor a matrix of covariances, based on its " +\
+                    "shape.")
+        else:
+            raise TypeError("covariance was set to a non-sequence.")
+    
+    @property
+    def square_root_covariance(self):
+        """
+        Property storing the square root of the covariance matrix defining
+        this ellipse.
+        """
+        if not hasattr(self, '_square_root_covariance'):
+            self._square_root_covariance = slalg.sqrtm(self.covariance)
+        return self._square_root_covariance
+    
+    @property
+    def log_probability(self):
+        """
+        Property storing the 
+        """
+        if not hasattr(self, '_log_probability'):
+            self._log_probability = log_gamma((self.numparams / 2) + 1) -\
+                (lalg.slogdet(self.covariance)[1] / 2.) - (self.numparams *\
+                (np.log(np.pi) + np.log(np.pi * (self.numparams + 2))) / 2)
+        return self._log_probability
+    
+    @property
+    def inverse_covariance(self):
+        """
+        Property storing the inverse of the covariance matrix of this ellipse.
+        """
+        if not hasattr(self, '_inverse_covariance'):
+            self._inverse_covariance = lalg.inv(self.covariance)
+        return self._inverse_covariance
     
     @property
     def numparams(self):
@@ -98,7 +164,7 @@ class EllipticalUniformDistribution(Distribution):
         max_z_radius = np.sqrt(self.numparams + 2)
         fractional_radii = np.power(radial_cdfs, 1. / self.numparams)
         deviations = max_z_radius * fractional_radii[...,np.newaxis] *\
-            np.dot(xis, self.sqrtcov)
+            np.dot(xis, self.square_root_covariance)
         points = self.mean[((np.newaxis,)*len(shape)) + (slice(None),)] +\
             deviations
         if none_shape:
@@ -118,9 +184,10 @@ class EllipticalUniformDistribution(Distribution):
                  if point is outside ellipse, -np.inf
         """
         centered_point = np.array(point) - self.mean
-        matprod = np.dot(np.dot(centered_point, self.invcov), centered_point)
+        matprod = np.dot(np.dot(centered_point, self.inverse_covariance),\
+            centered_point)
         if (matprod <= (self.numparams + 2)):
-            return self.const_log_value
+            return self.log_probability
         else:
             return -np.inf
 
@@ -142,10 +209,10 @@ class EllipticalUniformDistribution(Distribution):
             if self.numparams == other.numparams:
                 mean_close =\
                     np.allclose(self.mean, other.mean, rtol=0, atol=1e-9)
-                cov_close =\
-                    np.allclose(self.cov, other.cov, rtol=1e-12, atol=0)
+                covariance_close = np.allclose(self.covariance,\
+                    other.covariance, rtol=1e-12, atol=0)
                 metadata_equal = self.metadata_equal(other)
-                return all([mean_close, cov_close, metadata_equal])
+                return all([mean_close, covariance_close, metadata_equal])
             else:
                 return False
         else:
@@ -189,7 +256,7 @@ class EllipticalUniformDistribution(Distribution):
         """
         group.attrs['class'] = 'EllipticalUniformDistribution'
         create_hdf5_dataset(group, 'mean', data=self.mean, link=mean_link)
-        create_hdf5_dataset(group, 'covariance', data=self.cov,\
+        create_hdf5_dataset(group, 'covariance', data=self.covariance,\
             link=covariance_link)
         if save_metadata:
             self.save_metadata(group)
@@ -259,5 +326,6 @@ class EllipticalUniformDistribution(Distribution):
         Returns a deep copy of this Distribution. This function ignores
         metadata.
         """
-        return EllipticalUniformDistribution(self.mean.copy(), self.cov.copy())
+        return EllipticalUniformDistribution(self.mean.copy(),\
+            self.covariance.copy())
 

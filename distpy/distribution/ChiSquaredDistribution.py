@@ -25,22 +25,51 @@ class ChiSquaredDistribution(Distribution):
         
         degrees_of_freedom: positive integer
         """
+        self.degrees_of_freedom = degrees_of_freedom
         self.reduced = reduced
-        if type(degrees_of_freedom) in int_types:
-            if degrees_of_freedom > 0:
-                self.degrees_of_freedom = degrees_of_freedom
+        self.metadata = metadata
+    
+    @property
+    def degrees_of_freedom(self):
+        """
+        Property storing the number of degrees of freedom of the distribution.
+        """
+        if not hasattr(self, '_degrees_of_freedom'):
+            raise AttributeError("degrees_of_freedom was referenced before " +\
+                "it was set.")
+        return self._degrees_of_freedom
+    
+    @degrees_of_freedom.setter
+    def degrees_of_freedom(self, value):
+        """
+        Setter for the number of degrees of freedom of this distribution.
+        
+        value: positive integer
+        """
+        if type(value) in int_types:
+            if value > 0:
+                self._degrees_of_freedom = value
             else:
                 raise ValueError("degrees_of_freedom_given to " +\
                     "ChiSquaredDistribution was not positive.")
         else:
             raise ValueError("degrees_of_freedom given to " +\
                 "ChiSquaredDistribution was not an integer.")
-        self.const_lp_term = -(self.degrees_of_freedom * (np.log(2) / 2)) -\
-            gammaln(self.degrees_of_freedom / 2.)
-        if self.reduced:
-            self.const_lp_term =\
-                self.const_lp_term + np.log(self.degrees_of_freedom)
-        self.metadata = metadata
+    
+    @property
+    def const_lp_term(self):
+        """
+        Property storing the constant part of the logarithm of the probability
+        density of this distribution.
+        """
+        if not hasattr(self, '_const_lp_term'):
+            self._const_lp_term =\
+                ((-1) * gammaln(self.degrees_of_freedom / 2)) -\
+                (self.degrees_of_freedom * (np.log(2) / 2))
+            if self.reduced:
+                self._const_lp_term =\
+                    self._const_lp_term + np.log(self.degrees_of_freedom)
+        return self._const_lp_term
     
     @property
     def reduced(self):

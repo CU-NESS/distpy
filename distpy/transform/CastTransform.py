@@ -57,7 +57,7 @@ def cast_to_transform(key):
                 return LogTransform()
             elif lower_cased_key == 'log10':
                 return Log10Transform()
-            elif lower_cased_key == 'sine':
+            elif lower_cased_key == ['sin', 'sine']:
                 return SineTransform()
             elif lower_cased_key == 'arcsin':
                 return ArcsinTransform()

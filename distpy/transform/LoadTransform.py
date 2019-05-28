@@ -76,8 +76,7 @@ def load_transform_from_hdf5_group(group):
     elif class_name == 'PowerTransform':
         return PowerTransform(group.attrs['power'])
     elif class_name == 'ReciprocalTransform':
-        transform = load_transform_from_hdf5_group(group['transform'])
-        return ReciprocalTransform(transform)
+        return ReciprocalTransform()
     elif class_name == 'ExponentiatedTransform':
         transform = load_transform_from_hdf5_group(group['transform'])
         return ExponentiatedTransform(transform)

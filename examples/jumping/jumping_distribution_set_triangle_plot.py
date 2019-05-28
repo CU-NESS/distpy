@@ -15,7 +15,6 @@ from distpy import TransformList, GaussianJumpingDistribution,\
 ndraw = int(1e5)
 nbins = 100
 contour_confidence_levels = 0.997
-number_of_sigma = np.sqrt((-2) * np.log(1 - contour_confidence_levels))
 source = {'x': 1, 'y': 2, 'z': 1}
 parameters = ['x', 'y', 'z']
 mean = np.array([source[parameter] for parameter in parameters])
@@ -28,7 +27,7 @@ jumping_distribution_set = JumpingDistributionSet([\
 start_time = time.time()
 jumping_distribution_set.triangle_plot(source, ndraw, nbins=nbins, show=True,\
     in_transformed_space=True, reference_value_mean=transformed_mean,\
-    reference_value_covariance=(number_of_sigma**2)*covariance,\
+    reference_value_covariance=covariance,\
     contour_confidence_levels=contour_confidence_levels,\
     parameter_renamer=(lambda x: '${!s}$'.format(x)))
 end_time = time.time()

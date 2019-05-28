@@ -9,6 +9,7 @@ Description: Imports classes in this module so that any given class, CLASS, can
 from distpy.distribution.Distribution import Distribution
 from distpy.distribution.WindowedDistribution import WindowedDistribution
 from distpy.distribution.BetaDistribution import BetaDistribution
+from distpy.distribution.BernoulliDistribution import BernoulliDistribution
 from distpy.distribution.BinomialDistribution import BinomialDistribution
 from distpy.distribution.ChiSquaredDistribution import ChiSquaredDistribution
 from distpy.distribution.DoubleSidedExponentialDistribution import\

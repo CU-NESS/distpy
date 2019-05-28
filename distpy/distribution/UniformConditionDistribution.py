@@ -17,16 +17,16 @@ class UniformConditionDistribution(Distribution):
     (unnormalized) when a condition  is met and -inf when the condition is not
     met.
     """
-    def __init__(self, expression, metadata=None, is_discrete=False):
+    def __init__(self, expression, is_discrete=False, metadata=None):
         """
         Initializes a new UniformConditionDistribution
         
         expression: the condition which defines where the log_value of this
                     distribution is finite. expression.num_arguments is the
                     dimension of this distribution
-        metadata: data to store alongside this distribution
         is_discrete: True if the variable underlying this distribution is
                      discrete. False otherwise (default False)
+        metadata: data to store alongside this distribution
         """
         self.expression = expression
         self.is_discrete = is_discrete

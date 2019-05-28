@@ -173,7 +173,9 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
                    returns
     contour_confidence_levels: the confidence level of the contour in the
                                bivariate histograms. Only used if
-                               matplotlib_function is 'contour' or 'contourf'.
+                               matplotlib_function is 'contour' or 'contourf'
+                               or if reference_value_mean and
+                               reference_value_covariance are both not None.
                                Can be single number or sequence of numbers
     kwargs: keyword arguments to pass on to matplotlib.Axes.imshow (any but
             'origin', 'extent', or 'aspect') or matplotlib.Axes.contour or
@@ -220,7 +222,21 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
             (type(reference_value_mean[1]) is not type(None)) and\
             (type(reference_value_covariance) is not type(None)):
             reference_value_mean = np.array(reference_value_mean)
-            sqrt_covariance_matrix = scila.sqrtm(reference_value_covariance)
+            if type(contour_confidence_levels) in real_numerical_types:
+                contour_level_for_2D_reference_contour =\
+                    contour_confidence_levels
+            elif type(contour_confidence_levels) in sequence_types:
+                contour_level_for_2D_reference_contour =\
+                    np.max(contour_confidence_levels)
+            else:
+                raise ValueError("For reference value contours to be " +\
+                    "plotted, contour_confidence_levels should be either a " +\
+                    "single number between 0 or 1 or a sequence of such " +\
+                    "numbers.")
+            covariance_expansion_factor_for_2D_reference_contour =\
+                ((-2) * np.log(1 - contour_level_for_2D_reference_contour))
+            sqrt_covariance_matrix = scila.sqrtm(reference_value_covariance) *\
+                np.sqrt(covariance_expansion_factor_for_2D_reference_contour)
             angles = np.linspace(0, 2 * np.pi, num=1000, endpoint=False)
             circle_points = np.array([np.cos(angles), np.sin(angles)])
             ellipse_points = reference_value_mean[:,np.newaxis] +\

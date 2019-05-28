@@ -97,7 +97,8 @@ class DistributionList(Distribution):
     @property
     def num_distributions(self):
         """
-        Property storing the number of distributions in this 
+        Property storing the number of distributions in this DistributionList
+        object.
         """
         return len(self._data)
     
@@ -131,7 +132,7 @@ class DistributionList(Distribution):
             raise TypeError("DistributionList objects can only have other " +\
                 "DistributionList objects added to them.")
     
-    def with_different_transforms(self, new_transform_list):
+    def modify_transforms(self, new_transform_list):
         """
         Finds a DistributionList with the same distributions but different
         transforms. Draws from this DistributionList and the returned

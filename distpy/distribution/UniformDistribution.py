@@ -7,7 +7,7 @@ Description: File containing a class representing a uniform distribution.
 """
 import numpy as np
 import numpy.random as rand
-from ..util import numerical_types
+from ..util import numerical_types, sequence_types
 from .Distribution import Distribution
 
 class UniformDistribution(Distribution):
@@ -23,21 +23,66 @@ class UniformDistribution(Distribution):
         low lower limit of pdf (defaults to 0)
         high upper limit of pdf (defaults to 1)
         """
-        if (type(low) in numerical_types) and (type(high) in numerical_types):
-            if low < high:
-                self.low = low
-                self.high = high
-            elif high < low:
-                self.low = high
-                self.high = low
-            else:
-                raise ValueError('The high and low endpoints of a ' +\
-                    'UniformDistribution are equal!')
-        else:
-            raise ValueError('Either the low or high endpoint of a ' +\
-                'UniformDistribution was not of a numerical type.')
-        self._log_P = - np.log(self.high - self.low)
+        self.bounds = (low, high)
         self.metadata = metadata
+    
+    @property
+    def bounds(self):
+        """
+        Property storing the lower and upper bounds of this distribution in a
+        tuple.
+        """
+        if not hasattr(self, '_bounds'):
+            raise AttributeError("bounds was referenced before it was set.")
+        return self._bounds
+    
+    @bounds.setter
+    def bounds(self, value):
+        """
+        Setter for the lower and upper bounds of this distribution.
+        
+        value: tuple of form (lower_bound, upper_bound)
+        """
+        if type(value) in sequence_types:
+            if len(value) == 2:
+                if all([(type(element) in numerical_types)\
+                    for element in value]):
+                    if value[0] == value[1]:
+                        raise ValueError("The lower bound and upper bound " +\
+                            "were set to the same number.")
+                    else:
+                        self._bounds = (min(value), max(value))
+                else:
+                    raise TypeError("At least one element of bounds was " +\
+                        "not a number.")
+            else:
+                raise ValueError("bounds was set to a sequence of a length " +\
+                    "other than two.")
+        else:
+            raise TypeError("bounds was set to a non-sequence.")
+    
+    @property
+    def low(self):
+        """
+        Property storing the lower bound of this distribution.
+        """
+        return self.bounds[0]
+    
+    @property
+    def high(self):
+        """
+        Property storing the upper bound of this distribution.
+        """
+        return self.bounds[1]
+    
+    @property
+    def log_probability(self):
+        """
+        Property storing the log of the probability density inside the domain.
+        """
+        if not hasattr(self, '_log_probability'):
+            self._log_probability = ((-1) * np.log(self.high - self.low))
+        return self._log_probability
 
     @property
     def numparams(self):
@@ -71,7 +116,7 @@ class UniformDistribution(Distribution):
         point: numerical value of the variable
         """
         if (point >= self.low) and (point <= self.high):
-            return self._log_P
+            return self.log_probability
         return -np.inf
     
     def to_string(self):

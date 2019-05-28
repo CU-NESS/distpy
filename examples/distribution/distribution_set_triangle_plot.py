@@ -14,7 +14,6 @@ from distpy import TransformList, GaussianDistribution, DistributionSet
 ndraw = int(1e5)
 nbins = 100
 contour_confidence_levels = 0.997
-number_of_sigma = np.sqrt((-2) * np.log(1 - contour_confidence_levels))
 parameters = ['x', 'y', 'z']
 mean = np.array([1, 2, 0])
 covariance = np.array([[2, 0.8, 0], [0.8, 0.5, 0], [0, 0, 4]])
@@ -25,7 +24,7 @@ distribution_set =\
 start_time = time.time()
 distribution_set.triangle_plot(ndraw, nbins=nbins, show=False,\
     in_transformed_space=True, reference_value_mean=mean,\
-    reference_value_covariance=(number_of_sigma**2)*covariance,\
+    reference_value_covariance=covariance,\
     contour_confidence_levels=contour_confidence_levels,\
     parameter_renamer=(lambda x: '${!s}$'.format(x)))
 end_time = time.time()

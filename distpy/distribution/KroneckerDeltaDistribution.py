@@ -14,14 +14,14 @@ class KroneckerDeltaDistribution(Distribution):
     """
     Distribution which always returns the same discrete value.
     """
-    def __init__(self, value, metadata=None, is_discrete=True):
+    def __init__(self, value, is_discrete=True, metadata=None):
         """
         Initializes a KroneckerDeltaDistribution class
         
         value: value which is always returned by this distribution
-        metadata: data to store alongside this distribution
         is_discrete: True if the variable underlying this distribution is
                      discrete. False otherwise (default True)
+        metadata: data to store alongside this distribution
         """
         self.value = value
         self.is_discrete = is_discrete

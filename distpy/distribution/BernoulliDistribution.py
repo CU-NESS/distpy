@@ -1,68 +1,36 @@
 """
-File: distpy/distribution/BinomialDistribution.py
+File: distpy/distribution/BernoulliDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: 25 May 2019
 
-Description: File containing class representing a binomial distribution.
+Description: File containing class representing a Bernoulli distribution.
 """
 import numpy as np
 import numpy.random as rand
-from scipy.special import gammaln as log_gamma
 from ..util import int_types, numerical_types
 from .Distribution import Distribution
 
-class BinomialDistribution(Distribution):
+class BernoulliDistribution(Distribution):
     """
     Distribution with support on the non-negative integers up to a maximum
     numbers. It has only two parameters, probability of sucess and number of
     trials. When probability of success is 1/2, this is the distribution of the
     number of heads flipped in the number of trials given.
     """
-    def __init__(self, probability_of_success, number_of_trials,\
-        metadata=None):
+    def __init__(self, probability_of_success, metadata=None):
         """
         Initializes new BinomialDistribution with given scale.
         
         probability_of_success: real number in (0, 1)
-        number_of_trials: maximum integer in the support of this distribution
+        metadata: data to store alongside this distribution.
         """
         self.probability_of_success = probability_of_success
-        self.number_of_trials = number_of_trials
         self.metadata = metadata
-    
-    @property
-    def number_of_trials(self):
-        """
-        Property storing the integer number of trials from which to draw
-        numbers of successes.
-        """
-        if not hasattr(self, '_number_of_trials'):
-            raise AttributeError("number_of_trials was referenced before " +\
-                "it was set.")
-        return self._number_of_trials
-    
-    @number_of_trials.setter
-    def number_of_trials(self, value):
-        """
-        Setter for the number of trials from which to draw numbers of
-        successes.
-        
-        value: positive integer
-        """
-        if type(value) in int_types:
-            if value > 0:
-                self._number_of_trials = value
-            else:
-                raise ValueError("number_of_trials given to " +\
-                    "BinomialDistribution was not positive.")
-        else:
-            raise ValueError("number_of_trials given to " +\
-                "BinomialDistribution was not a number.")
     
     @property
     def probability_of_success(self):
         """
-        The probability of a success on a given trial.
+        Property storing the probability of drawing 1 as opposed to 0.
         """
         if not hasattr(self, '_probability_of_success'):
             raise AttributeError("probability_of_success was referenced " +\
@@ -72,7 +40,7 @@ class BinomialDistribution(Distribution):
     @probability_of_success.setter
     def probability_of_success(self, value):
         """
-        Setter for the probability of success on a single trial.
+        Setter for the probability of success.
         
         value: real number between 0 and 1 (exclusive)
         """
@@ -106,8 +74,16 @@ class BinomialDistribution(Distribution):
                                    (n+1)-D array for multivariate
         random: the random number generator to use (default: numpy.random)
         """
-        return random.binomial(self.number_of_trials,\
-            self.probability_of_success, size=shape)
+        if shape is None:
+            none_shape = True
+            shape = (1,)
+        else:
+            none_shape = False
+        values = (random.uniform(size=shape) <\
+            self.probability_of_success).astype(int)
+        if none_shape:
+            values = values[0]
+        return values
     
     def log_value(self, point):
         """
@@ -117,37 +93,32 @@ class BinomialDistribution(Distribution):
         point: numerical value of the variable
         """
         if type(point) in int_types:
-            if (point >= 0) and (point <= self.number_of_trials):
-                n_minus_k = self.number_of_trials - point
-                return log_gamma(self.number_of_trials + 1) -\
-                    log_gamma(point + 1) - log_gamma(n_minus_k + 1) +\
-                    (point * np.log(self.probability_of_success)) +\
-                    (n_minus_k * np.log(1 - self.probability_of_success))
+            if point == 0:
+                return np.log(1 - self.probability_of_success)
+            elif point == 1:
+                return np.log(self.probability_of_success)
             else:
                 return -np.inf
         else:
-            raise TypeError("point given to BinomialDistribution was not " +\
+            raise TypeError("point given to BernoulliDistribution was not " +\
                 "an integer.")
-
+    
     def to_string(self):
         """
         Finds and returns a string version of this BinomialDistribution.
         """
-        return "Binomial({0:.2g},{1:d})".format(self.probability_of_success,\
-            self.number_of_trials)
+        return "Bernoulli({:.2g})".format(self.probability_of_success)
     
     def __eq__(self, other):
         """
         Checks for equality of this distribution with other. Returns True if
-        other is a BinomialDistribution with the same probability_of_success
-        and number_of_trials.
+        other is a BernoulliDistribution with the same probability_of_success.
         """
-        if isinstance(other, BinomialDistribution):
+        if isinstance(other, BernoulliDistribution):
             p_close = np.isclose(self.probability_of_success,\
                 other.probability_of_success, rtol=0, atol=1e-6)
-            n_equal = (self.number_of_trials == other.number_of_trials)
             metadata_equal = self.metadata_equal(other)
-            return all([p_close, n_equal, metadata_equal])
+            return (p_close and metadata_equal)
         else:
             return False
     
@@ -170,7 +141,7 @@ class BinomialDistribution(Distribution):
         """
         Property storing the maximum allowable value(s) in this distribution.
         """
-        return self.number_of_trials
+        return 1
     
     @property
     def is_discrete(self):
@@ -190,8 +161,7 @@ class BinomialDistribution(Distribution):
                                 distribution and throws error if it fails
                        if False, metadata is ignored in saving process
         """
-        group.attrs['class'] = 'BinomialDistribution'
-        group.attrs['number_of_trials'] = self.number_of_trials
+        group.attrs['class'] = 'BernoulliDistribution'
         group.attrs['probability_of_success'] = self.probability_of_success
         if save_metadata:
             self.save_metadata(group)
@@ -208,15 +178,14 @@ class BinomialDistribution(Distribution):
                  the given group
         """
         try:
-            assert group.attrs['class'] == 'BinomialDistribution'
+            assert group.attrs['class'] == 'BernoulliDistribution'
         except:
             raise TypeError("The given hdf5 file doesn't seem to contain a " +\
-                "BinomialDistribution.")
+                "BernoulliDistribution.")
         metadata = Distribution.load_metadata(group)
         probability_of_success = group.attrs['probability_of_success']
-        number_of_trials = group.attrs['number_of_trials']
-        return BinomialDistribution(probability_of_success, number_of_trials,\
-            metadata=metadata)
+        return\
+            BernoulliDistribution(probability_of_success, metadata=metadata)
     
     @property
     def gradient_computable(self):
@@ -241,6 +210,5 @@ class BinomialDistribution(Distribution):
         Returns a deep copy of this Distribution. This function ignores
         metadata.
         """
-        return BinomialDistribution(self.probability_of_success,\
-            self.number_of_trials)
+        return BernoulliDistribution(self.probability_of_success)
 

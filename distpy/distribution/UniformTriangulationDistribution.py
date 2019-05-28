@@ -29,15 +29,35 @@ class UniformTriangulationDistribution(Distribution):
         points: only used if triangulation is None, points with which to
                 compute triangulation
         """
-        if type(triangulation) is type(None):
-            if type(points) is type(None):
+        self.triangulation = (triangulation, points)
+        self.metadata = metadata
+    
+    @property
+    def triangulation(self):
+        """
+        Property storing the triangulation at the heart of this distribution.
+        """
+        if not hasattr(self, '_triangulation'):
+            raise AttributeError("triangulation was referenced before it " +\
+                "was set.")
+        return self._triangulation
+    
+    @triangulation.setter
+    def triangulation(self, value):
+        """
+        Setter for the triangulation at the heart of this distribution.
+        
+        value: tuple of form (triangulation, points) where one and only one of
+               these may be None.
+        """
+        if type(value[0]) is type(None):
+            if type(value[1]) is type(None):
                 raise ValueError("If triangulation is not given, points " +\
                     "must be given. Neither were given.")
             else:
-                self.triangulation = Delaunay(points)
+                self._triangulation = Delaunay(value[1])
         else:
-            self.triangulation = triangulation
-        self.metadata = metadata
+            self._triangulation = value[0]
 
     @property
     def numparams(self):

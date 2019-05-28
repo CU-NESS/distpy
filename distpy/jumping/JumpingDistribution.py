@@ -5,6 +5,8 @@ Date: 12 Feb 2018
 
 Description: File containing base class for all jumping distributions.
 """
+import numpy as np
+import matplotlib.pyplot as pl
 from ..util import Savable, Loadable
 
 cannot_instantiate_jumping_distribution_error = NotImplementedError("Some " +\
@@ -81,6 +83,14 @@ class JumpingDistribution(Savable, Loadable):
         """
         raise cannot_instantiate_jumping_distribution_error
     
+    def __len__(self):
+        """
+        Allows user to access the number of parameters in this distribution by
+        using the len function and not explicitly referencing the numparams
+        property.
+        """
+        return self.numparams
+    
     def __eq__(self, other):
         """
         Tests for equality between this jumping distribution and other. All
@@ -137,4 +147,57 @@ class JumpingDistribution(Savable, Loadable):
         distribution objects a and b.
         """
         return (not self.__eq__(other))
+    
+    def plot(self, source, x_values, scale_factor=1, xlabel='', ylabel='',\
+        title='', fontsize=24, ax=None, show=False, **kwargs):
+        """
+        Plots the PDF of this distribution evaluated at the given x values.
+        
+        source: the source point of the jumping distribution.
+        x_values: 1D numpy.ndarray of sorted x values at which to evaluate this
+                  distribution
+        scale_factor: allows for the pdf values to be scaled by a constant
+                      (default 1)
+        xlabel: label to place on x axis
+        ylabel: label to place on y axis
+        title: title to place on top of plot
+        fontsize: size of labels and title
+        ax: Axes object on which to plot distribution values.
+            If None, a new Axes object is created on a new Figure object
+        show: if True, matplotlib.pyplot.show() is called before this function
+              returns
+        **kwargs: keyword arguments to pass to the matplotlib.pyplot.plot
+                  function if this is a continuous distribution or the
+                  matplotlib.pyplot.scatter function if this is a discrete
+                  distribution
+        
+        returns: ax if show is False, None otherwise
+        """
+        if self.numparams != 1:
+            raise NotImplementedError('plot can only be called with 1D ' +\
+                'distributions.')
+        y_values =\
+            np.exp([self.log_value(source, x_value) for x_value in x_values])
+        xlim = (x_values[0], x_values[-1])
+        if type(ax) is type(None):
+            fig = pl.figure(figsize=(12,9))
+            ax = fig.add_subplot(111)
+        if self.is_discrete:
+            ax.scatter(x_values, y_values * scale_factor, **kwargs)
+        else:
+            ax.plot(x_values, y_values * scale_factor, **kwargs)
+        ax.set_xlabel(xlabel, size=fontsize)
+        ax.set_ylabel(ylabel, size=fontsize)
+        ax.set_title(title, size=fontsize)
+        if 'label' in kwargs:
+            ax.legend(fontsize=fontsize)
+        ax.tick_params(labelsize=fontsize, width=2.5, length=7.5,\
+            which='major')
+        ax.tick_params(labelsize=fontsize, width=1.5, length=4.5,\
+            which='minor')
+        ax.set_xlim(xlim)
+        if show:
+            pl.show()
+        else:
+            return ax
 

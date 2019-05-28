@@ -19,7 +19,7 @@ class LinkedDistribution(Distribution):
     while ensuring that the variables linked by this distribution must be
     identical.
     """
-    def __init__(self, shared_distribution, numpars, metadata=None):
+    def __init__(self, shared_distribution, numparams, metadata=None):
         """
         Initializes a new LinkedDistribution with the given
         shared_distribution and number of parameters.
@@ -27,11 +27,32 @@ class LinkedDistribution(Distribution):
         shared_distribution: the Distribution which describes how the
                              individual values are distributed (must be a
                              Distribution)
-        numpars the number of parameters which this distribution describes
+        numparams the number of parameters which this distribution describes
         """
-        if isinstance(shared_distribution, Distribution):
-            if shared_distribution.numparams == 1:
-                self.shared_distribution = shared_distribution
+        self.shared_distribution = shared_distribution
+        self.numparams = numparams
+        self.metadata = metadata
+    
+    @property
+    def shared_distribution(self):
+        """
+        Property storing the distribution shared by all of the parameters.
+        """
+        if not hasattr(self, '_shared_distribution'):
+            raise AttributeError("shared_distribution was referenced " +\
+                "before it was set.")
+        return self._shared_distribution
+    
+    @shared_distribution.setter
+    def shared_distribution(self, value):
+        """
+        Setter for the distribution shared by all of the parameters.
+        
+        value: a univariate distribution
+        """
+        if isinstance(value, Distribution):
+            if value.numparams == 1:
+                self._shared_distribution = value
             else:
                 raise NotImplementedError("The shared_distribution " +\
                     "provided to a LinkedDistribution was multivariate (I " +\
@@ -39,16 +60,6 @@ class LinkedDistribution(Distribution):
         else:
             raise ValueError("The shared_distribution given to a " +\
                 "LinkedDistribution was not recognizable as a distribution.")
-        if (type(numpars) in numerical_types):
-            if numpars > 1:
-                self._numparams = numpars
-            else:
-                raise ValueError("A LinkedDistribution was initialized " +\
-                    "with only one parameter. Is this really what you want?")
-        else:
-            raise ValueError("The type of the number of parameters given " +\
-                "given to a LinkedDistribution was not numerical.")
-        self.metadata = metadata
 
     @property
     def numparams(self):
@@ -56,7 +67,24 @@ class LinkedDistribution(Distribution):
         Finds and returns the number of parameters which this distribution
         describes.
         """
+        if not hasattr(self, '_numparams'):
+            raise AttributeError("numparams was referenced before it was set.")
         return self._numparams
+    
+    @numparams.setter
+    def numparams(self, value):
+        """
+        Setter for the number of parameters which this distribution describes.
+        """
+        if (type(value) in numerical_types):
+            if value > 1:
+                self._numparams = value
+            else:
+                raise ValueError("A LinkedDistribution was initialized " +\
+                    "with only one parameter. Is this really what you want?")
+        else:
+            raise ValueError("The type of the number of parameters given " +\
+                "to a LinkedDistribution was not numerical.")
 
     def draw(self, shape=None, random=rand):
         """

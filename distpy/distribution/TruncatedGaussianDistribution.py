@@ -9,7 +9,7 @@ Description: File containing class representing a truncated 1-dimensional
 import numpy as np
 import numpy.random as rand
 from scipy.special import erf, erfinv
-from ..util import int_types
+from ..util import int_types, numerical_types
 from .Distribution import Distribution
 
 class TruncatedGaussianDistribution(Distribution):
@@ -18,7 +18,7 @@ class TruncatedGaussianDistribution(Distribution):
     one has some knowledge of the actual value of the parameter but also needs
     it to lie outside a given region.
     """
-    def __init__(self, mean, var, low=None, high=None, metadata=None):
+    def __init__(self, mean, variance, low=None, high=None, metadata=None):
         """
         Initializes a new TruncatedGaussianDistribution using the given
         parameters.
@@ -28,25 +28,146 @@ class TruncatedGaussianDistribution(Distribution):
         low lower limit of distribution. If None then it is assumed to be -inf
         high upper limit of distribution. If None then it is assumed to be +inf
         """
-        self.mean = float(mean)
-        self.var = float(var)
-        if type(low) is type(None):
-            self.lo = None
-            self._lo_term = -1.
-        else:
-            self.lo = float(low)
-            self._lo_term = erf((self.lo - self.mean) / np.sqrt(2 * self.var))
-
-        if type(high) is type(None):
-            self.hi = None
-            self._hi_term = 1.
-        else:
-            self.hi = float(high)
-            self._hi_term = erf((self.hi - self.mean) / np.sqrt(2 * self.var))
-
-        self._cons_lp_term = -(np.log(np.pi * self.var / 2) / 2)
-        self._cons_lp_term -= np.log(self._hi_term - self._lo_term)
+        self.mean = mean
+        self.variance = variance
+        self.low = low
+        self.high = high
         self.metadata = metadata
+    
+    @property
+    def low(self):
+        """
+        Property storing the lowest allowable value drawn from this
+        distribution.
+        """
+        if not hasattr(self, '_low'):
+            raise AttributeError("low was referenced before it was set.")
+        return self._low
+    
+    @low.setter
+    def low(self, value):
+        """
+        Setter for the lowest allowable value drawn from this distribution.
+        
+        value: a real number
+        """
+        if type(value) is type(None):
+            self._low = None
+        elif type(value) in numerical_types:
+            self._low = value
+        else:
+            raise ValueError("low was set to neither None nor a number.")
+    
+    @property
+    def high(self):
+        """
+        Property storing the highest allowable value drawn from this
+        distribution.
+        """
+        if not hasattr(self, '_high'):
+            raise AttributeError("high was referenced before it was set.")
+        return self._high
+    
+    @high.setter
+    def high(self, value):
+        """
+        Setter for the highest allowable value drawn from this distribution.
+        
+        value: a real number
+        """
+        if type(value) is type(None):
+            self._high = None
+        elif type(value) in numerical_types:
+            if value > self.low:
+                self._high = value
+            else:
+                raise ValueError("high was set to a number less than or " +\
+                    "equal to low.")
+        else:
+            raise ValueError("high was set to neither None nor a number.")
+    
+    @property
+    def const_lp_term(self):
+        """
+        Property storing the constant part of the log probability density of
+        this distribution.
+        """
+        if not hasattr(self, '_const_lp_term'):
+            self._const_lp_term =\
+                ((-1) * (np.log(np.pi * self.variance / 2) / 2)) -\
+                np.log(self.high_term - self.low_term)
+        return self._const_lp_term
+    
+    @property
+    def low_term(self):
+        """
+        Property storing the scaled error function at the low point.
+        """
+        if not hasattr(self, '_low_term'):
+            if type(self.low) is type(None):
+                self._low_term = -1
+            else:
+                self._low_term =\
+                    erf((self.low - self.mean) / np.sqrt(2 * self.variance))
+        return self._low_term
+    
+    @property
+    def high_term(self):
+        """
+        Property storing the scaled error function at the high point.
+        """
+        if not hasattr(self, '_high_term'):
+            if type(self.high) is type(None):
+                self._high_term = 1
+            else:
+                self._high_term =\
+                    erf((self.high - self.mean) / np.sqrt(2 * self.variance))
+        return self._high_term
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of the untruncated Gaussian used.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean was referenced before it was set.")
+        return self._mean
+    
+    @mean.setter
+    def mean(self, value):
+        """
+        Setter for the mean of the untruncated Gaussian used.
+        
+        value: any real number
+        """
+        if type(value) in numerical_types:
+            self._mean = (value * 1.)
+        else:
+            raise TypeError("mean was set to a non-number.")
+    
+    @property
+    def variance(self):
+        """
+        Property storing the variance of the untruncated Gaussian used.
+        """
+        if not hasattr(self, '_variance'):
+            raise AttributeError("variance was referenced before it was set.")
+        return self._variance
+    
+    @variance.setter
+    def variance(self, value):
+        """
+        Setter for the variance of the untruncated Gaussian used.
+        
+        value: any positive number
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._variance = (value * 1.)
+            else:
+                raise ValueError("variance must be positive.")
+        else:
+            raise TypeError("variance was set to a non-number.")
 
     @property
     def numparams(self):
@@ -76,8 +197,9 @@ class TruncatedGaussianDistribution(Distribution):
             shape = (shape,)
         unifs = random.rand(*shape)
         args_to_erfinv =\
-            (unifs * self._hi_term) + ((1. - unifs) * self._lo_term)
-        points = self.mean + (np.sqrt(2 * self.var) * erfinv(args_to_erfinv))
+            (unifs * self.high_term) + ((1. - unifs) * self.low_term)
+        points =\
+            self.mean + (np.sqrt(2 * self.variance) * erfinv(args_to_erfinv))
         if none_shape:
             return points[0]
         else:
@@ -90,25 +212,26 @@ class TruncatedGaussianDistribution(Distribution):
         
         point: numerical value of the variable
         """
-        if (type(self.lo) is not type(None) and point < self.lo) or\
-                (type(self.hi) is not type(None) and point > self.hi):
+        if (type(self.low) is not type(None) and point < self.low) or\
+                (type(self.high) is not type(None) and point > self.high):
             return -np.inf
-        return self._cons_lp_term - ((point - self.mean) ** 2) / (2 * self.var)
+        return (self.const_lp_term -\
+            ((point - self.mean) ** 2) / (2 * self.variance))
 
     def to_string(self):
         """
         Finds and returns string representation of this distribution.
         """
-        if type(self.lo) is type(None):
+        if type(self.low) is type(None):
             low_string = "-inf"
         else:
-            low_string = "{:.1g}".format(self.lo)
-        if type(self.hi) is type(None):
+            low_string = "{:.1g}".format(self.low)
+        if type(self.high) is type(None):
             high_string = "inf"
         else:
-            high_string = "{:.1g}".format(self.hi)
+            high_string = "{:.1g}".format(self.high)
         return "Normal({0:.2g}, {1:.2g}) on [{2!s},{3!s}]".format(self.mean,\
-            self.var, low_string, high_string)
+            self.variance, low_string, high_string)
     
     def __eq__(self, other):
         """
@@ -119,22 +242,23 @@ class TruncatedGaussianDistribution(Distribution):
         """
         if isinstance(other, TruncatedGaussianDistribution):
             mean_close = np.isclose(self.mean, other.mean, rtol=0, atol=1e-9)
-            var_close = np.isclose(self.var, other.var, rtol=1e-12, atol=0)
-            if type(self.hi) is type(None):
-                hi_close = (type(other.hi) is type(None))
-            elif type(other.hi) is not type(None):
-                hi_close = np.isclose(self.hi, other.hi, rtol=0, atol=1e-9)
+            variance_close =\
+                np.isclose(self.variance, other.variance, rtol=1e-12, atol=0)
+            if type(self.high) is type(None):
+                hi_close = (type(other.high) is type(None))
+            elif type(other.high) is not type(None):
+                hi_close = np.isclose(self.high, other.high, rtol=0, atol=1e-9)
             else:
-                # since self.hi is not None in this block, just return False
+                # since self.high is not None in this block, just return False
                 return False
-            if type(self.lo) is type(None):
-                lo_close = (type(other.lo) is type(None))
-            elif type(other.lo) is not type(None):
-                lo_close = np.isclose(self.lo, other.lo, rtol=0, atol=1e-9)
+            if type(self.low) is type(None):
+                lo_close = (type(other.low) is type(None))
+            elif type(other.low) is not type(None):
+                lo_close = np.isclose(self.low, other.low, rtol=0, atol=1e-9)
             else:
                 return False
             metadata_equal = self.metadata_equal(other)
-            return all([mean_close, var_close, hi_close, lo_close,\
+            return all([mean_close, variance_close, hi_close, lo_close,\
                 metadata_equal])
         else:
             return False
@@ -145,22 +269,23 @@ class TruncatedGaussianDistribution(Distribution):
         
         cdf: value between 0 and 1
         """
-        erfinv_args = (self._lo_term + (cdf * (self._hi_term - self._lo_term)))
-        return (self.mean + (np.sqrt(2 * self.var) * erfinv(erfinv_args)))
+        erfinv_args =\
+            (self.low_term + (cdf * (self.high_term - self.low_term)))
+        return (self.mean + (np.sqrt(2 * self.variance) * erfinv(erfinv_args)))
     
     @property
     def minimum(self):
         """
         Property storing the minimum allowable value(s) in this distribution.
         """
-        return self.lo
+        return self.low
     
     @property
     def maximum(self):
         """
         Property storing the maximum allowable value(s) in this distribution.
         """
-        return self.hi
+        return self.high
     
     @property
     def is_discrete(self):
@@ -182,12 +307,12 @@ class TruncatedGaussianDistribution(Distribution):
                        if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'TruncatedGaussianDistribution'
-        if type(self.lo) is not type(None):
-            group.attrs['low'] = self.lo
-        if type(self.hi) is not type(None):
-            group.attrs['high'] = self.hi
+        if type(self.low) is not type(None):
+            group.attrs['low'] = self.low
+        if type(self.high) is not type(None):
+            group.attrs['high'] = self.high
         group.attrs['mean'] = self.mean
-        group.attrs['variance'] = self.var
+        group.attrs['variance'] = self.variance
         if save_metadata:
             self.save_metadata(group)
     
@@ -238,7 +363,7 @@ class TruncatedGaussianDistribution(Distribution):
         
         returns: returns single number representing derivative of log value
         """
-        return (self.mean - point) / self.var
+        return (self.mean - point) / self.variance
     
     @property
     def hessian_computable(self):
@@ -257,13 +382,13 @@ class TruncatedGaussianDistribution(Distribution):
         
         returns: single number representing second derivative of log value
         """
-        return (-1.) / self.var
+        return (-1.) / self.variance
     
     def copy(self):
         """
         Returns a deep copy of this Distribution. This function ignores
         metadata.
         """
-        return TruncatedGaussianDistribution(self.mean, self.var, self.lo,\
-            self.hi)
+        return TruncatedGaussianDistribution(self.mean, self.variance,\
+            self.low, self.hi)
 

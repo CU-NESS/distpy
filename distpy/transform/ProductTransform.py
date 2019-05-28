@@ -110,7 +110,7 @@ class ProductTransform(Transform):
         
         returns: value of log derivative in same format as value
         """
-        return np.log(self.derivative(value))
+        return np.log(np.abs(self.derivative(value)))
     
     def derivative_of_log_derivative(self, value):
         """

@@ -134,7 +134,7 @@ class ArsinhTransform(Transform):
             return (((self.shape ** 2) * ((-1) * value)) /\
                 (1 + np.power(self.shape * value, 2)))
         else:
-            return value * 0
+            return (value * 0)
     
     def second_derivative_of_log_derivative(self, value):
         """

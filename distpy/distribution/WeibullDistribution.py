@@ -22,27 +22,71 @@ class WeibullDistribution(Distribution):
         shape, scale: positive numbers. shape == 1 reduces to exponential
                       distribution
         """
-        if type(shape) in numerical_types:
-            if shape > 0:
-                self.shape = shape
+        self.shape = shape
+        self.scale = scale
+        self.metadata = metadata
+    
+    @property
+    def shape(self):
+        """
+        Property storing the shape parameter of the distribution.
+        """
+        if not hasattr(self, '_shape'):
+            raise AttributeError("shape was referenced before it was set.")
+        return self._shape
+    
+    @shape.setter
+    def shape(self, value):
+        """
+        Setter for the shape parameter of this distribution.
+        
+        value: a positive number
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._shape = value
             else:
                 raise ValueError("shape parameter of WeibullDistribution " +\
                     "was not positive.")
         else:
             raise TypeError("shape parameter of WeibullDistribution was " +\
                 "not a number.")
-        if type(scale) in numerical_types:
-            if scale > 0:
-                self.scale = scale
+    
+    @property
+    def scale(self):
+        """
+        Property storing the scale parameter of the distribution.
+        """
+        if not hasattr(self, '_scale'):
+            raise AttributeError("scale was referenced before it was set.")
+        return self._scale
+    
+    @scale.setter
+    def scale(self, value):
+        """
+        Setter for the scale parameter of this distribution.
+        
+        value: a positive number
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._scale = value
             else:
                 raise ValueError("scale parameter of WeibullDistribution " +\
                     "was not positive.")
         else:
             raise TypeError("scale parameter of WeibullDistribution was " +\
                 "not a number.")
-        self.const_lp_term = np.log(self.shape) -\
-            (self.shape * np.log(self.scale))
-        self.metadata = metadata
+    
+    @property
+    def const_lp_term(self):
+        """
+        Property storing the constant part of the log probability density.
+        """
+        if not hasattr(self, '_const_lp_term'):
+            self._const_lp_term =\
+                np.log(self.shape) - (self.shape * np.log(self.scale))
+        return self._const_lp_term
 
     @property
     def numparams(self):

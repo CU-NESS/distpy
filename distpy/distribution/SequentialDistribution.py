@@ -17,18 +17,40 @@ class SequentialDistribution(Distribution):
     Class representing a distribution on parameters which must be in a specific
     order.
     """
-    def __init__(self, shared_distribution, numpars=2, metadata=None):
+    def __init__(self, shared_distribution, numparams=2, metadata=None):
         """
         Initializes a new SequentialDistribution.
         
         shared_distribution: the distribution from which values will be drawn
                              before they are sorted (must be univariate)
-        numpars: number of parameters which this SequentialDistribution
+        numparams: number of parameters which this SequentialDistribution
                  describes
         """
-        if isinstance(shared_distribution, Distribution):
-            if shared_distribution.numparams == 1:
-                self.shared_distribution = shared_distribution
+        self.shared_distribution = shared_distribution
+        self.numparams = numparams
+        self.metadata = metadata
+    
+    @property
+    def shared_distribution(self):
+        """
+        Property storing the distribution from which to draw values before
+        sorting.
+        """
+        if not hasattr(self, '_shared_distribution'):
+            raise AttributeError("shared_distribution was referenced " +\
+                "before it was set.")
+        return self._shared_distribution
+    
+    @shared_distribution.setter
+    def shared_distribution(self, value):
+        """
+        Setter for the distribution from which to draw values before sorting.
+        
+        value: univariate Distribution object
+        """
+        if isinstance(value, Distribution):
+            if value.numparams == 1:
+                self._shared_distribution = value
             else:
                 raise NotImplementedError("The shared_distribution " +\
                     "provided to a SequentialDistribution was multivariate " +\
@@ -37,16 +59,6 @@ class SequentialDistribution(Distribution):
             raise ValueError("The shared_distribution given to a " +\
                 "SequentialDistribution was not recognizable as a " +\
                 "distribution.")
-        if (type(numpars) in numerical_types):
-            if int(numpars) >= 1:
-                self._numparams = int(numpars)
-            else:
-                raise ValueError("A SequentialDistribution was initialized " +\
-                    "with non-positive numpars.")
-        else:
-            raise ValueError("The type of the number of parameters given " +\
-                "to a SequentialDistribution was not numerical.")
-        self.metadata = metadata
     
     @property
     def numparams(self):
@@ -54,7 +66,26 @@ class SequentialDistribution(Distribution):
         Finds and returns the number of parameters which are described by this
         SequentialDistribution.
         """
+        if not hasattr(self, '_numparams'):
+            raise AttributeError("numparams was referenced before it was set.")
         return self._numparams
+    
+    @numparams.setter
+    def numparams(self, value):
+        """
+        Setter for the number of parameters described by this distribution.
+        
+        value: must be a positive integer greater than 1.
+        """
+        if (type(value) in int_types):
+            if int(value) >= 1:
+                self._numparams = int(value)
+            else:
+                raise ValueError("A SequentialDistribution was initialized " +\
+                    "with non-positive numparams.")
+        else:
+            raise ValueError("The type of the number of parameters given " +\
+                "to a SequentialDistribution was not numerical.")
     
     def draw(self, shape=None, random=rand):
         """
@@ -204,7 +235,7 @@ class SequentialDistribution(Distribution):
         shared_distribution = shared_distribution_class.load_from_hdf5_group(\
             group['shared_distribution'], *args, **kwargs)
         return SequentialDistribution(shared_distribution=shared_distribution,\
-            numpars=numparams, metadata=metadata)
+            numparams=numparams, metadata=metadata)
     
     @property
     def gradient_computable(self):

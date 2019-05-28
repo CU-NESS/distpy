@@ -28,6 +28,7 @@ from distpy.jumping.LoadJumpingDistribution\
     import load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file
 from distpy.jumping.JumpingDistributionSum import JumpingDistributionSum
+from distpy.jumping.JumpingDistributionList import JumpingDistributionList
 from distpy.jumping.JumpingDistributionSet import JumpingDistributionSet
 from distpy.jumping.MetropolisHastingsSampler import MetropolisHastingsSampler
 

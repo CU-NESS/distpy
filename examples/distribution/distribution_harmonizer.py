@@ -5,46 +5,48 @@ Date: 26 Feb 2019
 
 Description: Example script showing how to use a DistributionHarmonizer object,
              which creates a consistent N-D distribution out of a M-D
-             distribution and a solver which computes the remaining (N-M)
-             parameters.
+             marginal distribution and a conditional_solver which computes the
+             conditional distribution of the remaining (N-M) parameters.
 """
 import time
 import numpy as np
-import matplotlib.pyplot as pl
 from distpy import GaussianDistribution, DistributionSet,\
-    DistributionHarmonizer
+    DistributionHarmonizer, bivariate_histogram
 
 fontsize = 24
 
-known_distribution_set =\
-    DistributionSet([(GaussianDistribution(0, 1), 'x', None)])
-def solver(dictionary):
-    return {'y': 1 + dictionary['x']}
-ndraw = 10000
+# true marginal distributions are normal with mean 0 and variance 1.
+correlation_coefficient = 0.5
+true_mean = [0, 0]
+true_covariance = [[1, correlation_coefficient], [correlation_coefficient, 1]]
 
-distribution_harmonizer =\
-    DistributionHarmonizer(known_distribution_set, solver, ndraw)
+marginal_distribution_set =\
+    DistributionSet([(GaussianDistribution(0, 1), 'x', None)])
+def conditional_solver(dictionary):
+    return DistributionSet([(GaussianDistribution(correlation_coefficient *\
+        dictionary['x'], 1 - (correlation_coefficient ** 2)), 'y', None)])
+marginal_draws = 10000
+conditional_draws = 1
+ndraw = conditional_draws * marginal_draws
+
+distribution_harmonizer = DistributionHarmonizer(marginal_distribution_set,\
+    conditional_solver, marginal_draws, conditional_draws=conditional_draws)
 start_time = time.time()
-full_distribution_set = distribution_harmonizer.full_distribution_set
+joint_distribution_set = distribution_harmonizer.joint_distribution_set
 middle_time = time.time()
-sample = full_distribution_set.draw(ndraw)
+sample = joint_distribution_set.draw(ndraw)
 end_time = time.time()
 form_duration = middle_time - start_time
 draw_duration = end_time - middle_time
-print(("It took {0:.5f} s to form the full distribution set with " +\
+print(("It took {0:.5f} s to form the joint distribution set with " +\
     "ndraw={1:d} from a DistributionHarmonizer and {2:.5f} s to return the " +\
     "sample from that distribution.").format(form_duration, ndraw,\
     draw_duration))
-sample = np.array([sample['x'], sample['y']])
 
-fig = pl.figure(figsize=(12, 9))
-ax = fig.add_subplot(111)
-ax.hist2d(sample[0], sample[1],\
-    bins=(np.linspace(-3, 3, 10), np.linspace(-2, 4, 10)))
-ax.set_xlabel('x', size=fontsize)
-ax.set_ylabel('y', size=fontsize)
-ax.tick_params(labelsize=fontsize, width=2.5, length=7.5, which='major')
-ax.tick_params(labelsize=fontsize, width=1.5, length=4.5, which='minor')
-
-pl.show()
+bivariate_histogram(sample['x'], sample['y'], reference_value_mean=true_mean,\
+    reference_value_covariance=true_covariance, bins=50,\
+    matplotlib_function='contourf', xlabel='$X$', ylabel='$Y$', title='',\
+    fontsize=16, contour_confidence_levels=[0.68, 0.95],\
+    reference_color='C3', reference_alpha=0.5, colors=['C0', 'C2'], alpha=0.5,\
+    show=True)
 

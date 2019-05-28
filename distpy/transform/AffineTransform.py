@@ -113,7 +113,7 @@ class AffineTransform(Transform):
         
         returns: value of log derivative in same format as value
         """
-        return ((0. * value) + np.log(self.scale_factor))
+        return ((0. * value) + np.log(np.abs(self.scale_factor)))
     
     def derivative_of_log_derivative(self, value):
         """

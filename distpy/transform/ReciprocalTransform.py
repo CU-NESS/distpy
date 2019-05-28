@@ -6,6 +6,7 @@ Date: 12 Feb 2018
 Description: File containing class describing the reciprocal of an arbitrary
              transformation.
 """
+from __future__ import division
 import numpy as np
 from .Transform import Transform
 
@@ -13,35 +14,6 @@ class ReciprocalTransform(Transform):
     """
     Class representing the reciprocal of a transformation.
     """
-    def __init__(self, transform):
-        """
-        Initializes a new ReciprocalTransform of the given transform.
-        
-        transform: must be a Transform object
-        """
-        self.transform = transform
-    
-    @property
-    def transform(self):
-        """
-        Property storing the transform which this is the reciprocal of.
-        """
-        if not hasattr(self, '_transform'):
-            raise AttributeError("transform referenced before it was set.")
-        return self._transform
-    
-    @transform.setter
-    def transform(self, value):
-        """
-        Setter for the transform which this is the reciprocal of.
-        
-        value: must be a Transform object
-        """
-        if isinstance(value, Transform):
-            self._transform = value
-        else:
-            raise TypeError("transform was not a Transform object.")
-    
     def derivative(self, value):
         """
         Computes the derivative of the function underlying this Transform at
@@ -51,9 +23,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of derivative in same format as value
         """
-        func = self.transform(value)
-        func_deriv = self.transform.derivative(value)
-        return ((-func_deriv) / (func ** 2))
+        return ((-1) / (value ** 2))
     
     def second_derivative(self, value):
         """
@@ -64,10 +34,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of second derivative in same format as value
         """
-        func = self.transform(value)
-        func_deriv = self.transform.derivative(value)
-        func_deriv2 = self.transform.second_derivative(value)
-        return (((2 * (func_deriv ** 2)) - (func * func_deriv2)) / (func ** 3))
+        return (2 / (value ** 3))
     
     def third_derivative(self, value):
         """
@@ -78,12 +45,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of third derivative in same format as value
         """
-        func = self.transform(value)
-        func_deriv = self.transform.derivative(value)
-        func_deriv2 = self.transform.second_derivative(value)
-        func_deriv3 = self.transform.third_derivative(value)
-        return (((6 * (((func * func_deriv) * func_deriv2) -\
-            (func_deriv ** 3))) - ((func ** 2) * func_deriv3)) / (func ** 4))
+        return ((-6) / (value ** 4))
     
     def log_derivative(self, value):
         """
@@ -94,8 +56,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of log derivative in same format as value
         """
-        return (self.transform.log_derivative(value) -\
-            (2 * np.log(self.transform(value))))
+        return ((-2) * np.log(np.abs(value)))
     
     def derivative_of_log_derivative(self, value):
         """
@@ -106,11 +67,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of derivative of log derivative in same format as value
         """
-        func = self.transform(value)
-        func_deriv = self.transform.derivative(value)
-        deriv_log_func_deriv =\
-            self.transform.derivative_of_log_derivative(value)
-        return (deriv_log_func_deriv - (2 * (func_deriv / func)))
+        return ((-2) / value)
     
     def second_derivative_of_log_derivative(self, value):
         """
@@ -123,13 +80,7 @@ class ReciprocalTransform(Transform):
         returns: value of second derivative of log derivative in same format as
                  value
         """
-        func = self.transform(value)
-        func_deriv = self.transform.derivative(value)
-        func_deriv2 = self.transform.second_derivative(value)
-        deriv2_log_func_deriv =\
-            self.transform.second_derivative_of_log_derivative(value)
-        return (deriv2_log_func_deriv +\
-            ((2 * ((func_deriv ** 2) - (func * func_deriv2))) / (func ** 2)))
+        return (2 / (value ** 2))
     
     def apply(self, value):
         """
@@ -139,7 +90,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of function in same format as value
         """
-        return (1. / self.transform(value))
+        return (1 / value)
     
     def apply_inverse(self, value):
         """
@@ -149,7 +100,7 @@ class ReciprocalTransform(Transform):
         
         returns: value of inverse function in same format as value
         """
-        return self.transform.apply_inverse(1. / value)
+        return (1 / value)
     
     def to_string(self):
         """
@@ -157,7 +108,7 @@ class ReciprocalTransform(Transform):
         
         returns: value which can be cast into this Transform
         """
-        return '1/{!s}'.format(self.transform.to_string())
+        return 'reciprocal'
     
     def fill_hdf5_group(self, group):
         """
@@ -166,7 +117,6 @@ class ReciprocalTransform(Transform):
         group: hdf5 file group to which to write data about this transform
         """
         group.attrs['class'] = 'ReciprocalTransform'
-        self.transform.fill_hdf5_group(group.create_group('transform'))
     
     def __eq__(self, other):
         """
@@ -176,11 +126,5 @@ class ReciprocalTransform(Transform):
         
         returns True if both Transforms are the same
         """
-        if isinstance(other, ReciprocalTransform):
-            return self.transform == other.transform
-        elif isinstance(other, Transform) and\
-            isinstance(self.transform, ReciprocalTransform):
-            return self.transform.transform == other
-        else:
-            return False
+        return isinstance(other, ReciprocalTransform)
 

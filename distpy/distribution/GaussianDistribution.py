@@ -32,77 +32,108 @@ class GaussianDistribution(Distribution):
                    or a 2D array (if multivariate) final covariance used is
                    average of this 2D array and its transpose
         """
-        if type(mean) in numerical_types:
-            self._check_covariance_when_mean_has_size_1(mean,\
-                                                        covariance)
-        elif type(mean) in sequence_types:
-            arrmean = np.array(mean)
-            if arrmean.ndim != 1:
-                raise ValueError("The mean of a GaussianDistribution was " +\
-                    "not 1 dimensional.")
-            elif arrmean.size == 0:
-                raise ValueError("The mean of a GaussianDistribution was " +\
-                    "set to something like an empty array.")
-            elif arrmean.size == 1:
-                self._check_covariance_when_mean_has_size_1(mean[0],\
-                                                            covariance)
-            elif type(covariance) in sequence_types:
-                arrcov = np.array(covariance)
-                if np.any(np.isnan(arrcov)):
-                    raise ValueError(("For some reason, there are nan's in " +\
-                        "the covariance matrix given to a " +\
-                        "GaussianDistribution, which was:\n{}.").format(\
-                        arrcov))
-                elif arrcov.shape == (len(arrmean), len(arrmean)):
-                    self.mean = np.matrix(arrmean)
-                    self._numparams = len(arrmean)
-                    self.covariance = np.matrix((arrcov + arrcov.T) / 2.)
-                else:
-                    raise ValueError("The covariance given to a " +\
-                        "GaussianDistribution was not castable to an array " +\
-                        "of the correct shape. It should be a square shape " +\
-                        "with the same side length as length of mean.")
-            else:
-                raise ValueError("The mean of a GaussianDistribution is " +\
-                    "array-like but its covariance isn't matrix like.")
-        else:
-            raise ValueError("The mean of a GaussianDistribution is not of " +\
-                "a recognizable type.")
-        self.invcov = la.inv(self.covariance)
-        self.logdetcov = la.slogdet(self.covariance)[1]
+        self.mean = mean
+        self.covariance = covariance
         self.square_root_covariance
         self.metadata = metadata
     
-    def _check_covariance_when_mean_has_size_1(self, true_mean, covariance):
-        #
-        # If the mean is a single number, then the covariance should be
-        # castable into a single number as well. This function checks that and
-        # raises an error if something unexpected happens. This function sets
-        # self.mean and self.covariance.
-        #
-        # true_mean the single number mean (should be a numerical_type)
-        # covariance the covariance which *should* be castable into a number
-        #
-        if type(covariance) in numerical_types:
-            # covariance is single number, as it should be
-            self.covariance = np.matrix([[covariance]])
-        elif type(covariance) in sequence_types:
-            # covariance should be number but at first glance, it isn't
-            arrcov = np.array(covariance)
-            if np.any(np.isnan(arrcov)):
-                raise ValueError("For some reason, there are nan's in the " +\
-                    "covariance matrix given to a GuassianDistribution.")
-            elif arrcov.size == 1:
-                self.covariance = np.matrix([[arrcov[(0,) * arrcov.ndim]]])
-            else:
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this GaussianDistribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean was referenced before it was set.")
+        return self._mean
+    
+    @mean.setter
+    def mean(self, value):
+        """
+        Setter for the mean of this distribution
+        
+        value: either a single number (if univariate) or a 1D numpy.ndarray of
+               length numparams
+        """
+        if type(value) in numerical_types:
+            value = [value]
+        if type(value) in sequence_types:
+            value = np.array(value)
+            if value.ndim != 1:
                 raise ValueError("The mean of a GaussianDistribution was " +\
-                    "set to a number but the covariance can't be cast into " +\
-                    "a number.")
+                    "not 1 dimensional.")
+            elif value.size == 0:
+                raise ValueError("The mean of a GaussianDistribution was " +\
+                    "set to something like an empty array.")
+            else:
+                self._mean = np.matrix(np.array(value))
         else:
-            raise ValueError("The covariance of a GaussianDistribution is " +\
-                "not of a recognizable type.")
-        self.mean = np.matrix([true_mean])
-        self._numparams = 1
+            raise ValueError("The mean of a GaussianDistribution is not of " +\
+                "a recognizable type.")
+    
+    @property
+    def covariance(self):
+        """
+        Property storing the covariance matrix of this Gaussian.
+        """
+        if not hasattr(self, '_covariance'):
+            raise AttributeError("covariance was referenced before it was " +\
+                "set.")
+        return self._covariance
+    
+    @covariance.setter
+    def covariance(self, value):
+        """
+        Setter for the covariance matrix of this Gaussian.
+        
+        value: if mean has length 1, then this can be a single number
+                                     representing the variance
+               otherwise, this should be a square positive definite matrix of
+                          rank numparams or a 1D array of variances (in which
+                          case the variates are assumed independent)
+        """
+        if type(value) in numerical_types:
+            if self.numparams == 1:
+                self._covariance = np.matrix([[value]])
+            else:
+                raise TypeError("covariance was set to a number even " +\
+                    "though this Gaussian is multi-dimensional.")
+        elif type(value) in sequence_types:
+            value = np.array(value)
+            if np.any(np.isnan(value)):
+                raise ValueError(("For some reason, there are nan's in the " +\
+                    "covariance matrix given to a GaussianDistribution, " +\
+                    "which was:\n{}.").format(value))
+            elif value.shape == (self.numparams,):
+                self._covariance = np.matrix(np.diag(value))
+            elif value.shape == ((self.numparams,) * 2):
+                self._covariance = np.matrix((value + value.T) / 2.)
+            else:
+                raise ValueError("The covariance given to a " +\
+                    "GaussianDistribution was not castable to an array of " +\
+                    "the correct shape. It should be a square shape with " +\
+                    "the same side length as length of mean.")
+        else:
+            raise ValueError("The mean of a GaussianDistribution is " +\
+                "array-like but its covariance isn't matrix like.")
+    
+    @property
+    def log_determinant_covariance(self):
+        """
+        Property storing the natural logarithm of the determinant of the
+        covariance matrix.
+        """
+        if not hasattr(self, '_log_determinant_covariance'):
+            self._log_determinant_covariance = la.slogdet(self.covariance)[1]
+        return self._log_determinant_covariance
+    
+    @property
+    def inverse_covariance(self):
+        """
+        Property storing the inverse of the covariance.
+        """
+        if not hasattr(self, '_inverse_covariance'):
+            self._inverse_covariance = la.inv(self.covariance)
+        return self._inverse_covariance
 
     @property
     def numparams(self):
@@ -112,8 +143,7 @@ class GaussianDistribution(Distribution):
         covariance).
         """
         if not hasattr(self, '_numparams'):
-            raise AttributeError("For some reason, I don't know how many " +\
-                "parameters this GaussianDistribution has!")
+            self._numparams = len(self.mean.A[0])
         return self._numparams
     
     def __add__(self, other):
@@ -332,8 +362,9 @@ class GaussianDistribution(Distribution):
                 "GaussianDistribution was not of a numerical type (should " +\
                 "be if distribution is univariate) or of a list type " +\
                 "(should be if distribution is multivariate).")
-        expon = np.float64(minus_mean * self.invcov * minus_mean.T) / 2.
-        return -1. * ((self.logdetcov / 2.) + expon +\
+        expon =\
+            np.float64(minus_mean * self.inverse_covariance * minus_mean.T) / 2.
+        return -1. * ((self.log_determinant_covariance / 2.) + expon +\
             ((self.numparams * np.log(two_pi)) / 2.))
 
     def to_string(self):
@@ -393,11 +424,12 @@ class GaussianDistribution(Distribution):
         remaining_indices = np.array([index\
             for index in np.arange(self.numparams)\
             if index not in known_indices])
-        new_covariance =\
-            la.inv(self.invcov.A[:,remaining_indices][remaining_indices])
+        new_covariance = la.inv(\
+            self.inverse_covariance.A[:,remaining_indices][remaining_indices])
         known_mean_displacement = values - self.mean.A[0][known_indices]
-        new_mean = self.mean.A[0][remaining_indices] - np.dot(new_covariance,\
-            np.dot(self.invcov.A[:,known_indices][remaining_indices],\
+        new_mean =\
+            self.mean.A[0][remaining_indices] - np.dot(new_covariance, np.dot(\
+            self.inverse_covariance.A[:,known_indices][remaining_indices],\
             known_mean_displacement))
         return GaussianDistribution(new_mean, new_covariance)
     
@@ -521,9 +553,9 @@ class GaussianDistribution(Distribution):
                 "be if distribution is univariate) or of a list type " +\
                 "(should be if distribution is multivariate).")
         if self.numparams == 1:
-            return (mean_minus * self.invcov).A[0,0]
+            return (mean_minus * self.inverse_covariance).A[0,0]
         else:
-            return (mean_minus * self.invcov).A[0,:]
+            return (mean_minus * self.inverse_covariance).A[0,:]
     
     @property
     def hessian_computable(self):
@@ -543,9 +575,9 @@ class GaussianDistribution(Distribution):
         returns: 2D square matrix of second derivatives of log value
         """
         if self.numparams == 1:
-            return -self.invcov.A[0,0]
+            return -self.inverse_covariance.A[0,0]
         else:
-            return -self.invcov.A
+            return -self.inverse_covariance.A
     
     def copy(self):
         """

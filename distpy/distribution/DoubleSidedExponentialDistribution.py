@@ -25,24 +25,64 @@ class DoubleSidedExponentialDistribution(Distribution):
         mean: mean, mode and median of the distribution
         variance: variance of distribution
         """
-        if type(mean) in numerical_types:
-            self.mean = (mean * 1.)
+        self.mean = mean
+        self.variance = variance
+        self.metadata = metadata
+    
+    @property
+    def mean(self):
+        """
+        Property storing the center of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean was referenced before it was set.")
+        return self._mean
+    
+    @mean.setter
+    def mean(self, value):
+        """
+        Setter for the mean of this distribution.
+        """
+        if type(value) in numerical_types:
+            self._mean = (value * 1.)
         else:
-            raise ValueError('The mean parameter given to a ' +\
-                'DoubleSidedExponentialDistribution was not of a numerical ' +\
-                'type.')
-        if type(variance) in numerical_types:
-            if variance > 0:
-                self.variance = (1. * variance)
+            raise ValueError("The mean parameter given to a " +\
+                "DoubleSidedExponentialDistribution was not of a numerical " +\
+                "type.")
+    
+    @property
+    def variance(self):
+        """
+        Property storing the variance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise AttributeError("variance was referenced before it was set.")
+        return self._variance
+    
+    @variance.setter
+    def variance(self, value):
+        """
+        Setter for the variance of this distribution.
+        """
+        if type(value) in numerical_types:
+            if value > 0:
+                self._variance = (value * 1.)
             else:
                 raise ValueError("The variance given to a " +\
                     "DoubleSidedExponentialDistribution was not positive.")
         else:
-            raise ValueError("The variance given to a " +\
+            raise ValueError("The variance parameter given to a " +\
                 "DoubleSidedExponentialDistribution was not of a numerical " +\
                 "type.")
-        self._const_lp_term = (np.log(2) + np.log(self.variance)) / (-2)
-        self.metadata = metadata
+    
+    @property
+    def const_lp_term(self):
+        """
+        Property storing the constant part of the log probability density.
+        """
+        if not hasattr(self, '_const_lp_term'):
+            self._const_lp_term = (np.log(2) + np.log(self.variance)) / (-2)
+        return self._const_lp_term
     
     @property
     def numparams(self):
@@ -84,7 +124,7 @@ class DoubleSidedExponentialDistribution(Distribution):
         
         point: numerical value of the variable
         """
-        return self._const_lp_term -\
+        return self.const_lp_term -\
             (np.abs(point - self.mean) / self.root_half_variance)
 
     def to_string(self):

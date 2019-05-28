@@ -111,6 +111,14 @@ class DistributionSet(Savable, Loadable):
         Property storing the number of parameters in this DistributionSet.
         """
         return len(self.params)
+    
+    def __len__(self):
+        """
+        Returns the number of parameters in a Distribution so that
+        len(distribution) can be used to get the number of parameters of a
+        Distribution object without explicitly referencing numparams.
+        """
+        return self.numparams
 
     def add_distribution(self, distribution, params, transforms=None):
         """
@@ -269,7 +277,7 @@ class DistributionSet(Savable, Loadable):
         self._data = [(distribution, list(map(function, params)), transforms)\
             for (distribution, params, transforms) in self._data]
     
-    def with_different_transforms(self, **new_transforms):
+    def modify_transforms(self, **new_transforms):
         """
         Finds a DistributionSet with the same distribution and parameters but
         different transforms. Draws from this DistributionSet and the returned
@@ -353,6 +361,13 @@ class DistributionSet(Savable, Loadable):
         applied to the parameter.
         
         parameter string name of parameter
+        
+        returns a tuple of the form (distribution, index, transform) where
+                distribution is the Distribution object describing this
+                parameter, index is the integer number (starting at 0) of the
+                given parameter in the distribution, and transform is the
+                Transform object defining the space in which Distribution
+                inputs or outputs the parameter.
         """
         for (distribution, params, transforms) in self._data:
             for (iparam, param) in enumerate(params):
@@ -679,12 +694,12 @@ class DistributionSet(Savable, Loadable):
         Computes the derivative(s) of log_value(point) with respect to the
         parameter(s).
         
-        point: either single value (if distribution is 1D) or array of values
+        point: dictionary describing point by using parameter names as keys and
+               variable values as values.
         
-        returns: if distribution is 1D, returns single number representing
-                                        derivative of log value
-                 else, returns 1D numpy.ndarray containing the N derivatives of
-                       the log value with respect to each individual parameter
+        returns: a 1D numpy.ndarray (of length numparams)of derivative values
+                 corresponding to the parameters (in an order given by the
+                 params property)
         """
         if isinstance(point, dict):
             result = np.zeros((self.numparams,))
@@ -727,13 +742,12 @@ class DistributionSet(Savable, Loadable):
         Computes the second derivative(s) of log_value(point) with respect to
         the parameter(s).
         
-        point: either single value (if distribution is 1D) or array of values
+        point: dictionary describing point by using parameter names as keys and
+               variable values as values.
         
-        returns: if distribution is 1D, returns single number representing
-                                        second derivative of log value
-                 else, returns 2D square numpy.ndarray with dimension length
-                       equal to the number of parameters representing the N^2
-                       different second derivatives of the log value
+        returns: a 2D numpy.ndarray (of shape (numparams,)*2) of derivative
+                 values corresponding to the parameters (in an order given by
+                 the params property)
         """
         if isinstance(point, dict):
             result = np.zeros((self.numparams,) * 2)

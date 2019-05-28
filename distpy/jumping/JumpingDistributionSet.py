@@ -114,6 +114,14 @@ class JumpingDistributionSet(Savable, Loadable):
         """
         return len(self.params)
     
+    def __len__(self):
+        """
+        Function allowing users to access the number of parameters described by
+        this DistributionSet using the len function and not explicitly
+        referencing the numparams property.
+        """
+        return self.numparams
+    
     def add_distribution(self, distribution, params, transforms=None):
         """
         Adds a jumping_distribution and the parameters it describes to the
