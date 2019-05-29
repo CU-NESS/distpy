@@ -18,8 +18,7 @@ from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
     ExponentiatedTransform, LoggedTransform, SumTransform, ProductTransform,\
     CompositeTransform, castable_to_transform, cast_to_transform,\
     load_transform_from_hdf5_group, load_transform_from_hdf5_file,\
-    invert_transform, TransformList, castable_to_transform_list,\
-    cast_to_transform_list, TransformSet
+    invert_transform, TransformList, TransformSet
 from distpy.distribution import Distribution, WindowedDistribution,\
     BetaDistribution, BernoulliDistribution, BinomialDistribution,\
     ChiSquaredDistribution, DoubleSidedExponentialDistribution,\

@@ -19,8 +19,8 @@ Description: A container which can hold an arbitrary number of distributions,
 """
 import numpy as np
 import numpy.random as rand
-from ..util import int_types, sequence_types
-from ..transform import cast_to_transform_list, TransformList, NullTransform
+from ..util import int_types, numerical_types, sequence_types
+from ..transform import TransformList, NullTransform
 from .Distribution import Distribution
 
 class DistributionList(Distribution):
@@ -87,7 +87,7 @@ class DistributionList(Distribution):
                     string if the distribution is univariate)
         """
         if isinstance(distribution, Distribution):
-            transforms = cast_to_transform_list(transforms,\
+            transforms = TransformList.cast(transforms,\
                 num_transforms=distribution.numparams)
             self._data.append((distribution, transforms))
         else:
@@ -145,7 +145,7 @@ class DistributionList(Distribution):
                  different transforms
         """
         new_transform_list =\
-            cast_to_transform_list(transforms, num_transforms=self.numparams)
+            TransformList.cast(transforms, num_transforms=self.numparams)
         (new_data, running_index) = ([], 0)
         for (distribution, transforms) in self._data:
             new_running_index = running_index + distribution.numparams
@@ -184,6 +184,8 @@ class DistributionList(Distribution):
                     point[...,params_included+itransform] =\
                         transform.apply_inverse(this_draw[...,itransform])
             params_included += numparams
+        if self.numparams == 1:
+            point = point[...,0]
         if none_shape:
             return point[0]
         else:
@@ -199,6 +201,8 @@ class DistributionList(Distribution):
         returns: the total log_value coming from contributions from all
                  distributions
         """
+        if type(point) in numerical_types:
+            point = [point]
         if type(point) in sequence_types:
             point = np.array(point)
             if point.shape == (self.numparams,):

@@ -19,8 +19,7 @@ Description: A container which can hold an arbitrary number of jumping
 """
 import numpy as np
 from ..util import Savable, Loadable, int_types, sequence_types, triangle_plot
-from ..transform import cast_to_transform_list, TransformList, TransformSet,\
-    NullTransform
+from ..transform import NullTransform, TransformList, TransformSet
 from .JumpingDistribution import JumpingDistribution
 from .LoadJumpingDistribution import load_jumping_distribution_from_hdf5_group
 try:
@@ -135,7 +134,7 @@ class JumpingDistributionSet(Savable, Loadable):
                    (can be a single string if the distribution is univariate)
         """
         if isinstance(distribution, JumpingDistribution):
-            transforms = cast_to_transform_list(transforms,\
+            transforms = TransformList.cast(transforms,\
                 num_transforms=distribution.numparams)
             if distribution.numparams == 1:
                 if type(params) is str:
@@ -347,10 +346,10 @@ class JumpingDistributionSet(Savable, Loadable):
         
         parameter string name of parameter
         """
-        for (distribution, params, transforms) in self._data:
+        for (jumping_distribution, params, transforms) in self._data:
             for (iparam, param) in enumerate(params):
                 if parameter == param:
-                    return (distribution, iparam, transforms[iparam])
+                    return (jumping_distribution, iparam, transforms[iparam])
         raise ValueError(("The parameter searched for ({!s}) in a " +\
             "JumpingDistributionSet was not found.").format(parameter))
     
@@ -395,22 +394,6 @@ class JumpingDistributionSet(Savable, Loadable):
         documentation, see delete_distribution function.
         """
         self.delete_distribution(parameter, throw_error=True)
-    
-    def parameter_strings(self, parameter):
-        """
-        Makes an informative string about this parameter's place in this
-        JumpingDistributionSet.
-        
-        parameter string name of parameter
-        
-        returns (param_string, transform_string) in tuple form
-        """
-        string = ""
-        (distribution, index, transform) = self.find_distribution(parameter)
-        if distribution.numparams != 1:
-            string += (self._numerical_adjective(index) + ' param of ')
-        string += distribution.to_string()
-        return (string, transform.to_string())
     
     def __eq__(self, other):
         """
@@ -542,6 +525,53 @@ class JumpingDistributionSet(Savable, Loadable):
             if not distribution.is_discrete:
                 answer.add_distribution(distribution, params, transforms)
         return answer
+    
+    def jumping_distribution_list(self, parameters):
+        """
+        Creates a DistributionList out of this DistributionSet by ordering it
+        in the same way as the given parameters.
+        
+        parameters: the parameters whose distribution should be put into the
+                    list, including order. May oy may not contain all of this
+                    DistributionSet object's parameters
+        
+        returns: DistributionList object containing the distribution of the
+                 given parameters
+        """
+        to_list = [parameter for parameter in parameters]
+        distribution_order = []
+        while to_list:
+            first_parameter = to_list[0]
+            broken = False
+            for (ituple, (jumping_distribution, params, transforms)) in\
+                enumerate(self._data):
+                if (first_parameter in params):
+                    if ituple in distribution_order:
+                        raise ValueError("The same jumping distribution " +\
+                            "cannot be put in the same " +\
+                            "JumpingDistributionList twice using this " +\
+                            "function. The parameters must be out of order.")
+                    distribution_order.append(ituple)
+                    broken = True
+                    break
+            if not broken:
+                raise ValueError(("The parameter {!s} was not found in " +\
+                    "this JumpingDistributionSet, so couldn't be used to " +\
+                    "populate a JumpingDistributionList object.").format(\
+                    first_parameter))
+            (jumping_distribution, params, transforms) =\
+                self._data[distribution_order[-1]]
+            for (distribution_param, list_param) in\
+                zip(params, to_list[:jumping_distribution.numparams]):
+                if distribution_param != list_param:
+                    raise ValueError("Something went wrong. You must have " +\
+                        "parameters out of order with respect to the " +\
+                        "distributions they are in.")
+            to_list = to_list[jumping_distribution.numparams:]
+        jumping_distribution_tuples =\
+            [self._data[element][::2] for element in distribution_order]
+        return JumpingDistributionList(\
+            jumping_distribution_tuples=jumping_distribution_tuples)
     
     def fill_hdf5_group(self, group):
         """

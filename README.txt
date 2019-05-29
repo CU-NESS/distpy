@@ -1,4 +1,121 @@
-distpy is a clean and simple Python package meant to store analytical distributions efficiently and effectively. It has three main submodules: distpy.transform, distpy.distribution, and distpy.jumping. It is compatible with Python2.7+ and Python3.5+
+---------------
+distpy overview
+---------------
+
+distpy is a clean and simple Python package meant to store analytical distributions efficiently and effectively. It has four main submodules: distpy.util, distpy.transform, distpy.distribution, and distpy.jumping. It is compatible with Python2.7+ and Python3.5+. The submodules are not relevant for the purpose of imports. Any class or function, 'XYZ', described below can be imported using `from distpy import XYZ`. The lists below enumerate the major classes and groups of classes. Below that is a detailed description of each submodule.
+
+Utility interfaces:
+    class Savable: Parent class for objects which can be saved to an hdf5 file group
+    class Loadable: Parent class for objects which can be loaded from an existing hdf5 file group
+
+hdf5 Utility objects and functions:
+    class HDF5Link: Allows for links within hdf5 files to avoid redundant saving
+    function create_hdf5_dataset: Creates an hdf5 dataset, possibly with links
+    function get_hdf5_value: Gets an hdf5 file from an h5py.Group or h5py.Dataset
+    function save_dictionary: Saves a dictionary to an hdf5 group as much as possible.
+    function load_dictionary: Loads a dictionary from an hdf5 group that was initially saved using the save_dictionary function
+
+General purpose utility objects:
+    class Expression: object that allows for evaluation of Python code strings programmatically through function calling syntax
+
+Transformations: Classes involving univariate transformations, which can be used to define novel transformed distributions
+    Utility functions: functions that load transforms from hdf5 files and groups, functions that cast to transforms or collections of transforms, and functions that invert transforms
+        load_transform_from_hdf5_group
+        load_transform_from_hdf5_file
+        cast_to_transform
+        castable_to_transform
+        invert_transform
+    Transform classes: The classes that actually implement the transformations
+        AffineTransform
+        ArcsinTransform
+        ArsinhTransform
+        BoxCoxTransform
+        CompositeTransform
+        Exp10Transform
+        ExponentialTransform
+        ExponentiatedTransform
+        Log10Transform
+        LoggedTransform
+        LogisticTransform
+        LogTransform
+        NullTransform
+        PowerTransform
+        ProductTransform
+        ReciprocalTransform
+        SineTransform
+        SumTransform
+    Transform container classes: Ordered or unordered collections of Transform objects
+        TransformList
+        TransformSet
+
+Distributions: Classes involving distributions of variables
+    Utility functions: functions that load distributions from hdf5 files and groups
+        load_distribution_from_hdf5_group
+        load_distribution_from_hdf5_file
+    Discrete distribution classes: Distributions defined at discrete points (usually the integers), univariate or multivariate
+        BernoulliDistribution
+        BinomialDistribution
+        CustomDiscreteDistribution
+        DiscreteUniformDistribution
+        GeometricDistribution
+        PoissonDistribution
+    Continuous distribution classes: Distributions defined on the real numbers (or a subset), univariate or multivariate
+        BetaDistribution
+        ChiSquaredDistribution
+        DoubleSidedExponentialDistribution
+        EllipticalUniformDistribution
+        ExponentialDistribution
+        GammaDistribution
+        GaussianDirectionDistribution
+        GaussianDistribution
+        GeneralizedParetoDistribution
+        GriddedDistribution
+        LinearDirectionDistribution
+        ParallelepipedDistribution
+        SechDistribution
+        SechSquaredDistribution
+        TruncatedGaussianDistribution
+        UniformConditionDistribution
+        UniformDirectionDistribution
+        UniformDistribution
+        UniformTriangulationDistribution
+        WeibullDistribution
+    Distribution classes that can be discrete or continuous: Distributions whose discrete/continuous nature is determined by inputs
+        DeterministicDistribution
+        DistributionSum
+        InfiniteUniformDistribution
+        KroneckerDeltaDistribution
+        LinkedDistribution
+        SequentialDistribution
+        WindowedDistribution
+    Distribution container classes: Ordered or unordered collections of Distribution objects
+        DistributionList
+        DistributionSet
+    class DistributionHarmonizer: Creates a joint DistributionSet from a marginal DistributionSet and a conditional DistributionSet
+
+Proposal distributions: Classes involving proposal distributions for random walks, which are a specific class of conditional distributions
+    Utility functions: functions that load jumping/proposal distributions from hdf5 files and groups
+        load_jumping_distribution_from_hdf5_group
+        load_jumping_distribution_from_hdf5_file
+    Discrete proposal distribution classes: Proposal distributions defined on integers (or a subset), univariate or multivariate
+        AdjacencyJumpingDistribution
+        BinomialJumpingDistribution
+        GridHopJumpingDistribution
+    Continuous proposal distribution classes: Proposal distributions defined on real numbers (or a subset), univariate or multivariate
+        GaussianJumpingDistribution
+        SourceDependentGaussianJumpingDistribution
+        TruncatedGaussianJumpingDistribution
+        UniformJumpingDistribution
+    Proposal distribution classes that can be discrete or continuous: Proposal distributions whose discrete/continuous nature is determined by inputs
+        JumpingDistributionSum
+        LocaleIndependentJumpingDistribution
+        SourceIndependentJumpingDistribution
+    Proposal distribution container classes: Ordered or unordered collections of JumpingDistribution objects
+        JumpingDistributionList
+        JumpingDistributionSet
+    class MetropolisHastingsSampler: Implementation of Metropolis Hastings Markov Chain Monte Carlo sampler
+
+
 
 ---------------------
 distpy.util submodule
@@ -11,11 +128,12 @@ The distpy.util.submodule also contains the following functions and classes for 
 Class: Savable
 Signature: (cannot be directly instantiated)
 Description: This is a base class that cannot be directly instantiated. It contains a method, save(file_name), which calls the subclass' implementation of the fill_hdf5_group(group) function (which, on its own, can be used to save the object into an extant h5py.Group) to save the object into a new hdf5 file at file_name.
-Function: save(file_name)
+Function save(file_name): Calls fill_hdf5_group with a group resulting from creating and opening a new hdf5 file at the given file name.
 
 Class: Loadable
 Signature: (cannot be directly instantiated)
 Description: This is a base class that cannot be directly instantiated. It contains a method, load(file_name), which calls the subclass' implementation of the load_hdf5_group(group) function (which, on its own, can be used to load the object from an extant h5py.Group) to load the object from an extant hdf5 file at file_name.
+Method load(file_name): Calls load_hdf5_group with a group resulting from opening and hdf5 file at the given file name.
 
 Class: HDF5Link
 Signature: HDF5Link(link, slices=None)
@@ -71,16 +189,16 @@ The distpy.transform submodule defines the below monotonic variable transformati
 
 Class: Transform
 Description: Base class for all Transform objects. Requires subclasses to implement the following functions:
-    apply(x) applies the transformation to the value x
-    apply_inverse(x) applies the inverse of the transformation to the value x
-    derivative(x) applies the derivative of the transformation to the value x
-    log_derivative(x) applies the natural log of the derivative of the transformation to the value x
-    second_derivative(x) applies the second derivative of the transformation to the value x
-    derivative_of_log_derivative(x) applies the derivative of the log of the derivative of the transformation to the value x
-    third_derivative(x) applies the third derivative of the transformation to the value x
-    second_derivative_of_log_derivative(x) applies the second derivative of the log of the derivative of the transformation to the value x
-    load_from_hdf5_group(group) staticmethod implemented by all subclasses that loads the Transform from a group of an hdf5 file.
-    fill_hdf5_group(group) fills the given group with information about this transformation so that load_from_hdf5_group can be called later
+Method apply(x): applies the transformation to the value x
+Method apply_inverse(x): applies the inverse of the transformation to the value x
+Method derivative(x): applies the derivative of the transformation to the value x
+Method log_derivative(x): applies the natural log of the derivative of the transformation to the value x
+Method second_derivative(x): applies the second derivative of the transformation to the value x
+Method derivative_of_log_derivative(x): applies the derivative of the log of the derivative of the transformation to the value x
+Method third_derivative(x): applies the third derivative of the transformation to the value x
+Method second_derivative_of_log_derivative(x): applies the second derivative of the log of the derivative of the transformation to the value x
+Method load_from_hdf5_group(group): staticmethod implemented by all subclasses that loads the Transform from a group of an hdf5 file.
+Method fill_hdf5_group(group): fills the given group with information about this transformation so that load_from_hdf5_group can be called later
 
 Class: AffineTransform
 Signature: AffineTransform(scale_factor, translation)
@@ -197,6 +315,25 @@ Class: TransformList
 Signature: TransformList(*transforms)
 Initialization description: The TransformList class is initialized very simply by providing an arbitrary amount of positional arguments, all of which are Transform objects or things that can be cast to Transform objects (see description of cast_transform below).
 Class description: TransformList is a list-like object containing transforms, which can be called through transform_list(inputs), which is a convenient way to run each transform on each input (where inputs is array-like), outputting an array-like output.
+Method append(transform): Appends a Transform to the list, adding it to the end
+Method extend(transform_list): Extends this TransformList with another TransformList (or something that can be cast into one) by adding it onto the end
+Method apply(point, axis=-1): Applies the transformations in the TransformList to a point along the given axis
+Method apply_inverse(point, axis=-1): Applies the inverses of the transformations in the TransformList to a point along the given axis
+Method cast(key, num_transforms=None): staticmethod that casts the key into a TransformList
+Method castable(key, num_transforms=None, return_transform_list_if_true=False): staticmethod that checks if key can be cast into a TransformList
+Method derivative(point, axis=-1): Applies the derivatives of the transformations in the TransformList to a point along the given axis
+Method log_derivative(point, axis=-1): Applies the logs of the derivatives of the transformations in the TransformList to a point along the 
+given axis
+Method second_derivative(point, axis=-1): Applies the second derivatives of the transformations in the TransformList to a point along the given axis
+Method derivative_of_log_derivative(point, axis=-1): Applies the derivatives of the logs of the derivatives of the transformations in the TransformList to a point along the given axis
+Method third_derivative(point, axis=-1): Applies the third derivatives of the transformations in the TransformList to a point along the given axis
+Method second_derivative_of_log_derivative(point, axis=-1): Applies the second derivatives of the logs of the derivatives of the transformations in the TransformList to a point along the given axis
+Method transform_gradient(untransformed_gradient, untransformed_point, axis=-1): Changes the gradient evaluated at the given point so that it is expressed in transformed space
+Method detransform_gradient(transformed_gradient, untransformed_point, axis=-1): Changes the transformed gradient evaluated at the transformed version of untransformed_point into untransformed space
+Method transform_hessian(untransformed_hessian, transformed_gradient, untransformed_point, first_axis=-2): Changes the hessian evaluated at the given point so that it is expressed in transformed space
+Method detransform_hessian(transformed_hessian, transformed_gradient, untransformed_point, axis=-1): Changes the transformed hessian evaluated at the transformed version of untransformed_point into untransformed space, using the transformed gradient evaluated at the same point
+Method transform_covariance(untransformed_covariance, untransformed_point, axis=(-2, -1)): Changes the covariance into untransformed space. This assumes that the covariance is small enough for derivatives to completely determine its changes
+Property is_null: Checks to see if all transformations in this TransformList are null transformations
 
 Class: TransformSet
 Signature: TransformSet(transforms, parameters=None)
@@ -243,21 +380,13 @@ Function: castable_to_transform
 Signature: castable_to_transform(key, return_transform_if_true=False)
 Description: Attempts to cast key to a Transform object using the cast_transform function described above. If key cannot be cast to a Transform, then False is returned. If key can be cast to a Transform denoted by transform, then (transform if return_transform_if_true else True) is returned.
 
-Function: cast_to_transform_list
-Signature: cast_to_transform_list(key, num_transforms=None)
-Description: If key is a TransformList, then it is returned. If it is a Transform object of is castable to a Transform object, then it is repeated (1 if (num_transforms is None) else num_transforms) times and returned as a TransformList object. Otherwise, key should be a list of Transform objects or objects that can be cast into Transform objects. In this case, if num_transforms is not None, num_transforms should be the length of key.
-
-Function: castable_to_transform_list
-Signature: castable_to_transform_list(key, return_transform_list_if_true=False, num_transforms=None)
-Description: Attempts to cast key to a TransformList object using the cast_transform function described above. If key cannot be cast to a TransformList with the given number of transforms, then False is returned. If key can be cast to a TransformList denoted by transform_list, then (transform_list if return_transform_list_if_true else True) is returned.
-
 
 
 -----------------------------
 distpy.distribution submodule
 -----------------------------
 
-The distpy.distribution module is the main purpose of distpy. It contains a base class called Distribution, which creates an interface with draw, log_value, to_string, and fill_hdf5_group methods and a numparams property all to be implemented in subclasses.
+The distpy.distribution module is the main purpose of distpy. It contains a base class called Distribution, which creates an interface with draw, log_value, to_string, and fill_hdf5_group methods and a numparams property all to be implemented in subclasses. It also provides many specific implemented subclasses of the Distribution class, described below.
 
 Class: Distribution
 Signature: (Distribution class cannot be directly instantiated)
@@ -382,7 +511,7 @@ Description/Notes: A generalizable form of the Gamma function that allows for an
 
 Class: GaussianDistribution
 Signature: GaussianDistribution(mean, covariance, metadata=None)
-Density = p(x) = (e ** (-(np.dot(np.dot((x - mean).T, inv(covariance)), (x - mean)) / 2))) / sqrt(((2 * pi) ** N) * |covariance|)
+Density = p(x) = (e ** (-(np.dot(np.dot(x - mean, inv(covariance)), x - mean) / 2))) / sqrt(det(2 * pi * covariance))
 Domain: All vectors x of same dimension as mean
 Mean: mean
 Variance: covariance
@@ -559,7 +688,7 @@ The distpy.distribution submodule also contains two different containers for Dis
 Class: DistributionList
 Signature: DistributionList(distribution_tuples=[])
 Description: The DistributionList is a subclass of the Distribution parent class that allows for many (independent) Distribution objects to be combined into one, possibly in transformed space. As a result, it implements all of the Distribution methods described above. The initialization argument distribution_tuples should be a list of tuples, tup, that could be individually passed to the add_distribution method (see below) through distribution_list.add_distribution(*tup). The DistributionList class can also be initialized with no arguments, in which case the user can add distributions one at a time using the add_distribution method below. The parameters of the distributions remain unnamed because they can be referred to by their index.
-Method add_distribution(distribution, transforms=None): Adds a distribution to the list, defined in the given transformed space. transforms should be something that can be cast to a TransformList of length distribution.numparams using the cast_to_transform_list function described above in the distpy.transform submodule. If no transforms are given, then the distribution takes inputs and puts out outputs points that are in the same space in which the corresponding distribution is defined.
+Method add_distribution(distribution, transforms=None): Adds a distribution to the list, defined in the given transformed space. transforms should be something that can be cast to a TransformList of length distribution.numparams using the TransformList.cast function described above in the distpy.transform submodule. If no transforms are given, then the distribution takes inputs and puts out outputs points that are in the same space in which the corresponding distribution is defined.
 Method __getitem__(which): Allows for the user to access another DistributionList that only includes the distributions specified through square bracket indexing. which can be an integer distribution index, a sequence of integer distribution indices, or a slice of distribution indices.
 Method __delitem__(which): Using the same indexing convention as the __getitem__ method, this method allows for deletion of an arbitrary number of the included distributions. It is also a magic method that allows for the del keyword to be used alongside square bracket indexing.
 Method continuous_sublist(): Returns a (shallow) copy of this DistributionList containing only the continous distributions.
@@ -567,7 +696,7 @@ Method discrete_sublist(): Returns a (shallow) copy of this DistributionList con
 Method copy(): Returns a deep copy of this DistributionList.
 Method __add__(other): Magic method allowing for two DistributionList objects to be combined using the '+' symbol.
 Method __eq__(other): Allows for equality checking of two DistributionList objects using the '==' symbol.
-Method modify_transforms(new_transform_list): Changes the transforms that define the relationship between the space in which points are returned (the untransformed space) and the space in which Distributions are defined (the transformed space). The argument should be a TransformList of length numparams (or something that can be cast to one using the cast_to_transform_list(key, numparams) method from the distpy.transform submodule).
+Method modify_transforms(new_transform_list): Changes the transforms that define the relationship between the space in which points are returned (the untransformed space) and the space in which Distributions are defined (the transformed space). The argument should be a TransformList of length numparams (or something that can be cast to one using the TransformList.cast(key, numparams) method from the distpy.transform submodule).
 Method transformed_version(): Returns a version of this DistributionList where both the untransformed and transformed space of the new DistributionList are the transformed space of this DistributionList.
 Property transform_list: TransformList object defining the space in which parameters are returned from the underlying distributions.
 Property empty: True if and only if the DistributionList has no Distribution objects in it.
@@ -575,7 +704,7 @@ Property empty: True if and only if the DistributionList has no Distribution obj
 Class: DistributionSet
 Signature: DistributionSet(distribution_tuples=[])
 Description: The DistributionSet class allows for an unordered set of Distribution objects which can be defined in transformed space and can be drawn from and evaluated simultaneously. The initialization argument distribution_tuples should be a list of tuples, tup, that could be individually passed to the add_distribution method (see below) through distribution_set.add_distribution(*tup). The DistributionSet class can also be initialized with no arguments, in which case the user can add distributions one at a time using the add_distribution method below. The parameters are referred to through string names because no indexing is implied in inputs and outputs (both are dictionaries).
-Method add_distribution(distribution, params, transforms=None): Adds a distribution to the set, defined in the given transformed space. params should be a sequence of strings of length distribution.numparams, which is used to define the names of the parameters of this DistributionSet. When accepting inputs or putting out outputs, this DistributionSet uses dictionaries whose keys are these strings. transforms should be something that can be cast to a TransformList of length distribution.numparams using the cast_to_transform_list function described above in the distpy.transform submodule. If no transforms are given, then the distribution takes inputs and puts out outputs points that are in the same space in which the corresponding distribution is defined.
+Method add_distribution(distribution, params, transforms=None): Adds a distribution to the set, defined in the given transformed space. params should be a sequence of strings of length distribution.numparams, which is used to define the names of the parameters of this DistributionSet. When accepting inputs or putting out outputs, this DistributionSet uses dictionaries whose keys are these strings. transforms should be something that can be cast to a TransformList of length distribution.numparams using the TransformList.cast function described above in the distpy.transform submodule. If no transforms are given, then the distribution takes inputs and puts out outputs points that are in the same space in which the corresponding distribution is defined.
 Method find_distribution(parameter): When given a string name in the parameter argument, this method returns a tuple of the form (distribution, index, transform) where distribution is the Distribution object describing this parameter, index is the integer number (starting at 0) of the given parameter in the distribution, and transform is the Transform object defining the space in which Distribution inputs or outputs the parameter.
 Method __getitem__(parameter): Magic method alias of find_distribution above that allows for square bracket indexing when searching.
 Method delete_distribution(parameter): Deletes the distribution describing the given parameter (this also deletes the distribution of other parameters which share a Distribution object with this one).
@@ -640,5 +769,143 @@ Property joint_distribution_set: DistributionSet object containing an approximat
 distpy.jumping submodule
 ------------------------
 
+The distpy.jumping module is similar to the distpy.distribution module except the distributions it contains require a source point to determine a destination point, as is necessary for random walks like Markov Chain Monte Carlo (MCMC) samplers. It also contains a MetropolisHastingsSampler class which uses these distributions as proposals. It contains a base class called JumpingDistribution, which creates an interface with draw, log_value, log_value_difference, to_string, and fill_hdf5_group methods and a numparams property all to be implemented in subclasses. It also provides many specific implemented subclasses of the JumpingDistribution class, described below.
 
+
+Class: JumpingDistribution
+Signature: (JumpingDistribution class cannot be directly instantiated)
+Description: Base class for all jumping/proposal distributions. All JumpingDistribution objects can be saved and loaded to hdf5 file/group objects because they implement the Savable and Loadable classes from the distpy.util module.
+Method draw(source, shape=None, random=np.random): Allows for random values to be drawn from the distribution in the given shape, assuming the given source point (None shape indicates a single random variate). random keyword argument allows for the passing of a mtrand random state.
+Method log_value(source, destination): Computes the log density of points drawn around the given destination when jumping from the given source. -np.inf indicates a 0 probability.
+Method log_value_difference(source, destination): Computes log_value(source,destination)-log_value(destination,source)
+Method plot(self, x_values, scale_factor=1, xlabel='', ylabel='', title='', fontsize=24, ax=None, show=False, **kwargs): Plots the distribution at the given x_values. Uses a matplotlib.pyplot.scatter if the distribution is discrete and matplotlib.pyplot.plot if the distribution is continuous.
+Method __len__(): Allows for checking the number of parameters of Distribution objects using the len function.
+Method __eq__(other): Allows for equality checking of Distribution objects using the '==' symbol.
+Method __ne__(other): Allows for inequality checking of Distribution objects using the '!=' symbol. This automatically returns the opposite of the __eq__ method.
+Property numparams: Integer number of parameters described by the distribution.
+Property is_discrete: Boolean describing whether log_value corresponds to a discrete probability mass function or a continuous probability density function.
+
+Class: AdjacencyJumpingDistribution
+Signature: AdjacencyJumpingDistribution(jumping_probability=0.5, minimum=None, maximum=None)
+Mass: p(destination|source) = (1 - jumping_probability) if destination and source are the same, jumping_probability is distributed evenly among the destination points one away from source and between minimum and maximum (inclusive)
+Description/Notes: This is a 1D discrete jumping distributions defined on a (possibly infinite) subset of the integers. Using it, only jumps of length one are possible and the minimum and maximum allowable values can be imposed efficiently.
+
+Class: BinomialJumpingDistribution
+Signature: BinomialJumpingDistribution(minimum, maximum)
+Mass: p(destination|source) is the same as (e ** BinomialDistribution(p_value(source), span).log_value(destination - minimum)) where p_value(source) is 1/(2*span) if source is minimum, 1-(1/(2*span)) if source is maximum, or (source/span) if source is neither minimum nor maximum and span = maximum - minimum
+Description/Notes: This is another 1D discrete jumping distribution defined on a finite subset of the integers. Unlike the AdjacencyJumpingDistribution, jumps of length greater than 1 are possible. This jumping distribution is based on the (shifted) BinomialDistribution whose mean is source. The only times where this is not rigorously true is when source is the minimum or maximum, in which case the the BinomialDistribution which has a mean 1/2 in from the extremum is used.
+
+Class: GaussianJumpingDistribution
+Signature: GaussianJumpingDistribution(covariance)
+Density: p(destination|source) = (e ** (-(dot(dot(destination - source, inv(covariance)), destination - source)) / 2)) / sqrt(det(2 * pi * covariance))
+Description/Notes: This is the most heavily used proposal distribution in MCMC analysis. It is a continuous distribution whose density at destination is equal to that of a GaussianDistribution with the same covariance and mean equal to source.
+
+Class: GridHopJumpingDistribution
+Signature: GridHopJumpingDistribution(ndim=2, jumping_probability=0.5, minima=None, maxima=None)
+Mass: p(destination|source) = (1 - jumping_probability) if destination and source are the same, jumping_probability is distributed evenly among the destination points one away from the source and between all minima and all maxima.
+Description/Notes: The GridHopJumpingDistribution class generalizes the AdjacencyJumpingDistribution to multiple dimensions. Only one dimension is jumped in at a time.
+
+Class: JumpingDistributionSum
+Signature: JumpingDistributionSum(jumping_distributions, weights)
+Density/mass: weighted sum of underlying jumping distributions, renormalized
+Description/Notes: This class allows for a jumping distribution which is a weighted sum of many jumping distributions.
+
+Class: LocaleIndependentJumpingDistribution
+Signature: LocaleIndependentJumpingDistribution(distribution)
+Density/Mass: p(destination|source) = (e ** distribution.log_value(destination - source))
+Description/Notes: The LocaleIndependentJumpingDistribution generalizes any Distribution object into a JumpingDistribution object by using distribution to determine how far and in which direction the destination should be from the source. Essentially distribution-source has the same density/mass (both discrete and continuous distributions can be made this way) as the given Distribution. For example, GaussianJumpingDistribution(covariance) could be conceptually (i.e. not practically/efficiently) recreated through LocaleIndependentJumpingDistribution(GaussianDistribution(np.zeros(numparams), covariance))
+
+Class: SourceDependentGaussianJumpingDistribution
+Signature: SourceDependentGaussianJumpingDistribution(points, covariances)
+Density: p(destination|source) = (e ** GaussianJumpingDistribution(covariance(source)).log_value(destination - source)) where covariance(source) is the element of covariances whose corresponding element of points is closest to source.
+Description/Notes: This is a first attempt at the creation of a multi-Gaussian jumping distribution, which would be needed in the case of exploring a distribution that is highly non-Gaussian. For a given source, this jumping distribution is Gaussian, but the covariance used is dependent on which of points is closest to source.
+
+Class: SourceIndependentJumpingDistribution
+Signature: SourceIndependentJumpingDistribution(distribution)
+Density/Mass: p(destination|source) = (e ** distribution.log_value(destination))
+Description/Notes: The SourceIndependentJumpingDistribution is another JumpingDistribution seeded by a normal Distribution class. In this case, the density does not depend on the source at all and the destination is merely distributed according to the given Distribution.
+
+Class: TruncatedGaussianJumpingDistribution
+Signature: TruncatedGaussianJumpingDistribution(variance, low=None, high=None)
+Density: p(destination|source) is proportional to (e ** (-((destination - source) ** 2)/(2 * variance))) inside the domain, and 0 outside. The domain is between (-np.inf if (low is None) else low) and (+np.inf if (high is None) else high)
+Description/Notes: This is a 1D GaussianJumpingDistribution which is not allows to exit a specific (possibly infinite) domain between low and high.
+
+Class: UniformJumpingDistribution
+Signature: UniformJumpingDistribution(covariance)
+Density: p(destination|source) is the same as (e ** UniformDistribution(source - sqrt(3 * covariance), source + sqrt(3 * covariance)).log_value(destination)) if univariate and is the same as (e ** EllipticalUniformDistribution(source, covariance).log_value(destination)) if multivariate
+Description/Notes: This class represents a jumping distribution where the destination is distributed through a UniformDistribution centered at source. It can be either univariate or multivariate.
+
+
+The distpy.jumping submodule also contains two different containers for JumpingDistribution objects.
+
+Class: JumpingDistributionList
+Signature: JumpingDistributionList(jumping_distribution_tuples=[])
+Description: The JumpingDistributionList is a subclass of the JumpingDistribution parent class that allows for many (independent) JumpingDistribution objects to be combined into one, possibly in transformed space. As a result, it implements all of the JumpingDistribution methods described above. The initialization argument jumping_distribution_tuples should be a list of tuples, tup, that could be individually passed to the add_distribution method (see below) through jumping_distribution_list.add_distribution(*tup). The JumpingDistributionList class can also be initialized with no arguments, in which case the user can add jumping distributions one at a time using the add_distribution method below. The parameters of the jumping distributions remain unnamed because they can be referred to by their index.
+Method add_distribution(jumping_distribution, transforms=None): Adds a jumping distribution to the list, defined in the given transformed space. transforms should be something that can be cast to a TransformList of length jumping_distribution.numparams using the TransformList.cast function described above in the distpy.transform submodule. If no transforms are given, then the jumping distribution takes inputs and puts out outputs points that are in the same space in which the corresponding jumping distribution is defined.
+Method __getitem__(which): Allows for the user to access another JumpingDistributionList that only includes the jumping distributions specified through square bracket indexing. which can be an integer jumping distribution index, a sequence of integer jumping distribution indices, or a slice of jumping distribution indices.
+Method __delitem__(which): Using the same indexing convention as the __getitem__ method, this method allows for deletion of an arbitrary number of the included jumping distributions. It is also a magic method that allows for the del keyword to be used alongside square bracket indexing.
+Method continuous_sublist(): Returns a (shallow) copy of this JumpingDistributionList containing only the continous jumping distributions.
+Method discrete_sublist(): Returns a (shallow) copy of this JumpingDistributionList containing only the discrete jumping distributions.
+Method __add__(other): Magic method allowing for two JumpingDistributionList objects to be combined using the '+' symbol.
+Method __eq__(other): Allows for equality checking of two JumpingDistributionList objects using the '==' symbol.
+Method modify_transforms(new_transform_list): Changes the transforms that define the relationship between the space in which points are returned (the untransformed space) and the space in which JumpingDistributions are defined (the transformed space). The argument should be a TransformList of length numparams (or something that can be cast to one using the TransformList.cast(key, numparams) method from the distpy.transform submodule).
+Method transformed_version(): Returns a version of this JumpingDistributionList where both the untransformed and transformed space of the new JumpingDistributionList are the transformed space of this JumpingDistributionList.
+Property transform_list: TransformList object defining the space in which parameters are returned from the underlying jumping distributions.
+Property empty: True if and only if the JumpingDistributionList has no JumpingDistribution objects in it.
+
+Class: JumpingDistributionSet
+Signature: JumpingDistributionSet(jumping_distribution_tuples=[])
+Description: The JumpingDistributionSet class allows for an unordered set of JumpingDistribution objects which can be defined in transformed space and can be drawn from and evaluated simultaneously. The initialization argument jumping_distribution_tuples should be a list of tuples, tup, that could be individually passed to the add_distribution method (see below) through jumping_distribution_set.add_distribution(*tup). The JumpingDistributionSet class can also be initialized with no arguments, in which case the user can add jumping distributions one at a time using the add_distribution method below. The parameters are referred to through string names because no indexing is implied in inputs and outputs (both are dictionaries).
+Method add_distribution(jumping_distribution, params, transforms=None): Adds a jumping distribution to the set, defined in the given transformed space. params should be a sequence of strings of length jumping_distribution.numparams, which is used to define the names of the parameters of this JumpingDistributionSet. When accepting inputs or putting out outputs, this JumpingDistributionSet uses dictionaries whose keys are these strings. transforms should be something that can be cast to a TransformList of length jumping_distribution.numparams using the TransformList.cast function described above in the distpy.transform submodule. If no transforms are given, then the jumping_distribution takes inputs and puts out outputs points that are in the same space in which the corresponding distribution is defined.
+Method find_distribution(parameter): When given a string name in the parameter argument, this method returns a tuple of the form (jumping_distribution, index, transform) where jumping_distribution is the JumpingDistribution object describing this parameter, index is the integer number (starting at 0) of the given parameter in the jumping distribution, and transform is the Transform object defining the space in which JumpingDistribution inputs or outputs the parameter.
+Method __getitem__(parameter): Magic method alias of find_distribution above that allows for square bracket indexing when searching.
+Method delete_distribution(parameter): Deletes the jumping distribution describing the given parameter (this also deletes the distribution of other parameters which share a Distribution object with this one).
+Method __delitem__(parameter): Magic method alias of delete_distribution above that allows for square bracket indexing and the use of the del keyword when deleting jumping distributions.
+Method __add__(other): Magic method allowing JumpingDistributionSet objects to be combined using the '+' symbol.
+Method __len__(): Allows user to check the number of parameters in the JumpingDistributionSet without explicitly referencing the numparams property.
+Method __eq__(other): Allows for equality checking with JumpingDistributionSet objects using the '==' symbol.
+Method __ne__(other): Allows for inequality checking with JumpingDistributionSet objects using the '!=' symbol. Always returns the opposite of __eq__(other)
+Method fill_hdf5_group(group): method that saves the JumpingDistributionSet to an h5py.Group (such as an open hdf5 file or some directory inside it)
+Method save(file_name): method that saves the JumpingDistributionSet to a new hdf5 file located at file_name.
+Method load_from_hdf5_group(group): Static method that loads and returns a JumpingDistributionSet object from a h5py.Group (such as an open hdf5 file or some directory inside it).
+Method load(file_name): Static method that loads and returns a JumpingDistributionSet object from an hdf5 file located at file_name.
+Method draw(source, shape=None, random=numpy.random): Draws a random sample from the JumpingDistributionSet when source is a dictionary of source variable values. This function returns a dictionary whose keys are parameter names and whose values are random values of given shape (setting shape to None returns single values as keys). The random keyword argument allows the user to supply a RandomState (the default is to use simply numpy.random).
+Method log_value(source, destination): Evaluates the log density of destination when jumping from source (in untransformed space). source and destination should be dictionaries with parameter names as keys and variable values as values.
+Method log_value_difference(source, destination): Evaluates (log_value(source, destination) - log_value(destination, source))
+Method continuous_subset(): Returns a version of this JumpingDistributionSet where only the continuous parameters/jumping distributions are included.
+Method discrete_subset(): Returns a version of this JumpingDistributionSet where only the discrete parameters/jumping distributions are included.
+Method jumping_distribution_list(parameters): Returns a JumpingDistributionList including the jumping distributions in the order corresponding to the given parameters.
+Method modify_parameters(function): Modifies the names of the parameters of this jumping distribution. The argument should be a Callable which, when called with old parameter names as inputs, returns new parameter names as outputs.
+Method modify_transforms(**new_transforms): Changes the transforms that define the relationship between the space in which points are returned (the untransformed space) and the space in which JumpingDistributions are defined (the transformed space). The keyword arguments given to this function should include all parameters as keys and the new Transform objects (or things that can be cast to Transform objects using the cast_to_transform(key) method from the distpy.transform submodule) as values.
+Method transformed_version(): Returns a version of this JumpingDistributionSet where both the untransformed space and the transformed space of the new DistributionSet are the transformed space of this JumpingDistributionSet.
+Method plot_univariate_histogram(source, ndraw, parameter, in_transformed_space=True, reference_value=None, bins=None, matplotlib_function='fill_between', show_intervals=False, norm_by_max=True, xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False, contour_confidence_levels=0.95, **kwargs): Plots a univariate histogram of the given parameter assuming that the JumpingDistributionSet is jumping from source using the univariate_histogram function of the distpy.util submodule. See the description of that function for documentation on the keyword_arguments. ndraw should be an integer number of samples to draw to make the histogram.
+Method plot_bivariate_histogram(source, ndraw, parameter1, parameter2, in_transformed_space=True, reference_value_mean=None, reference_value_covariance=None, bins=None, matplotlib_function='imshow', xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False, contour_confidence_levels=0.95, **kwargs): Plots a bivariate histogram of the given parameters assuming that the JumpingDistributionSet is jumping from source using the bivariate_histogram function of the distpy.util submodule. See the description of that function for documentation on the keyword arguments. ndraw should be an integer number of samples to draw to make the histogram.
+Method triangle_plot(source, ndraw, parameters=None, in_transformed_space=True, figsize=(8, 8), fig=None, show=False, kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100, plot_type='contour', reference_value_mean=None, reference_value_covariance=None, contour_confidence_levels=0.95, parameter_renamer=(lambda x: x), tick_label_format_string='{x:.3g}'): Makes a triangle plot of the given parameters (None means all parameters are plotted) assuming that the JumpingDistributionSet is jumping from source using the triangle_plot function from the distpy.util submodule. See the description of that function for documentation of the keyword arguments. ndraw should be an integer number of samples to draw to make the histograms.
+Property params: Sequence of strings representing the parameters described by this jumping distribution in an internal order.
+Property numparams: Integer number of parameters described by the JumpingDistributionSet.
+Property continuous_params: Returns a list of strings representing the continuous parameters described by this jumping distribution.
+Property discrete_params: Returns a list of strings representing the discrete parameters described by this jumping distribution.
+Property empty: True if and only if the DistributionSet has no Distribution objects in it.
+Property transform_set: TransformSet object yielding the Transform objects corresponding to eahc parameter name.
+
+
+The distpy.jumping submodule provides the following methods to load distributions from hdf5 files or groups.
+
+Function: load_jumping_distribution_from_hdf5_group
+Signature: load_jumping_distribution_from_hdf5_group(group, *args)
+Description: Loads a JumpingDistribution object from the given h5py.Group (such as an open hdf5 file or a subdirectory of it), where it was earlier saved using the fill_hdf5_group(group) method of the JumpingDistribution class.
+
+Function: load_jumping_distribution_from_hdf5_file
+Signature: load_jumping_distribution_from_hdf5_file(file_name)
+Description: Loads a JumpingDistribution object from an existing hdf5 file at the given location.
+
+
+The distpy.jumping submodule also provides the MetropolisHastingsSampler class, a conceptually simple implementation of the Metropolis Hastings Markov Chain Monte Carlo sampler:
+
+Class: MetropolisHastingsSampler
+Signature: MetropolisHastingsSampler(parameters, nwalkers, logprobability,\
+        jumping_distribution_set, nthreads=1, args=[], kwargs={})
+Description: A subclass of the emcee sampler implementing the simple MetropolisHastings sampler with an arbitrary JumpingDistributionSet proposal distribution jumping_distribution_set. parameters should be a list of strings. nwalkers should be a positive integer indicating the number of independent iterates to evolve. args and kwargs are positional and keyword arguments passed to logprobability, which should be a callable that, when given the position of a current iterate along with args and kwargs, returns the log density of the posterior distribution to explore. nthreads should be a positive integer determining the number of threads to use in calculating the logprobability many times. This generally only provides a benefit if logprobability requires more than a few tens of ms to evaluate.
+Method sample(point, lnprob=None, randomstate=None, thin=1, storechain=True, iterations=1): A generator that, at each evaluation, yields (pos, lnprob, rstate) where pos is the current positions of the chain in the parameter space, lnprob is the value of the log posterior at pos, and rstate is the current state of the random number generator. point should be a 2D numpy.ndarray of shape (nwalkers, numparams), lnprob (if given) should be a 1D numpy.ndarray of shape (nwalkers,), and rstate should be a state of a random number generator. thin allows user to control how often points should be saved to memory. storechain allows user to control whether chain should be saved to memory as samples are generated or if the user will do that themself. iterations determines the number of steps each walker should take upon each evaluation.
+Method reset(): Resets the sampler, clearing chain, lnprob, and other properties.
 

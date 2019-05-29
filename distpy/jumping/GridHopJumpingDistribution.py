@@ -51,11 +51,17 @@ class GridHopJumpingDistribution(JumpingDistribution):
         """
         Setter for the number of parameters this distribution describes.
         
-        value: a positive integer
+        value: an integer greater than 1
         """
         if type(value) in int_types:
             if value > 0:
-                self._ndim = value
+                if value > 1:
+                    self._ndim = value
+                else:
+                    raise ValueError("The GridHopJumpingDistribution class " +\
+                        "should not be initialized with only one parameter " +\
+                        "as the AdjacencyJumpingDistribution performs the " +\
+                        "exact same task more efficiently.")
             else:
                 raise ValueError("ndim was set to a non-positive integer.")
         else:

@@ -20,8 +20,7 @@ import numpy as np
 import numpy.random as rand
 from ..util import Savable, Loadable, int_types, sequence_types,\
     univariate_histogram, bivariate_histogram, triangle_plot
-from ..transform import cast_to_transform_list, TransformList, TransformSet,\
-    NullTransform
+from ..transform import NullTransform, TransformList, TransformSet
 from .Distribution import Distribution
 from .DistributionList import DistributionList
 from .LoadDistribution import load_distribution_from_hdf5_group
@@ -134,7 +133,7 @@ class DistributionSet(Savable, Loadable):
                     string if the distribution is univariate)
         """
         if isinstance(distribution, Distribution):
-            transforms = cast_to_transform_list(transforms,\
+            transforms = TransformList.cast(transforms,\
                 num_transforms=distribution.numparams)
             if distribution.numparams == 1:
                 if type(params) is str:
@@ -298,7 +297,7 @@ class DistributionSet(Savable, Loadable):
                     these_new_transforms.append(new_transforms[param])
                 else:
                     these_new_transforms.append(transforms[iparam])
-            these_new_transforms = cast_to_transform_list(these_new_transforms)
+            these_new_transforms = TransformList(*these_new_transforms)
             new_data.append((distribution, params, these_new_transforms))
         return DistributionSet(distribution_tuples=new_data)
 

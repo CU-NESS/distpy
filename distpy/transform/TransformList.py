@@ -12,6 +12,7 @@ from .CompositeTransform import CompositeTransform
 from .CastTransform import cast_to_transform, castable_to_transform
 from .LoadTransform import load_transform_from_hdf5_group
 from .InvertTransform import invert_transform
+from .CastTransform import castable_to_transform, cast_to_transform
 
 class TransformList(Savable, Loadable):
     """
@@ -25,6 +26,104 @@ class TransformList(Savable, Loadable):
                     objects
         """
         self.transforms = transforms
+    
+    @staticmethod
+    def cast(key, num_transforms=None):
+        """
+        Casts key into a TransformList object. If num_transforms is non-None,
+        this function can also cast to a TransformList object of a specific
+        length.
+        
+        key: either a TransformList, a list of Transforms (or things that can
+             be cast to transforms using the cast_to_transform function), or a
+             single transform
+        num_transforms: if None, 1) if key is a TransformList or list of
+                                    Transforms (or things that can be cast to
+                                    transforms using the cast_to_transform
+                                    function), then key implies num_transforms
+                                    without it needing to be given
+                                 2) if key is a Transform (or something that
+                                    can be cast to a Transform using the
+                                    cast_to_transform function), a
+                                    TransformList of length 1 is returned
+                                    containing only that Transform
+                        if positive integer, 1) if key is TransformList or list
+                                                of Transforms (or things that
+                                                can be cast to transforms using
+                                                the cast_to_transform
+                                                function), key is checked to
+                                                ensure it has this length
+                                             2) if key is Transform, key is
+                                                repeated this many times in the
+                                                returned TransformList.
+        
+        returns: a TransformList object casted from the key, guaranteed to have
+                 length num_transforms if num_transforms is not None
+        """
+        if isinstance(key, TransformList):
+            if (type(num_transforms) is not type(None)) and\
+                (len(key) != num_transforms):
+                raise ValueError("The given TransformList was not of the " +\
+                    "specified length. So, it could not be cast " +\
+                    "successfully into a TransformList of the desired size.")
+            else:
+                return key
+        elif type(key) in sequence_types:
+            if (type(num_transforms) is not type(None)) and\
+                (len(key) != num_transforms):
+                raise ValueError("The given sequence was not of the " +\
+                    "specified length. So, it could not be cast " +\
+                    "successfully into a TransformList of the desired size.")
+            else:
+                return TransformList(*key)
+        elif castable_to_transform(key):
+            transform = cast_to_transform(key)
+            if type(num_transforms) is type(None):
+                return TransformList(transform)
+            else:
+                return TransformList(*([transform] * num_transforms))
+        else:
+            raise TypeError("key could not be cast to a TransformList object.")
+    
+    @staticmethod
+    def castable(key, num_transforms=None,\
+        return_transform_list_if_true=False):
+        """
+        Function determining whether the given key can be cast into a
+        TransformList object.
+    
+        key: object to attempt to check for castability to a transform list
+             (see cast staticmethod for what keys will work)
+        num_transforms: number of transforms in TransformList to cast (see cast
+                        staticmethod with details on this parameter)
+        return_transform_list_if_true: 1) If True and the given key can be
+                                          successfully cast to a TransformList
+                                          object (with the given number of
+                                          transforms if num_transforms is
+                                          given), that actual TransformList
+                                          object is returned.
+                                       2) Otherwise, this parameter has no
+                                          effect. If False (default), this
+                                          function is guaranteed to return a
+                                          bool.
+    
+        returns: False: if key cannot be cast into a Transform without an error
+                 True: if key can be cast into a Transform without an error and
+                       return_transform_if_true is False
+                 a Transform object: if key can be cast into a Transform
+                                     without an error and
+                                     return_transform_if_true is True
+        """
+        try:
+            transform_list =\
+                TransformList.cast(key, num_transforms=num_transforms)
+        except:
+            return False
+        else:
+            if return_transform_list_if_true:
+                return transform_list
+            else:
+                return True
     
     @property
     def transforms(self):

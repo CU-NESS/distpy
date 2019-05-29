@@ -65,7 +65,7 @@ class GaussianDistribution(Distribution):
                 raise ValueError("The mean of a GaussianDistribution was " +\
                     "set to something like an empty array.")
             else:
-                self._mean = np.matrix(np.array(value))
+                self._mean = np.matrix(value)
         else:
             raise ValueError("The mean of a GaussianDistribution is not of " +\
                 "a recognizable type.")
@@ -227,7 +227,6 @@ class GaussianDistribution(Distribution):
             new_mean = self.mean.A[0] * other
             new_covariance = self.covariance.A * (other ** 2)
         return GaussianDistribution(new_mean, new_covariance)
-        
     
     def __rmul__(self, other):
         """

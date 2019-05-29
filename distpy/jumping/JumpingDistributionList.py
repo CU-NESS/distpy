@@ -22,7 +22,7 @@ Description: A container which can hold an arbitrary number of jumping
 import numpy as np
 import numpy.random as rand
 from ..util import int_types, numerical_types, sequence_types
-from ..transform import cast_to_transform_list, TransformList, NullTransform
+from ..transform import TransformList, NullTransform
 from .JumpingDistribution import JumpingDistribution
 
 class JumpingDistributionList(JumpingDistribution):
@@ -32,7 +32,7 @@ class JumpingDistributionList(JumpingDistribution):
     log_value on all of its constituent distributions, and draw, which draws
     from all of its constituent distributions.
     """
-    def __init__(self, distribution_tuples=[]):
+    def __init__(self, jumping_distribution_tuples=[]):
         """
         Creates a new JumpingDistributionList with the given distributions
         inside.
@@ -46,16 +46,16 @@ class JumpingDistributionList(JumpingDistribution):
                                      parameters of jumping_distribution
         """
         self._data = []
-        if type(distribution_tuples) in sequence_types:
-            for idistribution in range(len(distribution_tuples)):
-                this_tup = distribution_tuples[idistribution]
+        if type(jumping_distribution_tuples) in sequence_types:
+            for idistribution in range(len(jumping_distribution_tuples)):
+                this_tup = jumping_distribution_tuples[idistribution]
                 if (type(this_tup) in sequence_types):
                     self.add_distribution(*this_tup)
                 else:
                     raise ValueError("One of the distribution tuples " +\
-                        "provided to the initializer of a DistributionList " +\
-                        "was not a sequence of length 2 like " +\
-                        "(distribution, transforms).")
+                        "provided to the initializer of a " +\
+                        "JumpingDistributionList was not a sequence of " +\
+                        "length 2 like (jumping_distribution, transforms).")
         else:
             raise ValueError("The jumping_distribution_tuples argument " +\
                 "given to the initializer was not list-like. It should be " +\
@@ -94,7 +94,7 @@ class JumpingDistributionList(JumpingDistribution):
                     string if the jumping distribution is univariate)
         """
         if isinstance(jumping_distribution, JumpingDistribution):
-            transforms = cast_to_transform_list(transforms,\
+            transforms = TransformList.cast(transforms,\
                 num_transforms=jumping_distribution.numparams)
             self._data.append((jumping_distribution, transforms))
         else:
@@ -122,7 +122,7 @@ class JumpingDistributionList(JumpingDistribution):
         """
         if isinstance(other, JumpingDistributionList):
             return JumpingDistributionList(\
-                distribution_tuples=self._data+other._data)
+                jumping_distribution_tuples=self._data+other._data)
         else:
             raise TypeError("Can only add JumpingDistributionList objects " +\
                 "to other JumpingDistributionList objects.")
@@ -155,7 +155,7 @@ class JumpingDistributionList(JumpingDistribution):
                  distribution but different transforms
         """
         new_transform_list =\
-            cast_to_transform_list(transforms, num_transforms=self.numparams)
+            TransformList.cast(transforms, num_transforms=self.numparams)
         (new_data, running_index) = ([], 0)
         for (jumping_distribution, transforms) in self._data:
             new_running_index = running_index + jumping_distribution.numparams
@@ -163,7 +163,7 @@ class JumpingDistributionList(JumpingDistribution):
                 new_transform_list[running_index:new_running_index]
             running_index = new_running_index
             new_data.append((jumping_distribution, new_transforms))
-        return JumpingDistributionList(distribution_tuples=new_data)
+        return JumpingDistributionList(jumping_distribution_tuples=new_data)
     
     def draw(self, source, shape=None, random=rand):
         """
@@ -339,10 +339,10 @@ class JumpingDistributionList(JumpingDistribution):
         """
         if type(which) in int_types:
             jumping_distribution_list = JumpingDistributionList(\
-                distribution_tuples=[self._data[which]])
+                jumping_distribution_tuples=[self._data[which]])
         elif isinstance(which, slice):
-            jumping_distribution_list =\
-                JumpingDistributionList(distribution_tuples=self._data[which])
+            jumping_distribution_list = JumpingDistributionList(\
+                jumping_distribution_tuples=self._data[which])
         elif type(which) in sequence_types:
             jumping_distribution_list = JumpingDistributionList()
             for which_element in which:
@@ -526,5 +526,5 @@ class JumpingDistributionList(JumpingDistribution):
                 (jumping_distribution, transform_list))
             ituple += 1
         return JumpingDistributionList(\
-            distribution_tuples=jumping_distribution_tuples)
+            jumping_distribution_tuples=jumping_distribution_tuples)
 

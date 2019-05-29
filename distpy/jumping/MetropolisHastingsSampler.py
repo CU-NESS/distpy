@@ -21,6 +21,13 @@ else:
     have_multiprocess = True
 
 try:
+    from emcee import Sampler as emceeSampler
+except:
+    have_emcee = False
+else:
+    have_emcee = True
+
+try:
     # this runs with no issues in python 2 but raises error in python 3
     basestring
 except:
@@ -120,6 +127,10 @@ class MetropolisHastingsSampler(emceeSampler):
         args: extra positional arguments to pass to logprobability
         kwargs: extra keyword arguments to pass to logprobability
         """
+        if not have_emcee:
+            raise ImportError("Right now, the MetropolisHastingsSampler " +\
+                "class can only be initialized if emcee is installed " +\
+                "because it derives from emcee's Sampler class.")
         self.parameters = parameters
         self.nwalkers = nwalkers
         super(MetropolisHastingsSampler, self).__init__(len(self.parameters),\
@@ -291,7 +302,7 @@ class MetropolisHastingsSampler(emceeSampler):
                     the fact (for burn-in for example) set storechain to False.
 
         At each iteration, this generator yields (pos, lnprob, rstate) where:
-                pos: the current positions of the chain in the paramete space
+                pos: the current positions of the chain in the parameter space
                 lnprob: the value of the log posterior at pos
                 rstate: the current state of the random number generator
         """
