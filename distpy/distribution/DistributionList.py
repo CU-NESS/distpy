@@ -569,8 +569,7 @@ class DistributionList(Distribution):
         copied = DistributionList()
         for (distribution, transforms) in self._data:
             copied_distribution = distribution.copy()
-            copied_transforms =\
-                [transform.to_string() for transform in transforms]
+            copied_transforms = [transform for transform in transforms]
             copied.add_distribution(copied_distribution, copied_transforms)
         return copied
     

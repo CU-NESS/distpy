@@ -87,6 +87,60 @@ class TransformSet(Savable, Loadable):
                 for key in self.transforms})
         return self._inverse
     
+    def subset(self, parameters):
+        """
+        Creates and returns another TransformSet object corresponding to the
+        transforms in this TransformSet that are indexed by the given
+        parameters.
+        
+        parameters: set of strings
+        
+        returns: a TransformSet object
+        """
+        if isinstance(parameters, set):
+            if all([isinstance(element, basestring) for element in key]):
+                if all([(element in self.transforms) for element in key]):
+                    new_transforms =\
+                        {element: self.transforms[element] for element in key}
+                    return TransformSet(new_transforms)
+                else:
+                    raise KeyError("At least one of the strings given was " +\
+                        "not a key for a transform in this TransformSet.")
+            else:
+                raise KeyError("Not all elements of the given set were " +\
+                    "strings.")
+        else:
+            raise TypeError("parameters given to subset was not a set.")
+    
+    def transform_list(self, parameters):
+        """
+        Creates and returns a TransformList object corresponding to the
+        transforms in this TransformSet that are indexed by the given
+        parameters.
+        
+        parameters: sequence of strings which are unique keys of transforms in
+                    this TransformSet
+        
+        returns: a TransformList object of the same length as parameters
+        """
+        if type(parameters) in sequence_types:
+            if all([isinstance(element, basestring)\
+                for element in parameters]):
+                if all([(element in self.transforms)\
+                    for element in parameters]):
+                    new_transforms =\
+                        [self.transforms[element] for element in parameters]
+                    return TransformList(*new_transforms)
+                else:
+                    raise KeyError("At least one of the strings given was " +\
+                        "not a key for a transform in this TransformSet.")
+            else:
+                raise TypeError("Not all elements of the given sequence " +\
+                    "were strings.")
+        else:
+            raise TypeError("parameters given to transform_list was not a " +\
+                "sequence.")
+    
     def __getitem__(self, key):
         """
         Gets the transform associated with the given key.
@@ -105,29 +159,9 @@ class TransformSet(Savable, Loadable):
                                                            order given in key
         """
         if isinstance(key, set):
-            if all([isinstance(element, basestring) for element in key]):
-                if all([(element in self.transforms) for element in key]):
-                    new_transforms =\
-                        {element: self.transforms[element] for element in key}
-                    return TransformSet(new_transforms)
-                else:
-                    raise KeyError("At least one of the strings given was " +\
-                        "not a key for a transform in this TransformSet.")
-            else:
-                raise KeyError("Not all elements of the given set were " +\
-                    "strings.")
+            return self.subset(key)
         elif type(key) in sequence_types:
-            if all([isinstance(element, basestring) for element in key]):
-                if all([(element in self.transforms) for element in key]):
-                    new_transforms =\
-                        [self.transforms[element] for element in key]
-                    return TransformList(*new_transforms)
-                else:
-                    raise KeyError("At least one of the strings given was " +\
-                        "not a key for a transform in this TransformSet.")
-            else:
-                raise TypeError("Not all elements of the given sequence " +\
-                    "were strings.")
+            return self.transform_list(key)
         elif key in self.transforms:
             return self.transforms[key]
         else:

@@ -720,6 +720,26 @@ class TransformList(Savable, Loadable):
                 transforms.append(CompositeTransform(inner, outer))
         return TransformList(*transforms)
     
+    def sublist(self, indices):
+        """
+        Creates and returns a sublist of this TransformList corresponding to
+        the given indices.
+        
+        indices: either a sequence of integer indices or a slice
+        
+        returns a TransformList object
+        """
+        if isinstance(indices, slice):
+            return TransformList(*self.transforms[indices])
+        elif type(indices) in sequence_types:
+            if all([(type(index) in int_types) for index in indices]):
+                return TransformList(*[self.transforms[index]\
+                    for index in indices])
+            else:
+                raise TypeError("Not all indices given were integers.")
+        else:
+            raise TypeError("indices was set to a non-sequence.")
+    
     def __getitem__(self, index):
         """
         Gets a specific element or set of elements of the Transforms sequence.
@@ -727,19 +747,13 @@ class TransformList(Savable, Loadable):
         index: the index of the element(s) to retrieve. Can be an integer, a
                slice, or a sequence of integers.
         
-        returns: a Transform object or a TransformList object
+        returns: a Transform object if index is an integer or a TransformList
+                 object otherwise
         """
         if type(index) in int_types:
             return self.transforms[index]
-        elif isinstance(index, slice):
-            return TransformList(*self.transforms[index])
-        elif type(index) in sequence_types:
-            if all([type(element) in int_types for element in index]):
-                return TransformList(*[self.transforms[element]\
-                    for element in index])
-            else:
-                raise TypeError("Not all elements of sequence index were " +\
-                    "integers.")
+        elif isinstance(index, slice) or (type(index) in sequence_types):
+            return self.sublist(index)
         else:
             raise TypeError("index type not recognized.")
     
