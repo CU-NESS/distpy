@@ -19,26 +19,18 @@ from distpy import GaussianDistribution, DistributionSet,\
     GaussianJumpingDistribution, JumpingDistributionSet,\
     MetropolisHastingsSampler
 
-try:
-    import emcee
-except:
-    print("The MetropolisHastingsSampler class and " +\
-        "metropolis_hastings_sampler example script cannot be used/run if " +\
-        "emcee is not installed.")
-    sys.exit(0)
-
 if len(sys.argv) == 1:
     print("Using nthreads=1 because none was given. To give one, call this " +\
         "script with `python metropolis_hastings_sampler.py $NTHREADS`")
-    nthreads = 1
+    num_threads = 1
 else:
-    nthreads = int(sys.argv[1])
+    num_threads = int(sys.argv[1])
 
 parameters = ['x', 'y', 'z']
 mean = np.array([1, 2, 4])
-nwalkers = 4
-numsteps = 10
-rstate = None
+num_walkers = 4
+num_steps = 10
+random_state = None
 wait_time = 0.1
 
 def logprobability(pars):
@@ -50,20 +42,21 @@ guess_distribution_set = DistributionSet([\
 jumping_distribution_set = JumpingDistributionSet([\
     (GaussianJumpingDistribution(covariance), parameters, None)])
 
-sampler = MetropolisHastingsSampler(parameters, nwalkers, logprobability,\
-    jumping_distribution_set, nthreads=nthreads)
+sampler = MetropolisHastingsSampler(parameters, num_walkers, logprobability,\
+    jumping_distribution_set, num_threads=num_threads)
 
-guesses = guess_distribution_set.draw(nwalkers)
+guesses = guess_distribution_set.draw(num_walkers)
 guesses = np.stack([guesses[parameter] for parameter in parameters], axis=1)
 lnprob = np.array(list(map(logprobability, guesses)))
 
 start_time = time.time()
-sampler.run_mcmc(guesses, numsteps, rstate0=rstate, lnprob0=lnprob)
+sampler.run_mcmc(guesses, num_steps, initial_random_state=random_state,\
+    initial_lnprob=lnprob)
 end_time = time.time()
 duration = end_time - start_time
 
-print("(nwalkers, ncheckpoints, nparameters)={}".format(\
-    (nwalkers, numsteps, len(parameters))))
+print("(num_walkers, num_steps, num_parameters)={}".format(\
+    (num_walkers, num_steps, len(parameters))))
 print("sampler.chain.shape={}".format(sampler.chain.shape))
 print("sampler.lnprobability.shape={}".format(sampler.lnprobability.shape))
 print("The sampling took {:.6f} s.".format(duration))
