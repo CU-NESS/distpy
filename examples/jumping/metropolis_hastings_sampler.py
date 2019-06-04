@@ -19,6 +19,14 @@ from distpy import GaussianDistribution, DistributionSet,\
     GaussianJumpingDistribution, JumpingDistributionSet,\
     MetropolisHastingsSampler
 
+try:
+    import emcee
+except:
+    print("The MetropolisHastingsSampler class and " +\
+        "metropolis_hastings_sampler example script cannot be used/run if " +\
+        "emcee is not installed.")
+    sys.exit(0)
+
 if len(sys.argv) == 1:
     print("Using nthreads=1 because none was given. To give one, call this " +\
         "script with `python metropolis_hastings_sampler.py $NTHREADS`")
