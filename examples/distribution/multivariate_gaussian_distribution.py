@@ -15,9 +15,9 @@ from distpy import GaussianDistribution
 def_cm = cm.bone
 sample_size = int(1e5)
 
-mmean = [-7., 20.]
-mcov = [[125., 75.], [75., 125.]]
-distribution = GaussianDistribution(mmean, mcov)
+mean = [-7., 20.]
+covariance = [[125., 75.], [75., 125.]]
+distribution = GaussianDistribution(mean, covariance)
 hdf5_file_name = 'TEST_DELETE_THIS.hdf5'
 distribution.save(hdf5_file_name)
 try:
@@ -27,7 +27,9 @@ except:
     raise
 else:
     os.remove(hdf5_file_name)
-assert distribution.numparams == 2
+assert(distribution.numparams == 2)
+assert(GaussianDistribution([0, 0], [[1, 0], [0, 1]]) ==\
+    GaussianDistribution.combine(*([GaussianDistribution(0, 1)] * 2)))
 t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
@@ -38,7 +40,8 @@ mgp_ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
 pl.hist2d(mgp_xs, mgp_ys, bins=100, cmap=def_cm)
 pl.title(('Multivariate Gaussian prior (2 dimensions) with ' +\
-    'mean={0!s} and covariance={1!s}').format(mmean, mcov), size='xx-large')
+    'mean={0!s} and covariance={1!s}').format(mean, covariance),\
+    size='xx-large')
 pl.xlabel('x', size='xx-large')
 pl.ylabel('y', size='xx-large')
 pl.tick_params(labelsize='xx-large', width=2, length=6)

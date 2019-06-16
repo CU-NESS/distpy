@@ -6,15 +6,17 @@ Date: Feb 12 2018
 Description: File containing class representing Gaussian distribution
              (univariate or multivariate).
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
-import numpy.linalg as la
+import numpy.linalg as npla
+import scipy.linalg as scila
 from scipy.special import erfinv
 from ..util import numerical_types, int_types, sequence_types,\
     create_hdf5_dataset, get_hdf5_value
 from .Distribution import Distribution
 
-two_pi = 2 * np.pi
+natural_log_two_pi = np.log(2 * np.pi)
 
 class GaussianDistribution(Distribution):
     """
@@ -34,8 +36,29 @@ class GaussianDistribution(Distribution):
         """
         self.mean = mean
         self.covariance = covariance
-        self.square_root_covariance
         self.metadata = metadata
+    
+    @staticmethod
+    def combine(*distributions):
+        """
+        Combines many GaussianDistribution objects into one by concatenating
+        their means and covariance matrices.
+        
+        *distributions: a sequence of GaussianDistribution objects to combine
+        
+        returns: a single GaussianDistribution object 
+        """
+        if all([isinstance(distribution, GaussianDistribution)\
+            for distribution in distributions]):
+            new_mean = np.concatenate([distribution.mean.A[0]\
+                for distribution in distributions])
+            new_covariance = scila.block_diag(*[distribution.covariance.A\
+                for distribution in distributions])
+            return GaussianDistribution(new_mean, new_covariance)
+        else:
+            raise TypeError("At least one of the distributions given to the " +\
+                "GaussianDistribution class' combine function was not a " +\
+                "GaussianDistribution.")
     
     @property
     def mean(self):
@@ -106,7 +129,7 @@ class GaussianDistribution(Distribution):
             elif value.shape == (self.numparams,):
                 self._covariance = np.matrix(np.diag(value))
             elif value.shape == ((self.numparams,) * 2):
-                self._covariance = np.matrix((value + value.T) / 2.)
+                self._covariance = np.matrix((value + value.T) / 2)
             else:
                 raise ValueError("The covariance given to a " +\
                     "GaussianDistribution was not castable to an array of " +\
@@ -115,6 +138,7 @@ class GaussianDistribution(Distribution):
         else:
             raise ValueError("The mean of a GaussianDistribution is " +\
                 "array-like but its covariance isn't matrix like.")
+        self.square_root_covariance
     
     @property
     def log_determinant_covariance(self):
@@ -123,7 +147,7 @@ class GaussianDistribution(Distribution):
         covariance matrix.
         """
         if not hasattr(self, '_log_determinant_covariance'):
-            self._log_determinant_covariance = la.slogdet(self.covariance)[1]
+            self._log_determinant_covariance = npla.slogdet(self.covariance)[1]
         return self._log_determinant_covariance
     
     @property
@@ -132,7 +156,7 @@ class GaussianDistribution(Distribution):
         Property storing the inverse of the covariance.
         """
         if not hasattr(self, '_inverse_covariance'):
-            self._inverse_covariance = la.inv(self.covariance)
+            self._inverse_covariance = npla.inv(self.covariance)
         return self._inverse_covariance
 
     @property
@@ -241,7 +265,7 @@ class GaussianDistribution(Distribution):
         Property storing the square root of the covariance matrix.
         """
         if not hasattr(self, '_square_root_covariance'):
-            (eigenvalues, eigenvectors) = la.eigh(self.covariance.A)
+            (eigenvalues, eigenvectors) = npla.eigh(self.covariance.A)
             if np.any(eigenvalues <= 0):
                 raise ValueError(("Something went wrong, causing the " +\
                     "square root of the covariance matrix of this " +\
@@ -282,11 +306,12 @@ class GaussianDistribution(Distribution):
             if first.numparams == second.numparams:
                 dimension = first.numparams
                 delta = first.mean.A[0] - second.mean.A[0]
-                sigma_Q_inverse = la.inv(second.covariance.A)
+                sigma_Q_inverse = npla.inv(second.covariance.A)
                 sigma_P_times_sigma_Q_inverse =\
                     np.dot(first.covariance.A, sigma_Q_inverse)
                 return ((np.sum(np.diag(sigma_P_times_sigma_Q_inverse)) -\
-                    dimension - la.slogdet(sigma_P_times_sigma_Q_inverse)[1] +\
+                    dimension -\
+                    npla.slogdet(sigma_P_times_sigma_Q_inverse)[1] +\
                     np.dot(delta, np.dot(sigma_Q_inverse, delta))) / 2)
             else:
                 raise ValueError("The two given distributions do not have " +\
@@ -362,9 +387,9 @@ class GaussianDistribution(Distribution):
                 "be if distribution is univariate) or of a list type " +\
                 "(should be if distribution is multivariate).")
         expon =\
-            np.float64(minus_mean * self.inverse_covariance * minus_mean.T) / 2.
-        return -1. * ((self.log_determinant_covariance / 2.) + expon +\
-            ((self.numparams * np.log(two_pi)) / 2.))
+            np.float64(minus_mean * self.inverse_covariance * minus_mean.T) / 2
+        return -1. * ((self.log_determinant_covariance / 2) + expon +\
+            ((self.numparams * natural_log_two_pi) / 2))
 
     def to_string(self):
         """
@@ -423,7 +448,7 @@ class GaussianDistribution(Distribution):
         remaining_indices = np.array([index\
             for index in np.arange(self.numparams)\
             if index not in known_indices])
-        new_covariance = la.inv(\
+        new_covariance = npla.inv(\
             self.inverse_covariance.A[:,remaining_indices][remaining_indices])
         known_mean_displacement = values - self.mean.A[0][known_indices]
         new_mean =\

@@ -84,7 +84,14 @@ def create_hdf5_dataset(group, name, data=None, link=None):
             raise ValueError("No data or link to data was given!")
         elif issubclass(np.array(data).dtype.type, basestring):
             dataset = group.create_dataset(name, data=np.array([]))
-            dataset.attrs['__string_sequence_robust__'] = np.array(data)
+            dataset.attrs['__num_strings__'] = len(data)
+            for index in range(len(data)):
+                if isinstance(data[index], basestring):
+                    dataset.attrs['{}'.format(index)] = data[index]
+                else:
+                    raise ValueError("Multi-dimensional string arrays " +\
+                        "cannot currently be saved with the " +\
+                        "create_hdf5_dataset function.")
             return dataset
         else:
             return group.create_dataset(name, data=data)
@@ -123,6 +130,9 @@ def get_hdf5_value(obj):
     try:
         if '__string_sequence_robust__' in obj.attrs:
             return obj.attrs['__string_sequence_robust__']
+        elif '__num_strings__' in obj.attrs:
+            return np.array([obj.attrs['{}'.format(index)]\
+                for index in range(obj.attrs['__num_strings__'])])
         else:
             return obj[()]
     except:

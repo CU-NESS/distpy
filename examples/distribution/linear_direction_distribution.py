@@ -10,8 +10,13 @@ from __future__ import division
 import os, time
 import numpy as np
 import matplotlib.pyplot as pl
-import healpy as hp
 from distpy import GaussianDistribution, LinearDirectionDistribution
+try:
+    import healpy as hp
+except ImportError:
+    print("The example scripts displaying the DirectionDistribution " +\
+        "subclasses cannot be run without healpy installed.")
+    sys.exit(0)
 
 nsiden = 6
 nside = 2 ** nsiden

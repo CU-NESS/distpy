@@ -9,8 +9,13 @@ Description: File containing example of using the UniformDirectionDistribution
 import os, time
 import numpy as np
 import matplotlib.pyplot as pl
-import healpy as hp
 from distpy import UniformDirectionDistribution
+try:
+    import healpy as hp
+except ImportError:
+    print("The example scripts displaying the DirectionDistribution " +\
+        "subclasses cannot be run without healpy installed.")
+    sys.exit(0)
 
 nsiden = 5
 nside = 2 ** nsiden
