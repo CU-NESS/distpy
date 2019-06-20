@@ -229,7 +229,7 @@ class TransformSet(Savable, Loadable):
         
         returns: a dictionary of transformed parameter values
         """
-        return self.apply(parameters)
+        return self.apply(untransformed_parameters)
     
     def apply_inverse(self, transformed_parameters):
         """

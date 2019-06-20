@@ -881,18 +881,46 @@ class DistributionSet(Savable, Loadable):
         """
         samples = self.draw(ndraw)
         parameters = [parameter1, parameter2]
+        minima = {parameter: ((-np.inf) if (type(self.minimum[parameter]) is\
+            type(None)) else self.minimum[parameter])\
+            for parameter in parameters}
+        maxima = {parameter: ((+np.inf) if (type(self.maximum[parameter]) is\
+            type(None)) else self.maximum[parameter])\
+            for parameter in parameters}
         if in_transformed_space:
             samples = [self.transform_set[parameter](samples[parameter])\
                 for parameter in parameters]
+            (minima, maxima) = ([], [])
+            for parameter in parameters:
+                if type(self.minimum[parameter]) is type(None):
+                    minima.append(self.transform_set[parameter](-np.inf))
+                else:
+                    minima.append(\
+                        self.transform_set[parameter](self.minimum[parameter]))
+                if type(self.maximum[parameter]) is type(None):
+                    maxima.append(self.transform_set[parameter](+np.inf))
+                else:
+                    maxima.append(\
+                        self.transform_set[parameter](self.maximum[parameter]))
         else:
             samples = [samples[parameter] for parameter in parameters]
+            (minima, maxima) = ([], [])
+            for parameter in parameters:
+                if type(self.minimum[parameter]) is type(None):
+                    minima.append(-np.inf)
+                else:
+                    minima.append(self.minimum[parameter])
+                if type(self.maximum[parameter]) is type(None):
+                    maxima.append(+np.inf)
+                else:
+                    maxima.append(self.maximum[parameter])
         return bivariate_histogram(samples[0], samples[1],\
             reference_value_mean=reference_value_mean,\
             reference_value_covariance=reference_value_covariance, bins=bins,\
             matplotlib_function=matplotlib_function, xlabel=xlabel,\
             ylabel=ylabel, title=title, fontsize=fontsize, ax=ax, show=show,\
             contour_confidence_levels=contour_confidence_levels,\
-            **kwargs)
+            minima=minima, maxima=maxima, **kwargs)
     
     def triangle_plot(self, ndraw, parameters=None, in_transformed_space=True,\
         figsize=(8, 8), fig=None, show=False, kwargs_1D={}, kwargs_2D={},\
@@ -933,11 +961,23 @@ class DistributionSet(Savable, Loadable):
         samples = self.draw(ndraw)
         if type(parameters) is type(None):
             parameters = self.params
+        minima = {parameter: ((-np.inf) if (type(self.minimum[parameter]) is\
+            type(None)) else self.minimum[parameter])\
+            for parameter in parameters}
+        maxima = {parameter: ((+np.inf) if (type(self.maximum[parameter]) is\
+            type(None)) else self.maximum[parameter])\
+            for parameter in parameters}
         if in_transformed_space:
             samples = [self.transform_set[parameter](samples[parameter])\
                 for parameter in parameters]
+            minima = [self.transform_set[parameter](minima[parameter])\
+                for parameter in parameters]
+            maxima = [self.transform_set[parameter](maxima[parameter])\
+                for parameter in parameters]
         else:
             samples = [samples[parameter] for parameter in parameters]
+            minima = [self.minimum[parameter] for parameter in parameters]
+            maxima = [self.maximum[parameter] for parameter in parameters]
         labels = [parameter_renamer(parameter) for parameter in parameters]
         return triangle_plot(samples, labels, figsize=figsize, fig=fig,\
             show=show, kwargs_1D=kwargs_1D, kwargs_2D=kwargs_2D,\
@@ -945,5 +985,6 @@ class DistributionSet(Savable, Loadable):
             reference_value_mean=reference_value_mean,\
             reference_value_covariance=reference_value_covariance,\
             contour_confidence_levels=contour_confidence_levels,\
+            minima=minima, maxima=maxima,\
             tick_label_format_string=tick_label_format_string)
 

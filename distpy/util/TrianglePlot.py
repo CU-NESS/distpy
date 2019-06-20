@@ -151,7 +151,7 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     reference_value_covariance=None, bins=None, matplotlib_function='imshow',\
     xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False,\
     contour_confidence_levels=0.95, reference_color='r', reference_alpha=1,\
-    **kwargs):
+    minima=None, maxima=None, **kwargs):
     """
     Plots a 2D histogram of the given joint sample.
     
@@ -177,6 +177,10 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
                                or if reference_value_mean and
                                reference_value_covariance are both not None.
                                Can be single number or sequence of numbers
+    minima: sequence of (min_X, min_Y) to take into account when plotting
+            ellipses (only used if reference_value_covariance is not None)
+    maxima: sequence of (max_X, max_Y) to take into account when plotting
+            ellipses (only used if reference_value_covariance is not None)
     kwargs: keyword arguments to pass on to matplotlib.Axes.imshow (any but
             'origin', 'extent', or 'aspect') or matplotlib.Axes.contour or
             matplotlib.Axes.contourf (any)
@@ -242,10 +246,23 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
             ellipse_points = reference_value_mean[:,np.newaxis] +\
                 np.dot(sqrt_covariance_matrix, circle_points)
             (ellipse_xs, ellipse_ys) = ellipse_points
-            ax.fill(ellipse_xs, ellipse_ys, edgecolor='g', linewidth=1,\
+            if type(minima) is type(None):
+                minima = (-np.inf, -np.inf)
+            if type(maxima) is type(None):
+                maxima = (+np.inf, +np.inf)
+            ellipse_xs =\
+                np.where(ellipse_xs < minima[0], minima[0], ellipse_xs)
+            ellipse_xs =\
+                np.where(ellipse_xs > maxima[0], maxima[0], ellipse_xs)
+            ellipse_ys =\
+                np.where(ellipse_ys < minima[1], minima[1], ellipse_ys)
+            ellipse_ys =\
+                np.where(ellipse_ys > maxima[1], maxima[1], ellipse_ys)
+            ax.fill(ellipse_xs, ellipse_ys,\
+                linewidth=(1 if (matplotlib_function=='contour') else 0),\
                 fill=(matplotlib_function=='contourf'), linestyle='--',\
                 color=reference_color, alpha=reference_alpha)
-    ax.tick_params(width=2, length=6, labelsize=fontsize)
+    ax.tick_params(width=2.5, length=7.5, labelsize=fontsize)
     ax.set_xlabel(xlabel, size=fontsize)
     ax.set_ylabel(ylabel, size=fontsize)
     ax.set_title(title, size=fontsize)
@@ -274,7 +291,7 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100,\
     plot_type='contour', reference_value_mean=None,\
     reference_value_covariance=None, contour_confidence_levels=0.95,\
-    tick_label_format_string='{x:.3g}'):
+    minima=None, maxima=None, tick_label_format_string='{x:.3g}'):
     """
     Makes a triangle plot out of N samples corresponding to (possibly
     correlated) random variables
@@ -298,6 +315,10 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                                bivariate histograms. Only used if plot_type is
                                'contour' or 'contourf'. Can be single number or
                                sequence of numbers
+    minima: sequence of variable minima to take into account when plotting
+            ellipses (only used if reference_value_covariance is not None)
+    maxima: sequence of variable maxima to take into account when plotting
+            ellipses (only used if reference_value_covariance is not None)
     tick_label_format_string: format string that can be called using
                               tick_label_format_string.format(x=loc) where loc
                               is the location of the tick in data coordinates
@@ -309,6 +330,10 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     existing_plots = bool(fig.axes)
     samples = np.array(samples)
     num_samples = samples.shape[0]
+    if type(minima) is type(None):
+        minima = np.array([-np.inf] * num_samples)
+    if type(maxima) is type(None):
+        maxima = np.array([+np.inf] * num_samples)
     if plot_type == 'contour':
         matplotlib_function_1D = 'plot'
         matplotlib_function_2D = 'contour'
@@ -385,6 +410,8 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                     indices = np.array([column, row])
                     reference_value_subcovariance =\
                         reference_value_covariance[indices,:][:,indices]
+                these_minima = (minima[column], minima[row])
+                these_maxima = (maxima[column], maxima[row])
                 bivariate_histogram(column_sample, row_sample,\
                     reference_value_mean=reference_value_submean,\
                     reference_value_covariance=reference_value_subcovariance,\
@@ -393,7 +420,7 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                     ylabel='', title='', fontsize=fontsize, ax=ax,\
                     show=False,\
                     contour_confidence_levels=contour_confidence_levels,\
-                    **full_kwargs_2D)
+                    minima=these_minima, maxima=these_maxima, **full_kwargs_2D)
             ax.set_xticks(ticks[column])
             if row != column:
                 ax.set_yticks(ticks[row])
