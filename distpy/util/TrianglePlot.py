@@ -306,7 +306,13 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     kwargs_2D: keyword arguments to pass on to bivariate_histogram function
     fontsize: the size of the label fonts
     nbins: the number of bins for each sample
-    plot_type: 'contourf', 'contour', or 'histogram'
+    plot_type: determines the matplotlib functions to use for univariate and
+               bivariate histogram
+               if plot_type=='contourf': 'bar' and 'contourf' are used
+               if plot_type=='contour': 'plot' and 'contour' are used
+               if plot_type=='histogram': 'bar' and 'imshow' are used
+               otherwise: plot_type should be a length-2 sequence of the form
+                          (matplotlib_function_1D, matplotlib_function_2D)
     reference_value_mean: reference values to place on plots, if there are any
     reference_value_covariance: if not None, used (along with
                                 reference_value_mean) to plot reference
@@ -322,6 +328,8 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     tick_label_format_string: format string that can be called using
                               tick_label_format_string.format(x=loc) where loc
                               is the location of the tick in data coordinates
+    
+    returns: None if show is True, otherwise Figure instance with plot
     """
     if not have_matplotlib:
         raise no_matplotlib_error
@@ -334,24 +342,21 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
         minima = np.array([-np.inf] * num_samples)
     if type(maxima) is type(None):
         maxima = np.array([+np.inf] * num_samples)
+    (full_kwargs_1D, full_kwargs_2D) = ({}, {})
     if plot_type == 'contour':
         matplotlib_function_1D = 'plot'
         matplotlib_function_2D = 'contour'
-        full_kwargs_1D = {}
-        full_kwargs_2D = {}
-        if 'colors' not in kwargs_2D:
-            full_kwargs_2D['cmap'] = 'Dark2'
+        full_kwargs_2D['cmap'] = 'Dark2'
     elif plot_type == 'contourf':
-        matplotlib_function_1D = 'fill_between'
+        matplotlib_function_1D = 'bar'
         matplotlib_function_2D = 'contourf'
-        full_kwargs_1D = {}
-        full_kwargs_2D = {'colors':\
-            ['C{:d}'.format(index) for index in [0, 2, 4, 6, 1, 3, 5, 7]]}
+        full_kwargs_2D['colors'] =\
+            ['C{:d}'.format(index) for index in [0, 2, 4, 6, 1, 3, 5, 7]]
     elif plot_type == 'histogram':
         matplotlib_function_1D = 'bar'
         matplotlib_function_2D = 'imshow'
-        full_kwargs_1D = {}
-        full_kwargs_2D = {}
+    elif (type(plot_type) in sequence_types) and (len(plot_type) == 2):
+        (matplotlib_function_1D, matplotlib_function_2D) = plot_type
     else:
         raise ValueError("plot_type not recognized.")
     full_kwargs_1D.update(kwargs_1D)
