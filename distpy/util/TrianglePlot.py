@@ -346,7 +346,8 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     if plot_type == 'contour':
         matplotlib_function_1D = 'plot'
         matplotlib_function_2D = 'contour'
-        full_kwargs_2D['cmap'] = 'Dark2'
+        if 'colors' not in kwargs_2D:
+            full_kwargs_2D['cmap'] = 'Dark2'
     elif plot_type == 'contourf':
         matplotlib_function_1D = 'bar'
         matplotlib_function_2D = 'contourf'

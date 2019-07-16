@@ -380,16 +380,22 @@ class InfiniteUniformDistribution(Distribution):
         """
         Property storing the minimum allowable value(s) in this distribution.
         """
-        return [(element if np.isfinite(element) else None)\
-            for element in self.minima]
+        if self.numparams == 1:
+            return (self.minima if np.isfinite(self.minima) else None)
+        else:
+            return [(element if np.isfinite(element) else None)\
+                for element in self.minima]
     
     @property
     def maximum(self):
         """
         Property storing the maximum allowable value(s) in this distribution.
         """
-        return [(element if np.isfinite(element) else None)\
-            for element in self.maxima]
+        if self.numparams == 1:
+            return (self.maxima if np.isfinite(self.maxima) else None)
+        else:
+            return [(element if np.isfinite(element) else None)\
+                for element in self.maxima]
     
     @property
     def can_give_confidence_intervals(self):

@@ -216,20 +216,47 @@ class WindowedDistribution(Distribution):
         """
         Property storing the minimum allowable value(s) in this distribution.
         """
-        return np.where(self.foreground_distribution.minimum >\
-            self.background_distribution.minimum,\
-            self.foreground_distribution.minimum,\
-            self.background_distribution.minimum)
+        if not hasattr(self, '_minimum'):
+            minimum = []
+            background_minimum = self.background_distribution.minimum
+            foreground_minimum = self.foreground_distribution.minimum
+            if self.numparams == 1:
+                background_minimum = [background_minimum]
+                foreground_minimum = [foreground_minimum]
+            for index in range(self.numparams):
+                if type(background_minimum[index]) is type(None):
+                    minimum.append(foreground_minimum[index])
+                elif type(foreground_minimum[index]) is type(None):
+                    minimum.append(background_minimum[index])
+                else:
+                    minimum.append(max(\
+                        foreground_minimum[index], background_minimum[index]))
+            if self.numparams == 1:
+                minimum = minimum[0]
+            self._minimum = minimum
+        return self._minimum
     
     @property
     def maximum(self):
         """
         Property storing the maximum allowable value(s) in this distribution.
         """
-        return np.where(self.foreground_distribution.maximum <\
-            self.background_distribution.maximum,\
-            self.foreground_distribution.maximum,\
-            self.background_distribution.maximum)
+        if not hasattr(self, '_maximum'):
+            maximum = []
+            background_maximum = self.background_distribution.maximum
+            foreground_maximum = self.foreground_distribution.maximum
+            for index in range(self.numparams):
+                if type(background_maximum[index]) is type(None):
+                    maximum.append(foreground_maximum[index])
+                elif type(foreground_maximum[index]) is type(None):
+                    maximum.append(background_maximum[index])
+                else:
+                    maximum.append(min(\
+                        foreground_maximum[index], background_maximum[index]))
+            if self.numparams == 1:
+                maximum = maximum[0]
+            self._maximum = maximum
+        return self._maximum
     
     @property
     def is_discrete(self):
