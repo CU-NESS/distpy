@@ -222,7 +222,7 @@ class UniformConditionDistribution(Distribution):
         Property storing the minimum allowable value(s) in this distribution.
         The one for this Distribution is not known, so it set to None.
         """
-        return None
+        return (None if (self.numparams == 1) else ([None] * self.numparams))
     
     @property
     def maximum(self):
@@ -230,7 +230,7 @@ class UniformConditionDistribution(Distribution):
         Property storing the maximum allowable value(s) in this distribution.
         The one for this Distribution is not known, so it set to None.
         """
-        return None
+        return (None if (self.numparams == 1) else ([None] * self.numparams))
     
     @property
     def can_give_confidence_intervals(self):
