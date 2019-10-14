@@ -172,19 +172,70 @@ class GaussianDistribution(Distribution):
     
     def __add__(self, other):
         """
-        Adds other to this Gaussian variate. The result of this operation is a
-        Gaussian with a shifted mean but identical covariance.
+        Adds the Gaussian random variate described by this distribution
+        to the given object.
+
+        other: if other is a constant, the returned Gaussian is the same as
+                                       this one with other added to the mean
+                                       and the same covariance
+               if other is a 1D numpy.ndarray, it must be of the same length
+                                               as the dimension of this
+                                               GaussianDistribution. In this
+                                               case, the returned
+                                               GaussianDistribution is the
+                                               distribution of the sum of this
+                                               Gaussian variate with other
+               if other is a GaussianDistribution, it must have the same number
+                                                   of parameters as this one
         
-        other: must be castable to the 1D array shape of the Gaussian variate
-               described by this distribution
+        returns: GaussianDistribution representing the addition of this
+                 Gaussian variate with other
         """
-        return GaussianDistribution(self.mean.A[0] + other, self.covariance.A)
+        if isinstance(other, GaussianDistribution):
+            new_mean = self.mean.A[0] + other.mean.A[0]
+            new_covariance = self.covariance.A + other.covariance.A
+        elif type(other) in [list, tuple, np.ndarray]:
+            other = np.array(other)
+            if other.ndim == 1:
+                if len(other) == self.numparams:
+                    new_mean = self.mean.A[0] + other
+                    new_covariance = self.covariance.A
+                else:
+                    raise ValueError("Cannot multiply Gaussian distributed " +\
+                        "random vector by a vector of different size.")
+            else:
+                raise ValueError("Cannot multiply Gaussian distributed " +\
+                    "random vector by a tensor with more than 1 index.")
+        else:
+            # assume other is a constant
+            new_mean = self.mean.A[0] + other
+            new_covariance = self.covariance.A
+        return GaussianDistribution(new_mean, new_covariance)
     
     def __radd__(self, other):
         """
         Returns the same thing as __add__ (this makes addition commutative).
         """
         return self.__add__(other)
+    
+    def __sub__(self, other):
+        """
+        Returns the same thing as __add__ with an argument of (-other)
+        """
+        return self.__add__(-other)
+    
+    def __rsub__(self, other):
+        """
+        Returns the negative of the returned value of __sub__ (this makes
+        subtraction doable from either side).
+        """
+        return self.__sub__(other).__neg__()
+    
+    def __neg__(self):
+        """
+        Returns a new GaussianDistribution with a mean multiplied by -1.
+        """
+        return GaussianDistribution(-self.mean.A[0], self.covariance.A)
     
     def __mul__(self, other):
         """
@@ -214,6 +265,50 @@ class GaussianDistribution(Distribution):
         
         returns: GaussianDistribution representing the multiplication of this
                  Gaussian variate by other
+        """
+        new_mean = self.mean.A[0] * other
+        new_covariance = self.covariance.A * (other ** 2)
+        return GaussianDistribution(new_mean, new_covariance)
+    
+    def __rmul__(self, other):
+        """
+        Returns the same thing as __mul__ (this makes multiplication
+        commutative).
+        """
+        return self.__mul__(other)
+    
+    def __div__(self, other):
+        """
+        Returns the same thing as __mul__ with an argument of (1/other).
+        """
+        return self.__mul__(1 / other)
+    
+    @property
+    def square_root_covariance(self):
+        """
+        Property storing the square root of the covariance matrix.
+        """
+        if not hasattr(self, '_square_root_covariance'):
+            (eigenvalues, eigenvectors) = npla.eigh(self.covariance.A)
+            if np.any(eigenvalues <= 0):
+                raise ValueError(("Something went wrong, causing the " +\
+                    "square root of the covariance matrix of this " +\
+                    "GaussianJumpingDistribution to have at least one " +\
+                    "complex element. The eigenvalues of the covariance " +\
+                    "matrix are {!s}.").format(eigenvalues))
+            eigenvalues = np.sqrt(eigenvalues)
+            self._square_root_covariance =\
+                np.dot(eigenvectors * eigenvalues[None,:], eigenvectors.T)
+        return self._square_root_covariance
+    
+    def __matmul__(self, other):
+        """
+        Computes the Kullback-Leibler divergence between this distribution and
+        other.
+        
+        other: a GaussianDistribution object
+        
+        returns: scalar value of the Kullback-Leibler divergence
         """
         if type(other) in [list, tuple, np.ndarray]:
             other = np.array(other)
@@ -245,48 +340,11 @@ class GaussianDistribution(Distribution):
                         "length as the random vector.")
             else:
                 raise ValueError("Cannot multiply Gaussian distributed " +\
-                    "random vector by a tensor with more than 3 indices.")
+                    "random vector by a tensor with more than 2 indices.")
         else:
-            # assume other is a constant
-            new_mean = self.mean.A[0] * other
-            new_covariance = self.covariance.A * (other ** 2)
+            raise TypeError("Matrix multiplication can only be done with " +\
+                "sequence types.")
         return GaussianDistribution(new_mean, new_covariance)
-    
-    def __rmul__(self, other):
-        """
-        Returns the same thing as __mul__ (this makes multiplication
-        commutative).
-        """
-        return self.__mul__(other)
-    
-    @property
-    def square_root_covariance(self):
-        """
-        Property storing the square root of the covariance matrix.
-        """
-        if not hasattr(self, '_square_root_covariance'):
-            (eigenvalues, eigenvectors) = npla.eigh(self.covariance.A)
-            if np.any(eigenvalues <= 0):
-                raise ValueError(("Something went wrong, causing the " +\
-                    "square root of the covariance matrix of this " +\
-                    "GaussianJumpingDistribution to have at least one " +\
-                    "complex element. The eigenvalues of the covariance " +\
-                    "matrix are {!s}.").format(eigenvalues))
-            eigenvalues = np.sqrt(eigenvalues)
-            self._square_root_covariance =\
-                np.dot(eigenvectors * eigenvalues[None,:], eigenvectors.T)
-        return self._square_root_covariance
-    
-    def __matmul__(self, other):
-        """
-        Computes the Kullback-Leibler divergence between this distribution and
-        other.
-        
-        other: a GaussianDistribution object
-        
-        returns: scalar value of the Kullback-Leibler divergence
-        """
-        return GaussianDistribution.kullback_leibler_divergence(self, other)
     
     @staticmethod
     def kullback_leibler_divergence(first, second):

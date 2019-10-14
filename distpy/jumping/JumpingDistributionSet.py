@@ -619,7 +619,9 @@ class JumpingDistributionSet(Savable, Loadable):
         kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100,\
         plot_type='contour', reference_value_mean=None,\
         reference_value_covariance=None, contour_confidence_levels=0.95,\
-        parameter_renamer=(lambda x: x), tick_label_format_string='{x:.3g}'):
+        parameter_renamer=(lambda x: x), tick_label_format_string='{x:.3g}',\
+        num_ticks=3, minor_ticks_per_major_tick=1, xlabel_rotation=0,\
+        xlabelpad=None, ylabel_rotation=90, ylabelpad=None):
         """
         Makes a triangle plot out of ndraw samples from this distribution.
         
@@ -649,6 +651,13 @@ class JumpingDistributionSet(Savable, Loadable):
                                   tick_label_format_string.format(x=loc) where
                                   loc is the location of the tick in data
                                   coordinates
+        num_ticks: integer number of ticks per panel
+        minor_ticks_per_major_tick: integer number of minor ticks per major
+                                    tick
+        xlabel_rotation: rotation of x-label in degrees, default: 0
+        xlabelpad: pad size for xlabel, default: None
+        ylabel_rotation: rotation of y-label in degrees, default: 90
+        ylabelpad: pad size for ylabel, default: None
         """
         samples = self.draw(source, ndraw)
         if type(parameters) is type(None):
@@ -665,5 +674,7 @@ class JumpingDistributionSet(Savable, Loadable):
             reference_value_mean=reference_value_mean,\
             reference_value_covariance=reference_value_covariance,\
             contour_confidence_levels=contour_confidence_levels,\
-            tick_label_format_string=tick_label_format_string)
+            tick_label_format_string=tick_label_format_string,\
+            xlabel_rotation=xlabel_rotation, xlabelpad=xlabelpad,\
+            ylabel_rotation=ylabel_rotation, ylabelpad=ylabelpad)
 

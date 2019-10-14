@@ -16,6 +16,3 @@ packages = ['distpy.{!s}'.format(submodule)\
 setup(name='distpy', version='0.1', description='Distributions in Python',\
     packages=packages)
 
-    
-    
-    

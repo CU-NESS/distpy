@@ -151,7 +151,7 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     reference_value_covariance=None, bins=None, matplotlib_function='imshow',\
     xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False,\
     contour_confidence_levels=0.95, reference_color='r', reference_alpha=1,\
-    minima=None, maxima=None, **kwargs):
+    minima=None, maxima=None, num_ellipse_points=1000, **kwargs):
     """
     Plots a 2D histogram of the given joint sample.
     
@@ -193,6 +193,15 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
         fig = pl.figure()
         ax = fig.add_subplot(111)
     (nums, xbins, ybins) = np.histogram2d(xsample, ysample, bins=bins)
+    if matplotlib_function == 'contour':
+        nums = np.concatenate([np.zeros((1, nums.shape[1])), nums,\
+            np.zeros((1, nums.shape[1]))], axis=0)
+        nums = np.concatenate([np.zeros((nums.shape[0], 1)), nums,\
+            np.zeros((nums.shape[0], 1))], axis=1)
+        xbins = np.concatenate([[(2 * xbins[0]) - xbins[1]], xbins,\
+            [(2 * xbins[-1]) - xbins[-2]]])
+        ybins = np.concatenate([[(2 * ybins[0]) - ybins[1]], ybins,\
+            [(2 * ybins[-1]) - ybins[-2]]])
     xlim = (xbins[0], xbins[-1])
     ylim = (ybins[0], ybins[-1])
     xbin_centers = (xbins[1:] + xbins[:-1]) / 2
@@ -241,7 +250,8 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
                 ((-2) * np.log(1 - contour_level_for_2D_reference_contour))
             sqrt_covariance_matrix = scila.sqrtm(reference_value_covariance) *\
                 np.sqrt(covariance_expansion_factor_for_2D_reference_contour)
-            angles = np.linspace(0, 2 * np.pi, num=1000, endpoint=False)
+            angles = np.linspace(0, 2 * np.pi, num=num_ellipse_points,\
+                endpoint=False)
             circle_points = np.array([np.cos(angles), np.sin(angles)])
             ellipse_points = reference_value_mean[:,np.newaxis] +\
                 np.dot(sqrt_covariance_matrix, circle_points)
@@ -291,7 +301,9 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100,\
     plot_type='contour', reference_value_mean=None,\
     reference_value_covariance=None, contour_confidence_levels=0.95,\
-    minima=None, maxima=None, tick_label_format_string='{x:.3g}'):
+    minima=None, maxima=None, tick_label_format_string='{x:.3g}', num_ticks=3,\
+    minor_ticks_per_major_tick=1, xlabel_rotation=0, xlabelpad=None,\
+    ylabel_rotation=90, ylabelpad=None):
     """
     Makes a triangle plot out of N samples corresponding to (possibly
     correlated) random variables
@@ -328,6 +340,12 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     tick_label_format_string: format string that can be called using
                               tick_label_format_string.format(x=loc) where loc
                               is the location of the tick in data coordinates
+    num_ticks: integer number of ticks per panel, default: 3
+    minor_ticks_per_major_tick: integer number of minor ticks per major tick
+    xlabel_rotation: rotation of x-label in degrees, default: 0
+    xlabelpad: pad size for xlabel, default: None
+    ylabel_rotation: rotation of y-label in degrees, default: 90
+    ylabelpad: pad size for ylabel, default: None
     
     returns: None if show is True, otherwise Figure instance with plot
     """
@@ -362,7 +380,7 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
         raise ValueError("plot_type not recognized.")
     full_kwargs_1D.update(kwargs_1D)
     full_kwargs_2D.update(kwargs_2D)
-    ticks = []
+    (ticks, minor_ticks) = ([], [])
     bins = []
     for (isample, sample) in enumerate(samples):
         min_to_include = np.min(sample)
@@ -374,11 +392,25 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
             max_to_include =\
                 max(max_to_include, reference_value_mean[isample])
         middle = (max_to_include + min_to_include) / 2
-        width = max_to_include - min_to_include
-        bins.append(np.linspace(min_to_include - (width / 10),\
-            max_to_include + (width / 10), nbins + 1))
-        ticks.append(np.linspace(middle - (width / 2.5),\
-            middle + (width / 2.5), 3))
+        half_width = (max_to_include - min_to_include) / 2
+        these_bins = np.linspace(min_to_include - (half_width / 5),\
+            max_to_include + (half_width / 5), nbins + 1)
+        bins.append(these_bins)
+        half_width = (these_bins[-1] - these_bins[0]) / 2
+        major_tick_low_endpoint = middle - (half_width * (1 - (1 / num_ticks)))
+        major_tick_high_endpoint =\
+            middle + (half_width * (1 - (1 / num_ticks)))
+        these_ticks = np.linspace(major_tick_low_endpoint,\
+            major_tick_high_endpoint, num_ticks)
+        ticks.append(these_ticks)
+        minor_tick_low_endpoint = middle - (half_width * (1 + (1 / num_ticks)))
+        minor_tick_high_endpoint =\
+            middle + (half_width * (1 + (1 / num_ticks)))
+        num_minor_ticks =\
+            ((num_ticks + 1) * (minor_ticks_per_major_tick + 1)) + 1
+        these_minor_ticks = np.linspace(minor_tick_low_endpoint,\
+            minor_tick_high_endpoint, num_minor_ticks)
+        minor_ticks.append(these_minor_ticks)
     tick_label_formatter = StrMethodFormatter(tick_label_format_string)
     for (column, column_sample) in enumerate(samples):
         column_label = labels[column]
@@ -427,30 +459,35 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                     show=False,\
                     contour_confidence_levels=contour_confidence_levels,\
                     minima=these_minima, maxima=these_maxima, **full_kwargs_2D)
-            ax.set_xticks(ticks[column])
+            ax.set_xticks(minor_ticks[column], minor=True)
+            ax.set_xticks(ticks[column], minor=False)
             if row != column:
-                ax.set_yticks(ticks[row])
+                ax.set_yticks(minor_ticks[row], minor=True)
+                ax.set_yticks(ticks[row], minor=False)
             ax.xaxis.set_major_formatter(tick_label_formatter)
             ax.yaxis.set_major_formatter(tick_label_formatter)
+            ax.tick_params(width=2.5, length=7.5, which='major')
+            ax.tick_params(width=1.5, length=4.5, which='minor')
             ax.tick_params(left=True, right=True, top=True, bottom=True,\
                 labelleft=False, labelright=False, labeltop=False,\
-                labelbottom=False, direction='inout')
+                labelbottom=False, direction='inout', which='both')
             if (row == column):
-                ax.tick_params(left=False, top=False, right=False)
-            elif (row == (column + 1)):
-                ax.tick_params(left=False)
-                ax.tick_params(axis='y', direction='in')
-                ax.tick_params(left=False)
+                ax.tick_params(left=False, top=False, right=False,\
+                    which='both')
             if (row + 1) == num_samples:
-                ax.set_xlabel(column_label, size=fontsize, rotation=15)
-                ax.tick_params(labelbottom=True)
+                ax.set_xlabel(column_label, size=fontsize,\
+                    rotation=xlabel_rotation, labelpad=xlabelpad)
+                ax.tick_params(labelbottom=True, which='major')
             if column == 0:
                 if row == 0:
                     ax.tick_params(labelleft=False)
                 else:
-                    ax.set_ylabel(row_label, size=fontsize, rotation=60,\
-                        labelpad=30)
-                    ax.tick_params(labelleft=True)
+                    ax.set_ylabel(row_label, size=fontsize,\
+                        rotation=ylabel_rotation, labelpad=ylabelpad)
+                    ax.tick_params(labelleft=True, which='major')
+            ax.set_xlim((bins[column][0], bins[column][-1]))
+            if row != column:
+                ax.set_ylim((bins[row][0], bins[row][-1]))
     fig.subplots_adjust(wspace=0, hspace=0)
     if show:
         pl.show()
