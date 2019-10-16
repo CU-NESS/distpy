@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/CustomDiscreteDistribution.py
 Author: Keith Tauscher
-Date: 24 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing a class representing a custom n-dimensional
              discrete distribution with finite support.
@@ -116,6 +116,55 @@ class CustomDiscreteDistribution(Distribution):
         else:
             raise TypeError("probability_mass_function was not a " +\
                 "numpy.ndarray.")
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            mean = np.ndarray((self.numparams,))
+            for index in range(self.numparams):
+                variable_slice = (index * (np.newaxis,)) + (slice(None),) +\
+                    ((self.numparams - index - 1) * (np.newaxis,))
+                mean[index] = np.sum(\
+                    self.variable_values[index][variable_slice] *\
+                    self.probability_mass_function)
+            if self.numparams == 1:
+                self._mean = mean[0]
+            else:
+                self._mean = mean
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.numparams == 1:
+                expected_square = np.sum((self.variable_values[0] ** 2) *\
+                    self.probability_mass_function)
+                self._variance = expected_square - (self.mean ** 2)
+            else:
+                expected_squares = np.ndarray((self.numparams,) * 2)
+                for index1 in range(self.numparams):
+                    variable_slice1 =\
+                        (index1 * (np.newaxis,)) + (slice(None),) +\
+                        ((self.numparams - index1 - 1) * (np.newaxis,))
+                    values1 = self.variable_values[index1][variable_slice1]
+                    for index2 in range(index1, self.numparams):
+                        variable_slice2 =\
+                            (index2 * (np.newaxis,)) + (slice(None),) +\
+                            ((self.numparams - index2 - 1) * (np.newaxis,))
+                        values2 = self.variable_values[index2][variable_slice2]
+                        expected_square = np.sum(values1 * values2 *\
+                            self.probability_mass_function)
+                        expected_squares[index1,index2] = expected_square
+                        expected_squares[index2,index1] = expected_square
+                self._variance = expected_squares -\
+                    (self.mean[:,np.newaxis] * self.mean[np.newaxis,:])
+        return self._variance
     
     @property
     def flattened_cumulative_mass_function(self):

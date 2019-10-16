@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/EllipticalUniformDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing an elliptical uniform
              multivariate distribution.
@@ -96,6 +96,13 @@ class EllipticalUniformDistribution(Distribution):
                     "shape.")
         else:
             raise TypeError("covariance was set to a non-sequence.")
+    
+    @property
+    def variance(self):
+        """
+        Alias for covariance property.
+        """
+        return self.covariance
     
     @property
     def square_root_covariance(self):

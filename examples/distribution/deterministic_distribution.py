@@ -1,7 +1,7 @@
 """
 File: examples/distribution/multivariate_gaussian_distribution.py
 Author: Keith Tauscher
-Date: 10 Sep 2017
+Date: Oct 15 2019
 
 Description: Example showcasing use of DeterministicDistribution for
              multidimensional non-random variates.
@@ -36,6 +36,10 @@ sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s for a sample of size {1} to be drawn from a ' +\
     'multivariate ({2}-parameter) deterministic distribution').format(\
     time.time() - t0, sample_size, distribution.numparams))
+print("sample_mean={0}, expected_mean={1}".format(np.mean(sample, axis=0),\
+    distribution.mean))
+print("sample_variance={0}, expected_variance={1}".format(\
+    np.cov(sample, rowvar=False), distribution.variance))
 (sample_xs, sample_ys) = (sample[:,0], sample[:,1])
 pl.figure()
 pl.hist2d(sample_xs, sample_ys, bins=nbins, cmap=def_cm)

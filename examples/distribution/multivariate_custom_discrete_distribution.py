@@ -1,7 +1,7 @@
 """
 File: examples/distribution/multivariate_custom_discrete_distribution.py
 Author: Keith Tauscher
-Date: 24 Feb 2018
+Date: Oct 15 2019
 
 Description: Example showing how to use the CustomDiscreteDistribution class to
              represent a multivative discrete distribution with a simple
@@ -48,9 +48,13 @@ t1 = time.time()
 print(("It took {0:.5f} s to draw {1:d} samples from a 2D custom discrete " +\
     "distribution with {2:d} pixels.").format(t1 - t0, ndraw,\
     nxvalues * nyvalues))
+print("sample_mean={0}, expected_mean={1}".format(np.mean(draws, axis=0),\
+    distribution.mean))
+print("sample_variance={0}, expected_variance={1}".format(\
+    np.cov(draws, rowvar=False), distribution.variance))
 
 pl.figure()
-pl.hist2d(draws[:,0], draws[:,1], bins=(xbins, ybins), normed=True, cmap=cmap)
+pl.hist2d(draws[:,0], draws[:,1], bins=(xbins, ybins), density=True, cmap=cmap)
 pl.colorbar()
 pl.xlim(xlim)
 pl.ylim(ylim)

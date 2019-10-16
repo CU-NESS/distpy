@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/GeometricDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing a geometric distribution.
 """
@@ -140,6 +140,39 @@ class GeometricDistribution(Distribution):
         return 1
     
     @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            mean = self.minimum + (self.common_ratio / (1 - self.common_ratio))
+            if type(self.maximum) is not type(None):
+                mean = mean -\
+                    ((self.range * (self.common_ratio ** self.range)) /\
+                    (1 - (self.common_ratio ** self.range)))
+            self._mean = mean
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            roomr = self.common_ratio / (1 - self.common_ratio)
+            expected_square = roomr + (2 * (roomr ** 2))
+            if type(self.maximum) is not type(None):
+                rs = (self.common_ratio ** self.range)
+                expected_square = expected_square - ((self.range ** 2) * rs) -\
+                    (2 * roomr * self.range * rs) - (roomr * rs) -\
+                    (2 * rs * (roomr ** 2))
+                expected_square = expected_square /\
+                    (1 - (self.common_ratio ** self.range))
+            self._variance =\
+                expected_square - ((self.mean - self.minimum) ** 2)
+        return self._variance
+    
+    @property
     def log_common_ratio(self):
         """
         Property storing the natural logarithm of the common ratio of
@@ -163,7 +196,7 @@ class GeometricDistribution(Distribution):
         random: the random number generator to use (default: numpy.random)
         """
         uniforms = random.uniform(size=shape)
-        if type(self.range) is type(None):
+        if type(self.maximum) is type(None):
             log_argument = uniforms
         else:
             log_argument =\

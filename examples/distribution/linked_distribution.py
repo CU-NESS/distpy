@@ -1,7 +1,7 @@
 """
 File: examples/distribution/linked_distribution.py
 Author: Keith Tauscher
-Date: 7 Aug 2017
+Date: Oct 15 2019
 
 Description: Example of using the LinkedDescription class.
 """
@@ -29,6 +29,10 @@ t0 = time.time()
 sample = distribution.draw(sample_size)
 print(("It took {0:.5f} s to draw {1} vectors from a LinkedDistribution " +\
     "with a Normal(0,1) distribution.").format(time.time() - t0, sample_size))
+print("sample_mean={0}, expected_mean={1}".format(np.mean(sample, axis=0),\
+    distribution.mean))
+print("sample_variance={0}, expected_variance={1}".format(\
+    np.cov(sample, rowvar=False), distribution.variance))
 sam_xs = [sample[i][0] for i in range(sample_size)]
 sam_ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()

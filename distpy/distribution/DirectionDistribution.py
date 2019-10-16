@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/DirectionDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing subclass of Distributions whose support lies on
              the surface of a sphere.
@@ -61,6 +61,28 @@ class DirectionDistribution(Distribution):
         specify a single point on the celestial sphere.
         """
         return 2
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution. These are not
+        implemented for DirectionDistribution classes.
+        """
+        if not hasattr(self, '_mean'):
+            raise NotImplementedError("mean is not implemented for " +\
+                "DirectionDistribution classes.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution. These are not
+        implemented for DirectionDistribution classes.
+        """
+        if not hasattr(self, '_variance'):
+            raise NotImplementedError("variance is not implemented for " +\
+                "DirectionDistribution classes.")
+        return self._variance
     
     @property
     def pointing_center(self):

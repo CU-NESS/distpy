@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/ChiSquaredDistribution.py
 Author: Keith Tauscher
-Date: Feb 12 2017
+Date: Oct 15 2019
 
 Description: File containing class representing a chi-squared distribution.
 """
@@ -101,6 +101,30 @@ class ChiSquaredDistribution(Distribution):
         Chi-squared pdf is univariate, so numparams always returns 1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            if self.reduced:
+                self._mean = 1.
+            else:
+                self._mean = (1. * self.degrees_of_freedom)
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.reduced:
+                self._variance = (2. / self.degrees_of_freedom)
+            else:
+                self._variance = (2. * self.degrees_of_freedom)
+        return self._variance
 
     def draw(self, shape=None, random=rand):
         """

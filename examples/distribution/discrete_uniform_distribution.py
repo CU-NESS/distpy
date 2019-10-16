@@ -1,7 +1,7 @@
 """
 File: examples/distribution/discrete_uniform_distribution.py
 Author: Keith Tauscher
-Date: 16 Jun 2018
+Date: Oct 15 2019
 
 Description: Example of using the DiscreteUniformDistribution.
 """
@@ -34,6 +34,11 @@ t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a discrete uniform ' +\
     'distribution.').format(time.time() - t0, sample_size))
+print('Sample mean was {0:.3g}, while expected mean was {1:.3g}.'.format(\
+    np.mean(sample), distribution.mean))
+print(('Sample standard deviation was {0:.3g}, while expected standard ' +\
+    'deviation was {1:.3g}.').format(np.std(sample),\
+    distribution.standard_deviation))
 fig = pl.figure()
 ax = fig.add_subplot(111)
 bins = np.arange(low - 2, high + 3) - 0.5

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/GammaDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing a generalized Gamma
              distribution. The pdf has the form
@@ -150,6 +150,30 @@ class GammaDistribution(Distribution):
         Gamma distribution pdf is univariate, so numparams always returns 1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.scale *\
+                np.exp(gammaln((self.shape + 1) / self.power) -\
+                gammaln(self.shape / self.power))
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            first_term = np.exp(gammaln((self.shape + 2) / self.power) -\
+                gammaln(self.shape / self.power))
+            second_term = (np.exp(gammaln((self.shape + 1) / self.power) -\
+                gammaln(self.shape / self.power)) ** 2)
+            self._variance = (self.scale ** 2) * (first_term - second_term)
+        return self._variance
     
     def draw(self, shape=None, random=rand):
         """

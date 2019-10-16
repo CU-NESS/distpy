@@ -404,6 +404,8 @@ Method copy(): Returns a deep copy of this distribution.
 Method __len__(): Allows for checking the number of parameters of Distribution objects using the len function.
 Method __eq__(other): Allows for equality checking of Distribution objects using the '==' symbol.
 Method __ne__(other): Allows for inequality checking of Distribution objects using the '!=' symbol. This automatically returns the opposite of the __eq__ method.
+Property mean: Number or array storing mean of this distribution.
+Property variance: Number or array storing (co)variance of this distribution.
 Property numparams: Integer number of parameters described by the distribution.
 Property maximum: The maximum value(s) of the parameter(s) of this distribution.
 Property minimum: The minimum value(s) of the parameter(s) of this distribution.

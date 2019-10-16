@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/DistributionSum.py
 Author: Keith Tauscher
-Date: 10 Jun 2018
+Date: Oct 15 2019
 
 Description: File containing class which represents a weighted sum of
              distributions.
@@ -115,6 +115,45 @@ class DistributionSum(Distribution):
         if not hasattr(self, '_total_weight'):
             self._total_weight = np.sum(self.weights)
         return self._total_weight
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of the distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = np.sum([(weight * distribution.mean)\
+                for (weight, distribution) in\
+                zip(self.weights, self.distributions)]) / self.total_weight
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of the distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.numparams == 1:
+                expected_square = 0
+                for (weight, distribution) in\
+                    zip(self.weights, self.distributions):
+                    this_term =\
+                        distribution.variance + (distribution.mean ** 2)
+                    expected_square = expected_square + (weight * this_term)
+                expected_square = expected_square / self.total_weight
+                self._variance = expected_square - (self.mean ** 2)
+            else:
+                expected_square = np.zeros(2 * (self.numparams,))
+                for (weight, distribution) in\
+                    zip(self.weights, self.distributions):
+                    this_term = distribution.variance +\
+                        (distribution.mean[:,np.newaxis] *\
+                        distribution.mean[np.newaxis,:])
+                    expected_square = expected_square + (weight * this_term)
+                expected_square = expected_square / self.total_weight
+                self._variance = expected_square -\
+                    (self.mean[:,np.newaxis] * self.mean[np.newaxis,:])
+        return self._variance
     
     @property
     def discrete_cdf_values(self):

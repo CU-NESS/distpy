@@ -1,11 +1,12 @@
 """
 File: distpy/distribution/TruncatedGaussianDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing a truncated 1-dimensional
              gaussian distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
 from scipy.special import erf, erfinv
@@ -28,8 +29,8 @@ class TruncatedGaussianDistribution(Distribution):
         low lower limit of distribution. If None then it is assumed to be -inf
         high upper limit of distribution. If None then it is assumed to be +inf
         """
-        self.mean = mean
-        self.variance = variance
+        self.internal_mean = mean
+        self.internal_variance = variance
         self.low = low
         self.high = high
         self.metadata = metadata
@@ -94,7 +95,7 @@ class TruncatedGaussianDistribution(Distribution):
         """
         if not hasattr(self, '_const_lp_term'):
             self._const_lp_term =\
-                ((-1) * (np.log(np.pi * self.variance / 2) / 2)) -\
+                ((-1) * (np.log(np.pi * self.internal_variance / 2) / 2)) -\
                 np.log(self.high_term - self.low_term)
         return self._const_lp_term
     
@@ -107,8 +108,8 @@ class TruncatedGaussianDistribution(Distribution):
             if type(self.low) is type(None):
                 self._low_term = -1
             else:
-                self._low_term =\
-                    erf((self.low - self.mean) / np.sqrt(2 * self.variance))
+                self._low_term = erf((self.low - self.internal_mean) /\
+                    np.sqrt(2 * self.internal_variance))
         return self._low_term
     
     @property
@@ -120,42 +121,44 @@ class TruncatedGaussianDistribution(Distribution):
             if type(self.high) is type(None):
                 self._high_term = 1
             else:
-                self._high_term =\
-                    erf((self.high - self.mean) / np.sqrt(2 * self.variance))
+                self._high_term = erf((self.high - self.internal_mean) /\
+                    np.sqrt(2 * self.internal_variance))
         return self._high_term
     
     @property
-    def mean(self):
+    def internal_mean(self):
         """
         Property storing the mean of the untruncated Gaussian used.
         """
-        if not hasattr(self, '_mean'):
-            raise AttributeError("mean was referenced before it was set.")
-        return self._mean
+        if not hasattr(self, '_internal_mean'):
+            raise AttributeError("internal_mean was referenced before it " +\
+                "was set.")
+        return self._internal_mean
     
-    @mean.setter
-    def mean(self, value):
+    @internal_mean.setter
+    def internal_mean(self, value):
         """
         Setter for the mean of the untruncated Gaussian used.
         
         value: any real number
         """
         if type(value) in numerical_types:
-            self._mean = (value * 1.)
+            self._internal_mean = (value * 1.)
         else:
-            raise TypeError("mean was set to a non-number.")
+            raise TypeError("internal_mean was set to a non-number.")
     
     @property
-    def variance(self):
+    def internal_variance(self):
         """
         Property storing the variance of the untruncated Gaussian used.
         """
-        if not hasattr(self, '_variance'):
-            raise AttributeError("variance was referenced before it was set.")
-        return self._variance
+        if not hasattr(self, '_internal_variance'):
+            raise AttributeError("internal_variance was referenced before " +\
+                "it was set.")
+        return self._internal_variance
     
-    @variance.setter
-    def variance(self, value):
+    @internal_variance.setter
+    def internal_variance(self, value):
         """
         Setter for the variance of the untruncated Gaussian used.
         
@@ -163,11 +166,11 @@ class TruncatedGaussianDistribution(Distribution):
         """
         if type(value) in numerical_types:
             if value > 0:
-                self._variance = (value * 1.)
+                self._internal_variance = (value * 1.)
             else:
-                raise ValueError("variance must be positive.")
+                raise ValueError("internal_variance must be positive.")
         else:
-            raise TypeError("variance was set to a non-number.")
+            raise TypeError("internal_variance was set to a non-number.")
 
     @property
     def numparams(self):
@@ -176,6 +179,42 @@ class TruncatedGaussianDistribution(Distribution):
         implemented so numparams always returns 1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.internal_mean -\
+                (np.sqrt(2 * self.internal_variance / np.pi) *\
+                (np.exp(-(((self.high - self.internal_mean) /\
+                np.sqrt(2 * self.internal_variance)) ** 2)) -\
+                np.exp(-(((self.low - self.internal_mean) /\
+                np.sqrt(2 * self.internal_variance)) ** 2))) /\
+                (self.high_term - self.low_term))
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            variance = 1
+            alpha = (self.low - self.internal_mean) /\
+                np.sqrt(self.internal_variance)
+            beta = (self.high - self.internal_mean) /\
+                np.sqrt(self.internal_variance)
+            phi_of_alpha = np.exp((alpha ** 2) / (-2)) / np.sqrt(2 * np.pi)
+            phi_of_beta = np.exp((beta ** 2) / (-2)) / np.sqrt(2 * np.pi)
+            denominator = (self.high_term - self.low_term) / 2
+            variance = variance +\
+                (((alpha * phi_of_alpha) - (beta * phi_of_beta)) / denominator)
+            variance = variance -\
+                (((phi_of_alpha - phi_of_beta) / denominator) ** 2)
+            self._variance = variance * self.internal_variance
+        return self._variance
 
     def draw(self, shape=None, random=rand):
         """
@@ -198,8 +237,8 @@ class TruncatedGaussianDistribution(Distribution):
         unifs = random.rand(*shape)
         args_to_erfinv =\
             (unifs * self.high_term) + ((1. - unifs) * self.low_term)
-        points =\
-            self.mean + (np.sqrt(2 * self.variance) * erfinv(args_to_erfinv))
+        points = self.internal_mean +\
+            (np.sqrt(2 * self.internal_variance) * erfinv(args_to_erfinv))
         if none_shape:
             return points[0]
         else:
@@ -216,7 +255,7 @@ class TruncatedGaussianDistribution(Distribution):
                 (type(self.high) is not type(None) and point > self.high):
             return -np.inf
         return (self.const_lp_term -\
-            ((point - self.mean) ** 2) / (2 * self.variance))
+            ((point - self.internal_mean) ** 2) / (2 * self.internal_variance))
 
     def to_string(self):
         """
@@ -230,8 +269,9 @@ class TruncatedGaussianDistribution(Distribution):
             high_string = "inf"
         else:
             high_string = "{:.1g}".format(self.high)
-        return "Normal({0:.2g}, {1:.2g}) on [{2!s},{3!s}]".format(self.mean,\
-            self.variance, low_string, high_string)
+        return "Normal({0:.2g}, {1:.2g}) on [{2!s},{3!s}]".format(\
+            self.internal_mean, self.internal_variance, low_string,\
+            high_string)
     
     def __eq__(self, other):
         """
@@ -241,9 +281,10 @@ class TruncatedGaussianDistribution(Distribution):
         lo (down to 10^-9 level) and False otherwise.
         """
         if isinstance(other, TruncatedGaussianDistribution):
-            mean_close = np.isclose(self.mean, other.mean, rtol=0, atol=1e-9)
-            variance_close =\
-                np.isclose(self.variance, other.variance, rtol=1e-12, atol=0)
+            mean_close = np.isclose(self.internal_mean, other.internal_mean,\
+                rtol=0, atol=1e-9)
+            variance_close = np.isclose(self.internal_variance,\
+                other.internal_variance, rtol=1e-12, atol=0)
             if type(self.high) is type(None):
                 hi_close = (type(other.high) is type(None))
             elif type(other.high) is not type(None):
@@ -271,7 +312,8 @@ class TruncatedGaussianDistribution(Distribution):
         """
         erfinv_args =\
             (self.low_term + (cdf * (self.high_term - self.low_term)))
-        return (self.mean + (np.sqrt(2 * self.variance) * erfinv(erfinv_args)))
+        return (self.internal_mean +\
+            (np.sqrt(2 * self.internal_variance) * erfinv(erfinv_args)))
     
     @property
     def minimum(self):
@@ -311,8 +353,8 @@ class TruncatedGaussianDistribution(Distribution):
             group.attrs['low'] = self.low
         if type(self.high) is not type(None):
             group.attrs['high'] = self.high
-        group.attrs['mean'] = self.mean
-        group.attrs['variance'] = self.variance
+        group.attrs['mean'] = self.internal_mean
+        group.attrs['variance'] = self.internal_variance
         if save_metadata:
             self.save_metadata(group)
     
@@ -363,7 +405,7 @@ class TruncatedGaussianDistribution(Distribution):
         
         returns: returns single number representing derivative of log value
         """
-        return (self.mean - point) / self.variance
+        return (self.internal_mean - point) / self.internal_variance
     
     @property
     def hessian_computable(self):
@@ -382,13 +424,13 @@ class TruncatedGaussianDistribution(Distribution):
         
         returns: single number representing second derivative of log value
         """
-        return (-1.) / self.variance
+        return (-1.) / self.internal_variance
     
     def copy(self):
         """
         Returns a deep copy of this Distribution. This function ignores
         metadata.
         """
-        return TruncatedGaussianDistribution(self.mean, self.variance,\
-            self.low, self.hi)
+        return TruncatedGaussianDistribution(self.internal_mean,\
+            self.internal_variance, self.low, self.high)
 

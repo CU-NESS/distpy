@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/DistributionList.py
 Author: Keith Tauscher
-Date: 23 Sep 2018
+Date: Oct 15 2019
 
 Description: A container which can hold an arbitrary number of distributions,
              each of which can have any number of parameters which it describes
@@ -19,6 +19,7 @@ Description: A container which can hold an arbitrary number of distributions,
 """
 import numpy as np
 import numpy.random as rand
+import scipy.linalg as scila
 from ..util import int_types, numerical_types, sequence_types
 from ..transform import TransformList, NullTransform
 from .Distribution import Distribution
@@ -74,6 +75,47 @@ class DistributionList(Distribution):
         Property storing the number of parameters in this DistributionList.
         """
         return len(self.transform_list)
+    
+    @property
+    def mean(self):
+        """
+        Property storing the approximate mean of this distribution. If the
+        transform has a large second derivative at the mean, then this
+        approximation is poor.
+        """
+        if not hasattr(self, '_mean'):
+            mean = []
+            for (distribution, transforms) in self._data:
+                if distribution.numparams == 1:
+                    mean.append(transforms[0].apply_inverse(distribution.mean))
+                else:
+                    this_mean = distribution.mean
+                    for (itransform, transform) in enumerate(transforms):
+                        mean.append(\
+                            transform.apply_inverse(this_mean[itransform]))
+            self._mean = np.array(mean)
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            variances = []
+            for (distribution, transforms) in self._data:
+                if distribution.numparams == 1:
+                    this_mean = np.array([distribution.mean])
+                    this_covariance = np.array([[distribution.variance]])
+                    variances.append(transforms.inverse.transform_covariance(\
+                        this_covariance, this_mean))
+                else:
+                    this_mean = distribution.mean
+                    this_covariance = distribution.variance
+                    variances.append(transforms.inverse.transform_covariance(\
+                        this_covariance, this_mean))
+            self._variance = scila.block_diag(*variances)
+        return self._variance
 
     def add_distribution(self, distribution, transforms=None):
         """

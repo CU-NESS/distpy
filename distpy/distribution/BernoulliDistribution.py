@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/BernoulliDistribution.py
 Author: Keith Tauscher
-Date: 25 May 2019
+Date: 15 Oct 2019
 
 Description: File containing class representing a Bernoulli distribution.
 """
@@ -26,6 +26,25 @@ class BernoulliDistribution(Distribution):
         """
         self.probability_of_success = probability_of_success
         self.metadata = metadata
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.probability_of_success
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the variance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            self._variance =\
+                self.probability_of_success * (1 - self.probability_of_success)
+        return self._variance
     
     @property
     def probability_of_success(self):

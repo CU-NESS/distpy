@@ -21,13 +21,13 @@ expected_conditionalized_variance = (1 - (correlation ** 2))
 expected_conditionalized_mean = correlation * (known_y - mean[1])
 joint = GaussianDistribution(mean, covariance)
 conditionalized = joint.conditionalize(y_index, known_y)
-conditionalized_variance = conditionalized.covariance.A[0,0]
-conditionalized_mean = conditionalized.mean.A[0,0]
+conditionalized_variance = conditionalized.variance
+conditionalized_mean = conditionalized.mean
 marginalized = joint[0]
 expected_marginalized_variance = 1
 expected_marginalized_mean = 0
-marginalized_mean = marginalized.mean.A[0,0]
-marginalized_variance = marginalized.covariance.A[0,0]
+marginalized_mean = marginalized.mean
+marginalized_variance = marginalized.variance
 
 actual = [conditionalized_variance, conditionalized_mean] +\
     [marginalized_variance, marginalized_mean]

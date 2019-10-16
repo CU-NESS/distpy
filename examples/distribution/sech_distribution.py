@@ -1,7 +1,7 @@
 """
 File: examples/distribution/sech_distribution.py
 Author: Keith Tauscher
-Date: 8 Jul 2018
+Date: Oct 15 2019
 
 Description: Example of using the SechDistribution class to represent 1D random
              variates.
@@ -29,6 +29,11 @@ t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s for a sample of size {1} to be drawn from a sech ' +\
     'distribution.').format(time.time() - t0, sample_size))
+print('Sample mean was {0:.3g}, while expected mean was {1:.3g}.'.format(\
+    np.mean(sample), distribution.mean))
+print(('Sample standard deviation was {0:.3g}, while expected standard ' +\
+    'deviation was {1:.3g}.').format(np.std(sample),\
+    distribution.standard_deviation))
 fig = pl.figure()
 ax = fig.add_subplot(111)
 ax.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\

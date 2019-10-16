@@ -27,9 +27,10 @@ else:
     os.remove(hdf5_file_name)
 
 t0 = time.time()
-sample = distribution_set.draw(sample_size)['x']
+sample = distribution_set.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a 1D uniform ' +\
     'distribution (in square space).').format(time.time() - t0, sample_size))
+sample = sample['x']
 pl.figure()
 pl.hist(sample, bins=100, histtype='step', color='b', linewidth=2,\
     label='sampled', density=True)

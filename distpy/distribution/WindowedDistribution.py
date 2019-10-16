@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/WindowedDistribution.py
 Author: Keith Tauscher
-Date: 23 Sep 2018
+Date: Oct 15 2019
 
 Description: File containing distribution which is similar to a given one but,
              when drawing from them, only points which exist where a different
@@ -93,6 +93,26 @@ class WindowedDistribution(Distribution):
         WindowedDistribution.
         """
         return self.background_distribution.numparams
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise NotImplementedError("mean is not implemented for the " +\
+                "WindowedDistribution class.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise AttributeError("variance is not implemented for the " +\
+                "WindowedDistribution class.")
+        return self._variance
     
     def draw(self, shape=None, random=rand):
         """

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/DeterministicDistribution.py
 Author: Keith Tauscher
-Date: 26 Jun 2018
+Date: Oct 15 2019
 
 Description: File containing a class for a pseudo-distribution, characterized
              by no values and deterministic drawn points.
@@ -186,6 +186,27 @@ class DeterministicDistribution(Distribution):
             return 1
         else:
             return self.points.shape[1]
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = np.mean(self.points, axis=0)
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.numparams == 1:
+                self._variance = np.var(self.points)
+            else:
+                self._variance = np.cov(self.points, rowvar=False)
+        return self._variance
     
     def to_string(self):
         """

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/Distribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing base class for all distributions.
 """
@@ -41,6 +41,11 @@ class Distribution(Savable, Loadable):
     self.log_value(point) --- computes the log of the value of this
                               distribution at the given point
     self.numparams --- property, not function, storing number of parameters
+    self.mean --- property storing mean of distribution, if implemented (some
+                  distributions are too complicated for this to be implemented)
+    self.variance --- property storing (co)variance of distribution, if
+                      implemented (some distributions are too complicated for
+                      this to be implemented)
     self.to_string() --- string summary of this distribution
     self.__eq__(other) --- checks for equality with another object
     self.fill_hdf5_group(group) --- fills given hdf5 group with data from
@@ -149,6 +154,34 @@ class Distribution(Savable, Loadable):
         distribution. It must be implemented by all subclasses.
         """
         raise cannot_instantiate_distribution_error
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution, if implemented.
+        """
+        raise cannot_instantiate_distribution_error
+    
+    @property
+    def variance(self):
+        """
+        Property storing the (co)variance of this distribution, if implemented.
+        """
+        raise cannot_instantiate_distribution_error
+    
+    @property
+    def standard_deviation(self):
+        """
+        Property storing the standard deviation of univariate distributions
+        whose variance is implemented.
+        """
+        if not hasattr(self, '_standard_deviation'):
+            if self.numparams == 1:
+                self._standard_deviation = np.sqrt(self.variance)
+            else:
+                raise NotImplementedError("standard_deviation is not " +\
+                    "defined for multivariate distributions.")
+        return self._standard_deviation
     
     def __len__(self):
         """
@@ -287,6 +320,20 @@ class Distribution(Savable, Loadable):
         """
         return ((not self.is_discrete) and (self.numparams == 1))
     
+    @property
+    def median(self):
+        """
+        Property storing the median of distributions which have inverse_cdv
+        functions (which are most analytical univariate distributions).
+        """
+        if not hasattr(self, '_median'):
+            if self.can_give_confidence_intervals:
+                self._median = self.inverse_cdf(0.5)
+            else:
+                raise NotImplementedError("median cannot be determined for " +\
+                    "this distribution.")
+        return self._median
+    
     def left_confidence_interval(self, probability_level):
         """
         Finds confidence interval furthest to the left.
@@ -398,15 +445,20 @@ class Distribution(Savable, Loadable):
         """
         pass
     
-    def plot(self, x_values, scale_factor=1, xlabel='', ylabel='', title='',\
-        fontsize=24, ax=None, show=False, **kwargs):
+    def plot(self, x_values, scale_factor=1, center=False, xlabel='',\
+        ylabel='', title='', fontsize=24, ax=None, show=False, **kwargs):
         """
         Plots the PDF of this distribution evaluated at the given x values.
         
-        x_values: 1D numpy.ndarray of sorted x values at which to evaluate this
-                  distribution
+        x_values: 1D numpy.ndarray of sorted x values at which to plot this
+                  distribution (if center is True, then the distribution is
+                  plotted at these numbers of standard deviations from the
+                  mean)
         scale_factor: allows for the pdf values to be scaled by a constant
                       (default 1)
+        center: boolean determining whether numbers of standard deviations from
+                the mean (True) are plotted or values themselves (False) are
+                plotted
         xlabel: label to place on x axis
         ylabel: label to place on y axis
         title: title to place on top of plot
@@ -425,15 +477,21 @@ class Distribution(Savable, Loadable):
         if self.numparams != 1:
             raise NotImplementedError('plot can only be called with 1D ' +\
                 'distributions.')
-        y_values = np.exp([self.log_value(x_value) for x_value in x_values])
+        if center:
+            z_values = self.standard_deviation * np.exp([self.log_value(\
+                self.mean + (self.standard_deviation * x_value))\
+                for x_value in x_values])
+        else:
+            z_values =\
+                np.exp([self.log_value(x_value) for x_value in x_values])
         xlim = (x_values[0], x_values[-1])
         if type(ax) is type(None):
             fig = pl.figure(figsize=(12,9))
             ax = fig.add_subplot(111)
         if self.is_discrete:
-            ax.scatter(x_values, y_values * scale_factor, **kwargs)
+            ax.scatter(x_values, z_values * scale_factor, **kwargs)
         else:
-            ax.plot(x_values, y_values * scale_factor, **kwargs)
+            ax.plot(x_values, z_values * scale_factor, **kwargs)
         ax.set_xlabel(xlabel, size=fontsize)
         ax.set_ylabel(ylabel, size=fontsize)
         ax.set_title(title, size=fontsize)

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/PoissonDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing a Poisson distribution.
 """
@@ -57,6 +57,24 @@ class PoissonDistribution(Distribution):
         Poisson distribution pdf is univariate so numparams always returns 1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.scale
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            self._variance = self.scale
+        return self._variance
     
     def draw(self, shape=None, random=rand):
         """

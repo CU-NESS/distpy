@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/BetaDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: 15 Oct 2019
 
 Description: File containing class representing a beta distribution.
 """
@@ -117,6 +117,26 @@ class BetaDistribution(Distribution):
         if not hasattr(self, '_beta_minus_one'):
             self._beta_minus_one = self.beta - 1
         return self._beta_minus_one
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.alpha / (self.alpha + self.beta)
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            self._variance = (self.alpha * self.beta) /\
+                (((self.alpha + self.beta) ** 2) *\
+                (self.alpha + self.beta + 1))
+        return self._variance
     
     @property
     def const_lp_term(self):

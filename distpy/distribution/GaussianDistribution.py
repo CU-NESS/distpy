@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/GaussianDistribution.py
 Author: Keith Tauscher
-Date: Feb 12 2018
+Date: Oct 15 2019
 
 Description: File containing class representing Gaussian distribution
              (univariate or multivariate).
@@ -34,7 +34,7 @@ class GaussianDistribution(Distribution):
                    or a 2D array (if multivariate) final covariance used is
                    average of this 2D array and its transpose
         """
-        self.mean = mean
+        self.internal_mean = mean
         self.covariance = covariance
         self.metadata = metadata
     
@@ -50,7 +50,7 @@ class GaussianDistribution(Distribution):
         """
         if all([isinstance(distribution, GaussianDistribution)\
             for distribution in distributions]):
-            new_mean = np.concatenate([distribution.mean.A[0]\
+            new_mean = np.concatenate([distribution.internal_mean.A[0]\
                 for distribution in distributions])
             new_covariance = scila.block_diag(*[distribution.covariance.A\
                 for distribution in distributions])
@@ -61,16 +61,17 @@ class GaussianDistribution(Distribution):
                 "GaussianDistribution.")
     
     @property
-    def mean(self):
+    def internal_mean(self):
         """
-        Property storing the mean of this GaussianDistribution.
+        Property storing the mean of this GaussianDistribution in matrix form.
         """
-        if not hasattr(self, '_mean'):
-            raise AttributeError("mean was referenced before it was set.")
-        return self._mean
+        if not hasattr(self, '_internal_mean'):
+            raise AttributeError("internal_mean was referenced before it " +\
+                "was set.")
+        return self._internal_mean
     
-    @mean.setter
-    def mean(self, value):
+    @internal_mean.setter
+    def internal_mean(self, value):
         """
         Setter for the mean of this distribution
         
@@ -88,7 +89,7 @@ class GaussianDistribution(Distribution):
                 raise ValueError("The mean of a GaussianDistribution was " +\
                     "set to something like an empty array.")
             else:
-                self._mean = np.matrix(value)
+                self._internal_mean = np.matrix(value)
         else:
             raise ValueError("The mean of a GaussianDistribution is not of " +\
                 "a recognizable type.")
@@ -141,6 +142,30 @@ class GaussianDistribution(Distribution):
         self.square_root_covariance
     
     @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            if self.numparams == 1:
+                self._mean = self.internal_mean.A[0,0]
+            else:
+                self._mean = self.internal_mean.A[0]
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.numparams == 1:
+                self._variance = self.covariance.A[0,0]
+            else:
+                self._variance = self.covariance.A
+        return self._variance
+    
+    @property
     def log_determinant_covariance(self):
         """
         Property storing the natural logarithm of the determinant of the
@@ -167,7 +192,7 @@ class GaussianDistribution(Distribution):
         covariance).
         """
         if not hasattr(self, '_numparams'):
-            self._numparams = len(self.mean.A[0])
+            self._numparams = len(self.internal_mean.A[0])
         return self._numparams
     
     def __add__(self, other):
@@ -192,13 +217,13 @@ class GaussianDistribution(Distribution):
                  Gaussian variate with other
         """
         if isinstance(other, GaussianDistribution):
-            new_mean = self.mean.A[0] + other.mean.A[0]
+            new_mean = self.internal_mean.A[0] + other.internal_mean.A[0]
             new_covariance = self.covariance.A + other.covariance.A
         elif type(other) in [list, tuple, np.ndarray]:
             other = np.array(other)
             if other.ndim == 1:
                 if len(other) == self.numparams:
-                    new_mean = self.mean.A[0] + other
+                    new_mean = self.internal_mean.A[0] + other
                     new_covariance = self.covariance.A
                 else:
                     raise ValueError("Cannot multiply Gaussian distributed " +\
@@ -208,7 +233,7 @@ class GaussianDistribution(Distribution):
                     "random vector by a tensor with more than 1 index.")
         else:
             # assume other is a constant
-            new_mean = self.mean.A[0] + other
+            new_mean = self.internal_mean.A[0] + other
             new_covariance = self.covariance.A
         return GaussianDistribution(new_mean, new_covariance)
     
@@ -235,7 +260,8 @@ class GaussianDistribution(Distribution):
         """
         Returns a new GaussianDistribution with a mean multiplied by -1.
         """
-        return GaussianDistribution(-self.mean.A[0], self.covariance.A)
+        return GaussianDistribution(-self.internal_mean.A[0],\
+            self.covariance.A)
     
     def __mul__(self, other):
         """
@@ -266,7 +292,7 @@ class GaussianDistribution(Distribution):
         returns: GaussianDistribution representing the multiplication of this
                  Gaussian variate by other
         """
-        new_mean = self.mean.A[0] * other
+        new_mean = self.internal_mean.A[0] * other
         new_covariance = self.covariance.A * (other ** 2)
         return GaussianDistribution(new_mean, new_covariance)
     
@@ -314,7 +340,7 @@ class GaussianDistribution(Distribution):
             other = np.array(other)
             if other.ndim == 1:
                 if len(other) == self.numparams:
-                    new_mean = np.dot(self.mean.A[0], other)
+                    new_mean = np.dot(self.internal_mean.A[0], other)
                     new_covariance =\
                         np.dot(np.dot(self.covariance.A, other), other)
                 else:
@@ -324,7 +350,7 @@ class GaussianDistribution(Distribution):
                 if other.shape[1] == self.numparams:
                     if other.shape[0] <= self.numparams:
                         # other is a matrix with self.numparams columns
-                        new_mean = np.dot(other, self.mean.A[0])
+                        new_mean = np.dot(other, self.internal_mean.A[0])
                         new_covariance =\
                             np.dot(other, np.dot(self.covariance.A, other.T))
                     else:
@@ -363,7 +389,7 @@ class GaussianDistribution(Distribution):
             isinstance(second, GaussianDistribution):
             if first.numparams == second.numparams:
                 dimension = first.numparams
-                delta = first.mean.A[0] - second.mean.A[0]
+                delta = first.internal_mean.A[0] - second.internal_mean.A[0]
                 sigma_Q_inverse = npla.inv(second.covariance.A)
                 sigma_P_times_sigma_Q_inverse =\
                     np.dot(first.covariance.A, sigma_Q_inverse)
@@ -414,17 +440,18 @@ class GaussianDistribution(Distribution):
         returns a numpy.ndarray containing the values from this draw
         """
         if (self.numparams == 1):
-            loc = self.mean.A[0,0]
+            loc = self.internal_mean.A[0,0]
             scale = np.sqrt(self.covariance.A[0,0])
             return random.normal(loc=loc, scale=scale, size=shape)
         elif type(shape) is type(None):
-            return self.mean.A[0] + np.dot(self.square_root_covariance,\
+            return self.internal_mean.A[0] +\
+                np.dot(self.square_root_covariance,\
                 random.normal(0, 1, size=self.numparams))
         else:
             if type(shape) in int_types:
                 shape = (shape,)
             random_vector = random.normal(0, 1, size=shape+(1,self.numparams))
-            return self.mean.A +\
+            return self.internal_mean.A +\
                 np.sum(random_vector * self.square_root_covariance, axis=-1)
 
     def log_value(self, point):
@@ -436,9 +463,9 @@ class GaussianDistribution(Distribution):
         returns: the log of the value of this distribution at the given point
         """
         if type(point) in numerical_types:
-            minus_mean = np.matrix([point]) - self.mean
+            minus_mean = np.matrix([point]) - self.internal_mean
         elif type(point) in sequence_types:
-            minus_mean = np.matrix(point) - self.mean
+            minus_mean = np.matrix(point) - self.internal_mean
         else:
             raise ValueError("The type of point provided to a " +\
                 "GaussianDistribution was not of a numerical type (should " +\
@@ -456,9 +483,9 @@ class GaussianDistribution(Distribution):
         """
         if self.numparams == 1:
             return "Normal(mean={0:.3g},variance={1:.3g})".format(\
-                self.mean.A[0,0], self.covariance.A[0,0])
+                self.internal_mean.A[0,0], self.covariance.A[0,0])
         else:
-            return "{}-dim Normal".format(len(self.mean.A[0]))
+            return "{}-dim Normal".format(len(self.internal_mean.A[0]))
     
     def marginalize(self, key):
         """
@@ -470,7 +497,7 @@ class GaussianDistribution(Distribution):
         
         returns: marginalized GaussianDistribution
         """
-        new_mean = self.mean.A[0][key]
+        new_mean = self.internal_mean.A[0][key]
         new_covariance = self.covariance.A[:,key][key]
         return GaussianDistribution(new_mean, new_covariance)
     
@@ -508,9 +535,11 @@ class GaussianDistribution(Distribution):
             if index not in known_indices])
         new_covariance = npla.inv(\
             self.inverse_covariance.A[:,remaining_indices][remaining_indices])
-        known_mean_displacement = values - self.mean.A[0][known_indices]
+        known_mean_displacement =\
+            values - self.internal_mean.A[0][known_indices]
         new_mean =\
-            self.mean.A[0][remaining_indices] - np.dot(new_covariance, np.dot(\
+            self.internal_mean.A[0][remaining_indices] -\
+            np.dot(new_covariance, np.dot(\
             self.inverse_covariance.A[:,known_indices][remaining_indices],\
             known_mean_displacement))
         return GaussianDistribution(new_mean, new_covariance)
@@ -523,8 +552,8 @@ class GaussianDistribution(Distribution):
         """
         if isinstance(other, GaussianDistribution):
             if self.numparams == other.numparams:
-                mean_close =\
-                    np.allclose(self.mean.A, other.mean.A, rtol=0, atol=1e-9)
+                mean_close = np.allclose(self.internal_mean.A,\
+                    other.internal_mean.A, rtol=0, atol=1e-9)
                 covariance_close = np.allclose(self.covariance.A,\
                     other.covariance.A, rtol=1e-12, atol=0)
                 metadata_equal = self.metadata_equal(other)
@@ -541,7 +570,7 @@ class GaussianDistribution(Distribution):
         
         cdf: value between 0 and 1
         """
-        return (self.mean.A[0,0] +\
+        return (self.internal_mean.A[0,0] +\
             (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
     
     @property
@@ -579,7 +608,8 @@ class GaussianDistribution(Distribution):
                        if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GaussianDistribution'
-        create_hdf5_dataset(group, 'mean', data=self.mean.A[0], link=mean_link)
+        create_hdf5_dataset(group, 'mean', data=self.internal_mean.A[0],\
+            link=mean_link)
         create_hdf5_dataset(group, 'covariance', data=self.covariance.A,\
             link=covariance_link)
         if save_metadata:
@@ -626,9 +656,9 @@ class GaussianDistribution(Distribution):
                  else, returns 1D vector of values of derivatives
         """
         if type(point) in numerical_types:
-            mean_minus = self.mean - np.matrix([point])
+            mean_minus = self.internal_mean - np.matrix([point])
         elif type(point) in sequence_types:
-            mean_minus = self.mean - np.matrix(point)
+            mean_minus = self.internal_mean - np.matrix(point)
         else:
             raise ValueError("The type of point provided to a " +\
                 "GaussianDistribution was not of a numerical type (should " +\
@@ -666,6 +696,6 @@ class GaussianDistribution(Distribution):
         Returns a deep copy of this Distribution. This function ignores
         metadata.
         """
-        return GaussianDistribution(self.mean.A[0].copy(),\
+        return GaussianDistribution(self.internal_mean.A[0].copy(),\
             self.covariance.A.copy())
 

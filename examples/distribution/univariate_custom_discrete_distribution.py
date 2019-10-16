@@ -1,7 +1,7 @@
 """
 File: examples/distribution/univariate_custom_discrete_distribution.py
 Author: Keith Tauscher
-Date: 24 Feb 2018
+Date: Oct 15 2019
 
 Description: Example showing how to use the CustomDiscreteDistribution class to
              represent a 1D discrete distribution with a uniform probability
@@ -36,6 +36,11 @@ t1 = time.time()
 print(("It took {0:.5f} s to draw {1:d} samples from a 1D custom discrete " +\
     "distribution with {2:d} possible values.").format(t1 - t0, ndraw,\
     nvalues))
+print('Sample mean was {0:.3g}, while expected mean was {1:.3g}.'.format(\
+    np.mean(draws), distribution.mean))
+print(('Sample standard deviation was {0:.3g}, while expected standard ' +\
+    'deviation was {1:.3g}.').format(np.std(draws),\
+    distribution.standard_deviation))
 
 fig = pl.figure(figsize=(12, 10))
 ax = fig.add_subplot(111)

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/GriddedDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing an arbitrary dimensional
              distribution given by a rectangular array-defined pdf.
@@ -113,6 +113,26 @@ class GriddedDistribution(Distribution):
         describes.
         """
         return self._N
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise NotImplementedError("mean is not implemented for the " +\
+                "GriddedDistribution.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise NotImplementedError("variance is not implemented for the " +\
+                "GriddedDistribution.")
+        return self._variance
 
     def draw(self, shape=None, random=rand):
         """

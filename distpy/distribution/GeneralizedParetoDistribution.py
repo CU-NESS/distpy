@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/GeneralizedParetoDistribution.py
 Author: Keith Tauscher
-Date: 28 May 2018
+Date: Oct 15 2019
 
 Description: File containing a class representing a generalized form of the
              Pareto distribution. Its cdf is given by
@@ -109,6 +109,33 @@ class GeneralizedParetoDistribution(Distribution):
         always returns 1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            if self.shape <= 2:
+                raise NotImplementedError("mean is not defined because " +\
+                    "shape <= 2.")
+            else:
+                self._mean = self.location + (self.scale / (self.shape - 2))
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.shape <= 3:
+                raise NotImplementedError("variance is not defined because " +\
+                    "shape <= 3.")
+            else:
+                self._variance = ((self.scale ** 2) * (self.shape - 1)) /\
+                    ((self.shape - 3) * ((self.shape - 2) ** 2))
+        return self._variance
     
     def draw(self, shape=None, random=rand):
         """

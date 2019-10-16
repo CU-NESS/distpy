@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/UniformTriangulationDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing a class representing a uniform distribution over a
              set of simplices (usually a Delaunay triangulation).
@@ -68,6 +68,26 @@ class UniformTriangulationDistribution(Distribution):
         if not hasattr(self, '_numparams'):
             self._numparams = self.triangulation.points.shape[1]
         return self._numparams
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean is not implemented for the " +\
+                "UniformTriangulationDistribution class.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise AttributeError("variance is not implemented for the " +\
+                "UniformTriangulationDistribution class.")
+        return self._variance
     
     @property
     def nsimplices(self):

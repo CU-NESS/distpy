@@ -1,7 +1,7 @@
 """
 File: examples/distribution/distribution_set_two_independent_variates.py
 Author: Keith Tauscher
-Date: 7 Aug 2017
+Date: Oct 15 2019
 
 Description: File containing example of how to add two independent random
              variates into the same DistributionSet.
@@ -33,6 +33,10 @@ sample = distribution_set.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a 2-parameter pdf made ' +\
     'up of a uniform distribution times a Gaussian.').format(time.time() - t0,\
     sample_size))
+print('sample_mean={}, expected_mean={}'.format(\
+    {key: np.mean(sample[key]) for key in sample}, distribution_set.mean))
+print('sample_variances={}, expected_variances={}'.format(\
+    {key: np.var(sample[key]) for key in sample}, distribution_set.variance))
 pl.figure()
 pl.hist2d(sample['x'], sample['y'], bins=100, cmap=cm.bone)
 pl.title("PriorSet 2 independent parameter test. x is Unif(-3, 7) and y is " +\

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/SequentialDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing distribution which has a 1D form but manifests in
              the form of a sorted tuple.
@@ -69,6 +69,26 @@ class SequentialDistribution(Distribution):
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams was referenced before it was set.")
         return self._numparams
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean is not implemented for the " +\
+                "SequentialDistribution class.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise AttributeError("variance is not implemented for the " +\
+                "SequentialDistribution class.")
+        return self._variance
     
     @numparams.setter
     def numparams(self, value):

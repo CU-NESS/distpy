@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/ParallelepipedDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class represening a uniform distribution over an
              arbitrary parallelepiped (in arbitrary number of dimensions).
@@ -151,6 +151,25 @@ class ParallelepipedDistribution(Distribution):
         if not hasattr(self, '_numparams'):
             self._numparams = len(self.center)
         return self._numparams
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.center
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise AttributeError("variance is not implemented for the " +\
+                "ParallelepipedDistribution class.")
+        return self._variance
 
     @property
     def matrix(self):

@@ -1,7 +1,7 @@
 """
 File: examples/distribution/geometric_distribution.py
 Author: Keith Tauscher
-Date: 8 January 2018
+Date: Oct 15 2019
 
 Description: Example of using the GeometricDistribution class including the
              minimum and maximum.
@@ -15,7 +15,7 @@ sample_size = int(1e5)
 
 common_ratio = 0.95
 minimum = 3
-maximum = 20
+maximum = 30
 metadata = {'a': "This is pretty complicated", 'b': 1,\
     'c': True, 'd': "metadata don't you think?"}
 distribution = GeometricDistribution(common_ratio, minimum=minimum,\
@@ -34,6 +34,11 @@ t0 = time.time()
 sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a geometric ' +\
     'distribution.').format(time.time() - t0, sample_size))
+print('Sample mean was {0:.3g}, while expected mean was {1:.3g}.'.format(\
+    np.mean(sample), distribution.mean))
+print(('Sample standard deviation was {0:.3g}, while expected standard ' +\
+    'deviation was {1:.3g}.').format(np.std(sample),\
+    distribution.standard_deviation))
 fig = pl.figure()
 ax = fig.add_subplot(111)
 (start, end) = (minimum - 3, maximum + 3)

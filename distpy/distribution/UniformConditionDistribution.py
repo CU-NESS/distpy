@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/UniformConditionDistribution.py
 Author: Keith Tauscher
-Date: 13 Mar 2019
+Date: Oct 15 2019
 
 Description: File containing class representing a distribution which takes on
              the log_value 0 (unnormalized) when a condition  is met and -inf
@@ -136,6 +136,26 @@ class UniformConditionDistribution(Distribution):
         if not hasattr(self, '_numparams'):
             self._numparams = self.expression.num_arguments
         return self._numparams
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise NotImplementedError("mean is not implemented for " +\
+                "UniformConditionDistribution class.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise NotImplementedError("variance is not implemented for " +\
+                "UniformConditionDistribution class.")
+        return self._variance
     
     def __eq__(self, other):
         """

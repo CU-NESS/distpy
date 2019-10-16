@@ -1,7 +1,7 @@
 """
 File: examples/distribution/distribution_list_seven_variates.py
 Author: Keith Tauscher
-Date: 23 Sep 2018
+Date: Oct 15 2019
 
 Description: File containing example of a seven-variate DistributionList.
 """
@@ -39,6 +39,8 @@ sample = distribution_list.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a mixed distribution ' +\
     'with 7 parameters, in groups of 3, 2, 1, and 1.').format(\
     time.time() - t0, sample_size))
+print("sample_mean={0}, expected_mean={1}".format(np.mean(sample, axis=0),\
+    distribution_list.mean))
 pl.figure()
 pl.hist2d(sample[:,1], sample[:,6], bins=100, cmap=cm.bone)
 pl.title('PriorSet seven-parameter test. x should be in [0,1] and y should ' +\

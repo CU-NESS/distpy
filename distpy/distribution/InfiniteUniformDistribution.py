@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/InfiniteUniformDistribution.py
 Author: Keith Tauscher
-Date: 25 Mar 2019
+Date: Oct 15 2019
 
 Description: File containing class representing an improper uniform
              "distribution". This Distribution cannot be drawn from as there is
@@ -257,6 +257,26 @@ class InfiniteUniformDistribution(Distribution):
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams referenced before it was set.")
         return self._numparams
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            raise AttributeError("mean is not defined for the " +\
+                "InfiniteUniformDistribution.")
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            raise NotImplementedError("variance is not defined for the " +\
+                "InfiniteUniformDistribution.")
+        return self._variance
     
     @numparams.setter
     def numparams(self, value):

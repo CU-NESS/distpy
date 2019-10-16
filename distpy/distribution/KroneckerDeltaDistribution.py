@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/KroneckerDeltaDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing distribution which always takes
              the same value.
@@ -45,7 +45,7 @@ class KroneckerDeltaDistribution(Distribution):
         value: value which is always returned by this distribution
         """
         if type(value) in numerical_types:
-            self._value = np.array([value])
+            self._value = value
         elif type(value) in sequence_types:
             value = np.array(value)
             if (value.ndim == 1) and (value.size > 0):
@@ -56,6 +56,27 @@ class KroneckerDeltaDistribution(Distribution):
                     "1D numpy.ndarray value.")
         else:
             raise TypeError("value was set to a non-number.")
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.value
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            if self.numparams == 1:
+                self._variance = 0
+            else:
+                self._variance = np.zeros(2 * (self.numparams,))
+        return self._variance
     
     def draw(self, shape=None, random=None):
         """
@@ -75,13 +96,13 @@ class KroneckerDeltaDistribution(Distribution):
         """
         
         if type(shape) is type(None):
-            return_value = self.value
+            return_value = np.array([self.value])
         else:
             if type(shape) in int_types:
                 shape = (shape,)
             return_value = self.value * np.ones(shape + (self.numparams,))
         if self.numparams == 1:
-            return return_value[...,0]
+            return return_value[...,0] * 1.
         else:
             return return_value
     
@@ -152,7 +173,10 @@ class KroneckerDeltaDistribution(Distribution):
         distribution. It must be implemented by all subclasses.
         """
         if not hasattr(self, '_numparams'):
-            self._numparams = len(self.value)
+            if type(self.value) in numerical_types:
+                self._numparams = 1
+            else:
+                self._numparams = len(self.value)
         return self._numparams
     
     def to_string(self):

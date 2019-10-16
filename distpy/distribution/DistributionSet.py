@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/DistributionSet.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: A container which can hold an arbitrary number of distributions,
              each of which can have any number of parameters which it describes
@@ -110,6 +110,55 @@ class DistributionSet(Savable, Loadable):
         Property storing the number of parameters in this DistributionSet.
         """
         return len(self.params)
+    
+    @property
+    def mean(self):
+        """
+        Property storing the approximate mean of this distribution. If the
+        transform has a large second derivative at the mean, then this
+        approximation is poor.
+        """
+        if not hasattr(self, '_mean'):
+            mean = {}
+            for (distribution, params, transforms) in self._data:
+                if distribution.numparams == 1:
+                    mean[params[0]] =\
+                        transforms[0].apply_inverse(distribution.mean)
+                else:
+                    this_mean = distribution.mean
+                    for (itransform, (parameter, transform)) in\
+                        enumerate(zip(params, transforms)):
+                        mean[parameter] =\
+                            transform.apply_inverse(this_mean[itransform])
+            self._mean = mean
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the variances of this distribution. Covariances are
+        not included because of the dictionary format of the return value.
+        """
+        if not hasattr(self, '_variance'):
+            variances = {}
+            for (distribution, params, transforms) in self._data:
+                if distribution.numparams == 1:
+                    this_mean = np.array([distribution.mean])
+                    this_covariance = np.array([[distribution.variance]])
+                    variances[params[0]] =\
+                        transforms.inverse.transform_covariance(\
+                        this_covariance, this_mean)[0,0]
+                else:
+                    this_mean = distribution.mean
+                    this_covariance = distribution.variance
+                    this_untransformed_covariance =\
+                        transforms.inverse.transform_covariance(\
+                        this_covariance, this_mean)
+                    for (parameter, variance) in\
+                        zip(params, np.diag(this_untransformed_covariance)):
+                        variances[parameter] = variance
+            self._variance = variances
+        return self._variance
     
     def __len__(self):
         """

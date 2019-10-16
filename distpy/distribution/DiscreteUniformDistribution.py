@@ -1,11 +1,12 @@
 """
 File: distpy/distribution/DiscreteUniformDistribution.py
 Author: Keith Tauscher
-Date: 16 Jun 2018
+Date: Oct 15 2019
 
 Description: File containing a class representing a discrete uniform
              distribution.
 """
+from __future__ import division
 import numpy as np
 import numpy.random as rand
 from ..util import int_types, sequence_types
@@ -92,6 +93,24 @@ class DiscreteUniformDistribution(Distribution):
         always returns 1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = (self.low + self.high) / 2
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            self._variance = (((self.high - self.low + 1) ** 2) - 1) / 12
+        return self._variance
     
     def draw(self, shape=None, random=rand):
         """

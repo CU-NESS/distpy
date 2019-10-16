@@ -1,7 +1,7 @@
 """
 File: examples/distribution/distribution_sum.py
 Author: Keith Tauscher
-Date: 26 Feb 2019
+Date: Oct 15 2019
 
 Description: Example script showing how to generate and use a DistributionSum
              object, which allows for multiple unrelated distributions to be
@@ -43,6 +43,11 @@ duration = end_time - start_time
 print(("It took {0:.5f} s to draw a sample of size {1:d} from a " +\
     "DistributionSum of a UniformDistribution and a " +\
     "GaussianDistribution.").format(duration, ndraw))
+print('Sample mean was {0:.3g}, while expected mean was {1:.3g}.'.format(\
+    np.mean(draws), distribution.mean))
+print(('Sample standard deviation was {0:.3g}, while expected standard ' +\
+    'deviation was {1:.3g}.').format(np.std(draws),\
+    distribution.standard_deviation))
 
 xs = np.linspace(-8, 8, 1000)
 ys = np.array([np.exp(distribution.log_value(x)) for x in xs])

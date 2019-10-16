@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/SechSquaredDistribution.py
 Author: Keith Tauscher
-Date: 8 Jul 2018
+Date: Oct 15 2019
 
 Description: File containing class representing a sech squared distribution.
 """
@@ -77,7 +77,7 @@ class SechSquaredDistribution(Distribution):
         Property storing a measure of the scale of the distribution.
         """
         if not hasattr(self, '_scale'):
-            self._scale = np.sqrt(3 * self.variance) / np.pi
+            self._scale = 2 * np.sqrt(3 * self.variance) / np.pi
         return self._scale
     
     @property

@@ -1,7 +1,7 @@
 """
 File: distpy/distribution/ExponentialDistribution.py
 Author: Keith Tauscher
-Date: 12 Feb 2018
+Date: Oct 15 2019
 
 Description: File containing class representing an exponential distribution.
 """
@@ -101,6 +101,24 @@ class ExponentialDistribution(Distribution):
         1.
         """
         return 1
+    
+    @property
+    def mean(self):
+        """
+        Property storing the mean of this distribution.
+        """
+        if not hasattr(self, '_mean'):
+            self._mean = self.shift + (1 / self.rate)
+        return self._mean
+    
+    @property
+    def variance(self):
+        """
+        Property storing the covariance of this distribution.
+        """
+        if not hasattr(self, '_variance'):
+            self._variance = (1 / (self.rate ** 2))
+        return self._variance
     
     def draw(self, shape=None, random=rand):
         """

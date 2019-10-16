@@ -1,7 +1,7 @@
 """
 File: examples/distribution/elliptical_uniform_distribution.py
 Author: Keith Tauscher
-Date: 7 Aug 2017
+Date: Oct 15 2019
 
 Description: Example of using the EllipticalUniformDistribution class.
 """
@@ -32,6 +32,10 @@ sample = distribution.draw(sample_size)
 print(("It took {0:.5f} s for a sample of size {1} to be drawn from a " +\
     "uniform multivariate elliptical prior.").format(time.time() - t0,\
     sample_size))
+print("sample_mean={0}, expected_mean={1}".format(np.mean(sample, axis=0),\
+    distribution.mean))
+print("sample_variance={0}, expected_variance={1}".format(\
+    np.cov(sample, rowvar=False), distribution.variance))
 ellp_xs = [sample[idraw][0] for idraw in range(sample_size)]
 ellp_ys = [sample[idraw][1] for idraw in range(sample_size)]
 pl.figure()

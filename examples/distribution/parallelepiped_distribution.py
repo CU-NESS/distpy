@@ -1,7 +1,7 @@
 """
 File: examples/distribution/parallelepiped_distribution.py
 Author: Keith Tauscher
-Date: 7 Aug 2017
+Date: Oct 15 2019
 
 Description: Example of using the ParallelepipedDistribution class.
 """
@@ -33,6 +33,8 @@ sample = distribution.draw(sample_size)
 print(('It took {0:.5f} s to draw {1} points from a bivariate ' +\
     'parallelogram shaped unform distribution.').format(time.time() - t0,\
     sample_size))
+print("sample_mean={0}, expected_mean={1}".format(np.mean(sample, axis=0),\
+    distribution.mean))
 xs = [sample[i][0] for i in range(sample_size)]
 ys = [sample[i][1] for i in range(sample_size)]
 pl.figure()
