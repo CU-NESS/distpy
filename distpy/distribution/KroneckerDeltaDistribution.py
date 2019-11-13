@@ -48,8 +48,11 @@ class KroneckerDeltaDistribution(Distribution):
             self._value = value
         elif type(value) in sequence_types:
             value = np.array(value)
-            if (value.ndim == 1) and (value.size > 0):
-                self._value = value
+            if value.ndim == 1:
+                if value.size == 1:
+                    self._value = value[0]
+                else:
+                    self._value = value
             else:
                 raise ValueError("KroneckerDeltaDistribution must be " +\
                     "initialized with either a number value or a non-empty " +\
@@ -96,15 +99,15 @@ class KroneckerDeltaDistribution(Distribution):
         """
         
         if type(shape) is type(None):
-            return_value = np.array([self.value])
+            return self.value
         else:
             if type(shape) in int_types:
                 shape = (shape,)
             return_value = self.value * np.ones(shape + (self.numparams,))
-        if self.numparams == 1:
-            return return_value[...,0] * 1.
-        else:
-            return return_value
+            if self.numparams == 1:
+                return return_value[...,0]
+            else:
+                return return_value
     
     def log_value(self, point):
         """

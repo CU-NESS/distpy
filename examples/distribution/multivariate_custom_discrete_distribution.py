@@ -54,7 +54,7 @@ print("sample_variance={0}, expected_variance={1}".format(\
     np.cov(draws, rowvar=False), distribution.variance))
 
 pl.figure()
-pl.hist2d(draws[:,0], draws[:,1], bins=(xbins, ybins), density=True, cmap=cmap)
+pl.hist2d(draws[:,0], draws[:,1], bins=(xbins, ybins), normed=True, cmap=cmap)
 pl.colorbar()
 pl.xlim(xlim)
 pl.ylim(ylim)
