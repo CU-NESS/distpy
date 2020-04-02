@@ -1,5 +1,5 @@
 """
-File: pylinex/util/TrianglePlot.py
+File: distpy/util/TrianglePlot.py
 Author: Keith Tauscher
 Date: 18 Aug 2018
 
