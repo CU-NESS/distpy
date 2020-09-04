@@ -973,7 +973,7 @@ class DistributionSet(Savable, Loadable):
     
     def triangle_plot(self, ndraw, parameters=None, in_transformed_space=True,\
         figsize=(8, 8), fig=None, show=False, kwargs_1D={}, kwargs_2D={},\
-        fontsize=28, nbins=100, plot_type='contour',\
+        fontsize=28, nbins=100, plot_type='contour', plot_limits=None,\
         reference_value_mean=None, reference_value_covariance=None,\
         contour_confidence_levels=0.95, parameter_renamer=(lambda x: x),\
         tick_label_format_string='{x:.3g}', num_ticks=3,\
@@ -995,6 +995,12 @@ class DistributionSet(Savable, Loadable):
         fontsize: the size of the label fonts
         nbins: the number of bins for each sample
         plot_type: 'contourf', 'contour', or 'histogram'
+        plot_limits: if not None, a dictionary whose keys are parameter names
+                                  and whose values are 2-tuples of the form
+                                  (low, high) representing the desired axis
+                                  limits for each variable in untransformed
+                                  space
+                     if None (default), bins are used to decide plot limits
         reference_value_mean: reference values to place on plots, if there are
                               any
         reference_value_covariance: if not None, used (along with
@@ -1037,13 +1043,22 @@ class DistributionSet(Savable, Loadable):
             minima = [self.minimum[parameter] for parameter in parameters]
             maxima = [self.maximum[parameter] for parameter in parameters]
         labels = [parameter_renamer(parameter) for parameter in parameters]
+        if type(plot_limits) is not type(None):
+            if in_transformed_space:
+                plot_limits = [\
+                    (self.transform_set[parameter](plot_limits[parameter][0]),\
+                    self.transform_set[parameter](plot_limits[parameter][1]))\
+                    for parameter in parameters]
+            else:
+                plot_limits =\
+                    [plot_limits[parameter] for parameter in parameters]
         return triangle_plot(samples, labels, figsize=figsize, fig=fig,\
             show=show, kwargs_1D=kwargs_1D, kwargs_2D=kwargs_2D,\
             fontsize=fontsize, nbins=nbins, plot_type=plot_type,\
             reference_value_mean=reference_value_mean,\
             reference_value_covariance=reference_value_covariance,\
             contour_confidence_levels=contour_confidence_levels,\
-            minima=minima, maxima=maxima,\
+            minima=minima, maxima=maxima, plot_limits=plot_limits,\
             tick_label_format_string=tick_label_format_string,\
             num_ticks=num_ticks,\
             minor_ticks_per_major_tick=minor_ticks_per_major_tick,\

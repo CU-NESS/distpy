@@ -151,7 +151,8 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     reference_value_covariance=None, bins=None, matplotlib_function='imshow',\
     xlabel='', ylabel='', title='', fontsize=28, ax=None, show=False,\
     contour_confidence_levels=0.95, reference_color='r', reference_alpha=1,\
-    minima=None, maxima=None, num_ellipse_points=1000, **kwargs):
+    minima=None, maxima=None, num_ellipse_points=1000,\
+    xs_for_reference_lines=None, ys_for_reference_lines=None, **kwargs):
     """
     Plots a 2D histogram of the given joint sample.
     
@@ -224,6 +225,10 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
                 **kwargs)
         else:
             raise ValueError("matplotlib_function not recognized.")
+    if type(xs_for_reference_lines) is not type(None):
+        xlim = xs_for_reference_lines
+    if type(ys_for_reference_lines) is not type(None):
+        ylim = ys_for_reference_lines
     if type(reference_value_mean) is not type(None):
         if type(reference_value_mean[0]) is not type(None):
             ax.plot([reference_value_mean[0]] * 2, ylim,\
@@ -301,7 +306,8 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     kwargs_1D={}, kwargs_2D={}, fontsize=28, nbins=100,\
     plot_type='contour', reference_value_mean=None,\
     reference_value_covariance=None, contour_confidence_levels=0.95,\
-    minima=None, maxima=None, tick_label_format_string='{x:.3g}', num_ticks=3,\
+    minima=None, maxima=None, plot_limits=None,\
+    tick_label_format_string='{x:.3g}', num_ticks=3,\
     minor_ticks_per_major_tick=1, xlabel_rotation=0, xlabelpad=None,\
     ylabel_rotation=90, ylabelpad=None):
     """
@@ -337,6 +343,10 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
             ellipses (only used if reference_value_covariance is not None)
     maxima: sequence of variable maxima to take into account when plotting
             ellipses (only used if reference_value_covariance is not None)
+    plot_limits: if not None, a sequence of 2-tuples of the form (low, high)
+                              representing the desired axis limits for each
+                              variable
+                 if None (default), bins are used to decide plot limits
     tick_label_format_string: format string that can be called using
                               tick_label_format_string.format(x=loc) where loc
                               is the location of the tick in data coordinates
@@ -396,7 +406,13 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
         these_bins = np.linspace(min_to_include - (half_width / 5),\
             max_to_include + (half_width / 5), nbins + 1)
         bins.append(these_bins)
-        half_width = (these_bins[-1] - these_bins[0]) / 2
+        if type(plot_limits) is type(None):
+            half_width = (these_bins[-1] - these_bins[0]) / 2
+            middle = (these_bins[-1] + these_bins[0]) / 2
+        else:
+            half_width =\
+                (plot_limits[isample][1] - plot_limits[isample][0]) / 2
+            middle = (plot_limits[isample][1] + plot_limits[isample][0]) / 2
         major_tick_low_endpoint = middle - (half_width * (1 - (1 / num_ticks)))
         major_tick_high_endpoint =\
             middle + (half_width * (1 - (1 / num_ticks)))
@@ -450,13 +466,19 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                         reference_value_covariance[indices,:][:,indices]
                 these_minima = (minima[column], minima[row])
                 these_maxima = (maxima[column], maxima[row])
+                if type(plot_limits) is type(None):
+                    (x_limits, y_limits) = (None, None)
+                else:
+                    (x_limits, y_limits) =\
+                        (plot_limits[column], plot_limits[row])
                 bivariate_histogram(column_sample, row_sample,\
                     reference_value_mean=reference_value_submean,\
                     reference_value_covariance=reference_value_subcovariance,\
                     bins=(bins[column], bins[row]),\
                     matplotlib_function=matplotlib_function_2D, xlabel='',\
                     ylabel='', title='', fontsize=fontsize, ax=ax,\
-                    show=False,\
+                    show=False, xs_for_reference_lines=x_limits,\
+                    ys_for_reference_lines=y_limits,\
                     contour_confidence_levels=contour_confidence_levels,\
                     minima=these_minima, maxima=these_maxima, **full_kwargs_2D)
             ax.set_xticks(minor_ticks[column], minor=True)
@@ -485,9 +507,14 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                     ax.set_ylabel(row_label, size=fontsize,\
                         rotation=ylabel_rotation, labelpad=ylabelpad)
                     ax.tick_params(labelleft=True, which='major')
-            ax.set_xlim((bins[column][0], bins[column][-1]))
-            if row != column:
-                ax.set_ylim((bins[row][0], bins[row][-1]))
+            if type(plot_limits) is type(None):
+                ax.set_xlim((bins[column][0], bins[column][-1]))
+                if row != column:
+                    ax.set_ylim((bins[row][0], bins[row][-1]))
+            else:
+                ax.set_xlim(plot_limits[column])
+                if row != column:
+                    ax.set_ylim(plot_limits[row])
     fig.subplots_adjust(wspace=0, hspace=0)
     if show:
         pl.show()
