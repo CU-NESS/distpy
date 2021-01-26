@@ -53,7 +53,7 @@ def univariate_histogram(sample, reference_value=None, bins=None,\
     if type(ax) is type(None):
         fig = pl.figure()
         ax = fig.add_subplot(111)
-    (nums, bins) = np.histogram(sample, bins=bins)
+    (nums, bins) = np.histogram(sample, bins=bins, density=True)
     bin_centers = (bins[1:] + bins[:-1]) / 2
     num_bins = len(bin_centers)
     if norm_by_max:
@@ -392,9 +392,16 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     full_kwargs_2D.update(kwargs_2D)
     (ticks, minor_ticks) = ([], [])
     bins = []
+    none_plot_limits = (type(plot_limits) is type(None))
+    if none_plot_limits:
+        plot_limits = []
     for (isample, sample) in enumerate(samples):
         min_to_include = np.min(sample)
         max_to_include = np.max(sample)
+        half_width = (max_to_include - min_to_include) / 2
+        these_bins = np.linspace(min_to_include - (half_width / 5),\
+            max_to_include + (half_width / 5), nbins + 1)
+        bins.append(these_bins)
         if (type(reference_value_mean) is not type(None)) and\
             (type(reference_value_mean[isample]) is not type(None)):
             min_to_include =\
@@ -403,12 +410,9 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                 max(max_to_include, reference_value_mean[isample])
         middle = (max_to_include + min_to_include) / 2
         half_width = (max_to_include - min_to_include) / 2
-        these_bins = np.linspace(min_to_include - (half_width / 5),\
-            max_to_include + (half_width / 5), nbins + 1)
-        bins.append(these_bins)
-        if type(plot_limits) is type(None):
-            half_width = (these_bins[-1] - these_bins[0]) / 2
-            middle = (these_bins[-1] + these_bins[0]) / 2
+        if none_plot_limits:
+            plot_limits.append(\
+                (middle - (1.2 * half_width), middle + (1.2 * half_width)))
         else:
             half_width =\
                 (plot_limits[isample][1] - plot_limits[isample][0]) / 2
@@ -507,14 +511,9 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
                     ax.set_ylabel(row_label, size=fontsize,\
                         rotation=ylabel_rotation, labelpad=ylabelpad)
                     ax.tick_params(labelleft=True, which='major')
-            if type(plot_limits) is type(None):
-                ax.set_xlim((bins[column][0], bins[column][-1]))
-                if row != column:
-                    ax.set_ylim((bins[row][0], bins[row][-1]))
-            else:
-                ax.set_xlim(plot_limits[column])
-                if row != column:
-                    ax.set_ylim(plot_limits[row])
+            ax.set_xlim(plot_limits[column])
+            if row != column:
+                ax.set_ylim(plot_limits[row])
     fig.subplots_adjust(wspace=0, hspace=0)
     if show:
         pl.show()
