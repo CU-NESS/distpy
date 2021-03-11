@@ -181,7 +181,11 @@ class GaussianDistribution(Distribution):
         Property storing the inverse of the covariance.
         """
         if not hasattr(self, '_inverse_covariance'):
-            self._inverse_covariance = npla.inv(self.covariance)
+            if self.covariance_diagonal:
+                self._inverse_covariance =\
+                    np.matrix(np.diag(1 / np.diag(self.covariance.A)))
+            else:
+                self._inverse_covariance = npla.inv(self.covariance)
         return self._inverse_covariance
 
     @property
@@ -310,21 +314,36 @@ class GaussianDistribution(Distribution):
         return self.__mul__(1 / other)
     
     @property
+    def covariance_diagonal(self):
+        """
+        Property storing a boolean describing whether the covariance matrix is
+        exactly diagonal or not.
+        """
+        if not hasattr(self, '_covariance_diagonal'):
+            self._covariance_diagonal = np.all(\
+                self.covariance.A == np.diag(np.diag(self.covariance.A)))
+        return self._covariance_diagonal
+    
+    @property
     def square_root_covariance(self):
         """
         Property storing the square root of the covariance matrix.
         """
         if not hasattr(self, '_square_root_covariance'):
-            (eigenvalues, eigenvectors) = npla.eigh(self.covariance.A)
-            if np.any(eigenvalues <= 0):
-                raise ValueError(("Something went wrong, causing the " +\
-                    "square root of the covariance matrix of this " +\
-                    "GaussianJumpingDistribution to have at least one " +\
-                    "complex element. The eigenvalues of the covariance " +\
-                    "matrix are {!s}.").format(eigenvalues))
-            eigenvalues = np.sqrt(eigenvalues)
-            self._square_root_covariance =\
-                np.dot(eigenvectors * eigenvalues[None,:], eigenvectors.T)
+            if self.covariance_diagonal:
+                self._square_root_covariance =\
+                    np.diag(np.sqrt(np.diag(self.covariance.A)))
+            else:
+                (eigenvalues, eigenvectors) = npla.eigh(self.covariance.A)
+                if np.any(eigenvalues <= 0):
+                    raise ValueError(("Something went wrong, causing the " +\
+                        "square root of the covariance matrix of this " +\
+                        "GaussianJumpingDistribution to have at least one " +\
+                        "complex element. The eigenvalues of the " +\
+                        "covariance matrix are {!s}.").format(eigenvalues))
+                eigenvalues = np.sqrt(eigenvalues)
+                self._square_root_covariance =\
+                    np.dot(eigenvectors * eigenvalues[None,:], eigenvectors.T)
         return self._square_root_covariance
     
     def __matmul__(self, other):
@@ -444,15 +463,39 @@ class GaussianDistribution(Distribution):
             scale = np.sqrt(self.covariance.A[0,0])
             return random.normal(loc=loc, scale=scale, size=shape)
         elif type(shape) is type(None):
-            return self.internal_mean.A[0] +\
-                np.dot(self.square_root_covariance,\
-                random.normal(0, 1, size=self.numparams))
+            if self.covariance_diagonal:
+                return self.internal_mean.A[0] +\
+                    (np.diag(self.square_root_covariance) *\
+                    random.normal(0, 1, size=self.numparams))
+            else:
+                return self.internal_mean.A[0] +\
+                    np.dot(self.square_root_covariance,\
+                    random.normal(0, 1, size=self.numparams))
         else:
             if type(shape) in int_types:
                 shape = (shape,)
-            random_vector = random.normal(0, 1, size=shape+(1,self.numparams))
-            return self.internal_mean.A +\
-                np.sum(random_vector * self.square_root_covariance, axis=-1)
+            if self.covariance_diagonal:
+                random_vector =\
+                    random.normal(0, 1, size=shape+(self.numparams,))
+                return self.internal_mean.A +\
+                    (random_vector * np.diag(self.square_root_covariance))
+            else:
+                random_vector =\
+                    random.normal(0, 1, size=shape+(1,self.numparams))
+                return self.internal_mean.A + np.sum(random_vector *\
+                    self.square_root_covariance, axis=-1)
+    
+    @property
+    def log_value_constant_part(self):
+        """
+        Property storing the constant part of the log value, i.e. the part of
+        the sum that has no dependence on the point at which the distribution
+        is being evaluated.
+        """
+        if not hasattr(self, '_log_value_constant_part'):
+            self._log_value_constant_part = (self.log_determinant_covariance +\
+            (self.numparams * natural_log_two_pi)) / (-2.)
+        return self._log_value_constant_part
 
     def log_value(self, point):
         """
@@ -468,13 +511,16 @@ class GaussianDistribution(Distribution):
             minus_mean = np.matrix(point) - self.internal_mean
         else:
             raise ValueError("The type of point provided to a " +\
-                "GaussianDistribution was not of a numerical type (should " +\
-                "be if distribution is univariate) or of a list type " +\
-                "(should be if distribution is multivariate).")
-        expon =\
-            np.float64(minus_mean * self.inverse_covariance * minus_mean.T) / 2
-        return -1. * ((self.log_determinant_covariance / 2) + expon +\
-            ((self.numparams * natural_log_two_pi) / 2))
+                "GaussianDistribution was not of a numerical type " +\
+                "(should be if distribution is univariate) or of a " +\
+                "list type (should be if distribution is multivariate).")
+        if self.covariance_diagonal:
+            exponent = np.sum((minus_mean.A[0] ** 2) /\
+                np.diag(self.covariance.A)) / (-2.)
+        else:
+            exponent = np.float64(\
+                minus_mean * self.inverse_covariance * minus_mean.T) / (-2.)
+        return self.log_value_constant_part + exponent
 
     def to_string(self):
         """
@@ -666,6 +712,8 @@ class GaussianDistribution(Distribution):
                 "(should be if distribution is multivariate).")
         if self.numparams == 1:
             return (mean_minus * self.inverse_covariance).A[0,0]
+        elif self.covariance_diagonal:
+            return mean_minus.A[0] / np.diag(self.covariance.A)
         else:
             return (mean_minus * self.inverse_covariance).A[0,:]
     
