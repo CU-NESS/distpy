@@ -1,10 +1,10 @@
 """
-File: distpy/__init__.py
-Author: Keith Tauscher
-Update date: 15 Oct 2018
+`distpy` is a `Python` package designed to represent, draw from, evaluate, and
+plot many different kinds of distributions.
 
-Description: Imports classes in this module so that any given class, CLASS, can
-             be imported using "from distpy import CLASS"
+**File**: $DISTPY/distpy/\_\_init\_\_.py  
+**Author**: Keith Tauscher  
+**Update date**: 14 May 2021
 """
 from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
     save_dictionary, load_dictionary, Savable, Loadable, bool_types,\
@@ -24,8 +24,9 @@ from distpy.distribution import Distribution, WindowedDistribution,\
     ChiSquaredDistribution, DoubleSidedExponentialDistribution,\
     EllipticalUniformDistribution, ExponentialDistribution, GammaDistribution,\
     SechDistribution, SechSquaredDistribution, GaussianDistribution,\
-    GeometricDistribution, GriddedDistribution, ParallelepipedDistribution,\
-    PoissonDistribution, KroneckerDeltaDistribution, UniformDistribution,\
+    SparseGaussianDistribution, GeometricDistribution, GriddedDistribution,\
+    ParallelepipedDistribution, PoissonDistribution,\
+    KroneckerDeltaDistribution, UniformDistribution,\
     TruncatedGaussianDistribution, InfiniteUniformDistribution,\
     UniformConditionDistribution, WeibullDistribution, LinkedDistribution,\
     SequentialDistribution, DirectionDistribution,\
@@ -44,4 +45,25 @@ from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     JumpingDistributionList, JumpingDistributionSet,\
     load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file, MetropolisHastingsSampler
+
+class_names = ['distpy.util.Expression.Expression']
+# init not included in magic_names because __init__ is automatically documented
+# hash not included because it appears automatically
+magic_names = ['new', 'del', 'repr', 'str', 'bytes', 'format', 'lt', 'le',\
+    'eq', 'ne', 'gt', 'ge', 'bool', 'getattr', 'getattribute', 'setattr',\
+    'delattr', 'dir', 'get', 'set', 'delete', 'set_name', 'slots',\
+    'init_subclass', 'class_getitem', 'call', 'len', 'length_hint', 'getitem',\
+    'setitem', 'delitem', 'missing', 'iter', 'reversed', 'contains', 'add',\
+    'sub', 'mul', 'matmul', 'truediv', 'floordiv', 'div', 'mod', 'divmod',\
+    'pow', 'lshift', 'rshift', 'and', 'or', 'xor', 'radd', 'rsub', 'rmul',\
+    'rmatmul', 'rtruediv', 'rfloordiv', 'rdiv', 'rmod', 'rdivmod', 'rpow',\
+    'rlshift', 'rrshift', 'rand', 'ror', 'rxor', 'iadd', 'isub', 'imul',\
+    'imatmul', 'itruediv', 'ifloordiv', 'idiv', 'imod', 'ipow', 'ilshift',\
+    'irshift', 'iand', 'ior', 'ixor', 'neg', 'pos', 'abs', 'invert',\
+    'complex', 'int', 'float', 'index', 'round', 'trunc', 'floor', 'ceil',\
+    'enter', 'exit', 'await', 'aiter', 'anext', 'aenter', 'aexit']
+__pdoc__ = {}
+for magic_name in magic_names:
+    for class_name in class_names:
+        __pdoc__['{0!s}.__{1!s}__'.format(class_name, magic_name)] = True
 

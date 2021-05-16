@@ -1,11 +1,13 @@
 """
-File: distpy/util/TrianglePlot.py
-Author: Keith Tauscher
-Date: 18 Aug 2018
+Module containing functions which plot univariate histograms
+(`distpy.util.TrianglePlot.univariate_histogram`), bivariate histograms
+(`distpy.util.TrianglePlot.bivariate_histogram`), and triangle plots
+(`distpy.util.TrianglePlot.triangle_plot`), which are really just combinations
+of the previous two types.
 
-Description: File containing functions which plot univariate histograms,
-             bivariate histograms, and triangle plots (which are really just
-             combinations of the previous two types).
+**File**: $DISTPY/distpy/util/TrianglePlot.py  
+**Author**: Keith Tauscher  
+**Date**: 15 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -28,25 +30,44 @@ def univariate_histogram(sample, reference_value=None, bins=None,\
     """
     Plots a 1D histogram of the given sample.
     
-    sample: the 1D sample of which to take a histogram
-    reference_value: a point at which to plot a dashed reference line
-    bins: bins to pass to numpy.histogram: default, None
-    matplotlib_function: either 'fill_between', 'bar', or 'plot'
-    show_intervals: if True, 95% confidence intervals are plotted
-    xlabel: the string to use in labeling x axis
-    ylabel: the string to use in labeling y axis
-    title: title string with which to top plot
-    fontsize: the size of the tick label font
-    ax: if None, new Figure and Axes are created
+    Parameters
+    ----------
+    sample : sequence
+        the 1D sample of which to take a histogram
+    reference_value : real number or None
+        if given, a point at which to plot a dashed reference line
+    bins : int, sequence, or None
+        bins to pass to `numpy.histogram` function
+    matplotlib_function : str
+        either 'fill_between', 'bar', or 'plot'
+    show_intervals : bool
+        if True, 95% confidence intervals are plotted
+    xlabel : str
+        the string to use in labeling x axis
+    ylabel : str
+        the string to use in labeling y axis
+    title : str
+        title string with which to top plot
+    fontsize : int, str, or None
+        integer size in points or one of ['xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'] representing size of labels
+    ax : matplotlib.Axes or None
+        if None, new Figure and Axes are created  
         otherwise, this Axes object is plotted on
-    show: if True, matplotlib.pyplot.show is called before this function
-                   returns
-    norm_by_max: if True, normalization is such that maximum of histogram
-                          values is 1. Default: True
-    kwargs: keyword arguments to pass on to matplotlib.Axes.plot or
-            matplotlib.Axes.fill_between
+    show : bool
+        if True, `matplotlib.pyplot.show` is called before this function
+        returns
+    norm_by_max : bool
+        if True, normalization is such that maximum of histogram values is 1.
+    kwargs : dict
+        keyword arguments to pass on to `matplotlib.Axes.plot` or
+        `matplotlib.Axes.fill_between`
     
-    returns: None if show is True, otherwise Axes instance with plot
+    Returns
+    -------
+    axes : matplotlib.Axes or None
+        if `show` is True, None is returned  
+        otherwise, the Axes instance plotted on is returned
     """
     if not have_matplotlib:
         raise no_matplotlib_error
@@ -116,17 +137,30 @@ def confidence_contour_2D(xsample, ysample, nums=None,\
     confidence_contours=0.95, hist_kwargs={}):
     """
     Finds the posterior distribution levels which represent the boundaries of
-    confidence intervals of the given confidence level(s).
+    confidence intervals of the given confidence level(s) in two dimensions.
     
-    xsample: xsample to contour
-    ysample: ysample to contour
-    nums: if histogram has already been created, nums can be passed here
-    confidence_contours: confidence level as a number between 0 and 1 or a 1D
-                         array of such numbers, default: 0.95
-    hist_kwargs: only used if nums is None, contains keyword arguments to pass
-                 to histogram2d function
+    Parameters
+    ----------
+    xsample : sequence
+        1D sample corresponding to variable on x-axis
+    ysample : sequence
+        1D sample corresponding to variable on y-axis
+    nums : numpy.ndarray or None
+         if histogram has already been created, the histogram values can be
+         passed here as a 2D numpy.ndarray.  
+         if nums is None, `numpy.histogram2d` is called in this function
+    confidence_contours : number or sequence of numbers
+        confidence level as a number between 0 and 1 or a 1D array of such
+        numbers
+    hist_kwargs : dict
+        keyword arguments to pass to `numpy.histogram2d` function (only used
+        if `nums` is None)
     
-    returns: 1D array of confidence contours
+    Returns
+    -------
+    contour_boundaries: sequence
+        1D sequence of boundaries of contours corresponding to given confidence
+        level(s)
     """
     if type(nums) is type(None):
         (nums, xedges, yedges) =\
@@ -156,37 +190,64 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     """
     Plots a 2D histogram of the given joint sample.
     
-    xsample: the sample to use for the x coordinates
-    ysample: the sample to use for the y coordinates
-    reference_value_mean: points to plot a dashed reference line for axes
-    reference_value_covariance: if not None, used (along with
-                                reference_value_mean) to plot reference ellipse
-    bins: bins to pass to numpy.histogram2d, default: None
-    matplotlib_function: function to use in plotting. One of ['imshow',
-                         'contour', 'contourf']. default: 'imshow'
-    xlabel: the string to use in labeling x axis
-    ylabel: the string to use in labeling y axis
-    title: title with which to top plot
-    fontsize: the size of the tick label font (and other fonts)
-    ax: if None, new Figure and Axes are created
+    Parameters
+    ----------
+    xsample : sequence
+        1D sample corresponding to variable on x-axis
+    ysample : sequence
+        1D sample corresponding to variable on y-axis
+    reference_value_mean : sequence or None
+        if None, no reference line is plotted  
+        otherwise, sequence of two elements representing the reference value
+        for x- and y-samples. Each element can be either None (if no reference
+        line should be plotted) or a value at which to plot a reference line.
+    reference_value_covariance: numpy.ndarray or None
+        if `numpy.ndarray`, represents the covariance matrix used to generate
+        a reference ellipse around the reference mean.  
+        if None or if one or more of `reference_value_mean` is None, no ellipse
+        is plotted
+    bins : int, sequence, or None
+        bins to pass to `numpy.histogram2d`
+    matplotlib_function : str
+        function to use in plotting. One of ['imshow', 'contour', 'contourf'].
+    xlabel : str
+        the string to use in labeling x axis
+    ylabel : str
+        the string to use in labeling y axis
+    title : str
+        title string with which to top plot
+    fontsize : int, str, or None
+        integer size in points or one of ['xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'] representing size of labels
+    ax : matplotlib.Axes or None
+        if None, new Figure and Axes are created  
         otherwise, this Axes object is plotted on
-    show: if True, matplotlib.pyplot.show is called before this function
-                   returns
-    contour_confidence_levels: the confidence level of the contour in the
-                               bivariate histograms. Only used if
-                               matplotlib_function is 'contour' or 'contourf'
-                               or if reference_value_mean and
-                               reference_value_covariance are both not None.
-                               Can be single number or sequence of numbers
-    minima: sequence of (min_X, min_Y) to take into account when plotting
-            ellipses (only used if reference_value_covariance is not None)
-    maxima: sequence of (max_X, max_Y) to take into account when plotting
-            ellipses (only used if reference_value_covariance is not None)
-    kwargs: keyword arguments to pass on to matplotlib.Axes.imshow (any but
-            'origin', 'extent', or 'aspect') or matplotlib.Axes.contour or
-            matplotlib.Axes.contourf (any)
+    show : bool
+        if True, `matplotlib.pyplot.show` is called before this function
+        returns
+    contour_confidence_levels : number or sequence of numbers
+        confidence level as a number between 0 and 1 or a 1D array of such
+        numbers. Only used if `matplotlib_function` is `'contour'` or
+        `'contourf'` or if `reference_value_mean` and
+        `reference_value_covariance` are both not None
+    minima : sequence
+        sequence of the form `(min_X, min_Y)` to take into account when
+        plotting ellipses (only used if `reference_value_covariance` is not
+        None)
+    maxima : sequence
+        sequence of the form `(max_X, max_Y)` to take into account when
+        plotting ellipses (only used if `reference_value_covariance` is not
+        None)
+    kwargs : dict
+        keyword arguments to pass on to `matplotlib.Axes.imshow` (any but
+        'origin', 'extent', or 'aspect') or `matplotlib.Axes.contour` or
+        `matplotlib.Axes.contourf` (any)
     
-    returns: None if show is True, otherwise Axes instance with plot
+    Returns
+    -------
+    axes : matplotlib.Axes or None
+        if `show` is True, None is returned  
+        otherwise, the Axes instance plotted on is returned
     """
     if not have_matplotlib:
         raise no_matplotlib_error
@@ -290,12 +351,20 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
 
 def get_ax_with_geometry(fig, *geometry):
     """
-    Gets the Axes with the given geometry.
+    Gets the `matplotlib.Axes` with the given geometry.
     
-    fig: Matplotlib Figure object
-    geometry: row, column, and plot index (starting at 1) in tuple
+    Parameters
+    ----------
+    fig : matplotlib.Figure
+        the figure from which to find the desired `matplotlib.Axes`
+    geometry : tuple
+        3-tuple containing number of rows, number of columns, and plot index
+        (starting at 1)
     
-    returns: a Matplotlib Axes object
+    Returns
+    -------
+    ax: matplotlib.Axes
+        `matplotlib.Axes` at the given spot in the `matplotlib.Figure`
     """
     for ax in fig.axes:
         if ax.get_geometry() == tuple(geometry):
@@ -312,52 +381,90 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     ylabel_rotation=90, ylabelpad=None):
     """
     Makes a triangle plot out of N samples corresponding to (possibly
-    correlated) random variables
+    correlated) random variables.
     
-    samples: tuple of N 1D samples of the same length or an array of shape
-             (N,m) where m is a single integer
-    labels: the labels to use for each sample
-    figsize: the size of the figure on which to put the triangle plot
-    show: if True, matplotlib.pyplot.show is called before this function
-                   returns
-    kwargs_1D: keyword arguments to pass on to univariate_histogram function
-    kwargs_2D: keyword arguments to pass on to bivariate_histogram function
-    fontsize: the size of the label fonts
-    nbins: the number of bins for each sample
-    plot_type: determines the matplotlib functions to use for univariate and
-               bivariate histogram
-               if plot_type=='contourf': 'bar' and 'contourf' are used
-               if plot_type=='contour': 'plot' and 'contour' are used
-               if plot_type=='histogram': 'bar' and 'imshow' are used
-               otherwise: plot_type should be a length-2 sequence of the form
-                          (matplotlib_function_1D, matplotlib_function_2D)
-    reference_value_mean: reference values to place on plots, if there are any
-    reference_value_covariance: if not None, used (along with
-                                reference_value_mean) to plot reference
-                                ellipses in each bivariate histogram
-    contour_confidence_levels: the confidence level of the contour in the
-                               bivariate histograms. Only used if plot_type is
-                               'contour' or 'contourf'. Can be single number or
-                               sequence of numbers
-    minima: sequence of variable minima to take into account when plotting
-            ellipses (only used if reference_value_covariance is not None)
-    maxima: sequence of variable maxima to take into account when plotting
-            ellipses (only used if reference_value_covariance is not None)
-    plot_limits: if not None, a sequence of 2-tuples of the form (low, high)
-                              representing the desired axis limits for each
-                              variable
-                 if None (default), bins are used to decide plot limits
-    tick_label_format_string: format string that can be called using
-                              tick_label_format_string.format(x=loc) where loc
-                              is the location of the tick in data coordinates
-    num_ticks: integer number of ticks per panel, default: 3
-    minor_ticks_per_major_tick: integer number of minor ticks per major tick
-    xlabel_rotation: rotation of x-label in degrees, default: 0
-    xlabelpad: pad size for xlabel, default: None
-    ylabel_rotation: rotation of y-label in degrees, default: 90
-    ylabelpad: pad size for ylabel, default: None
+    Parameters
+    ----------
+    samples : sequence
+        sequence which (when cast to `numpy.ndarray`) has shape (N,m), where N
+        is the number of variables to plot and m is the number of samples of
+        each variable
+    labels : sequence
+        sequence of N strings representing the labels for each variable
+    figsize : tuple
+        tuple of form (width, height) representing the size of the figure on
+        which to put the triangle plot
+    show : bool
+        if True, `matplotlib.pyplot.show` is called before this function
+        returns
+    kwargs_1D : dict
+        keyword arguments to pass on to
+        `distpy.util.TrianglePlot.univariate_histogram` function
+    kwargs_2D : dict
+        keyword arguments to pass on to
+        `distpy.util.TrianglePlot.bivariate_histogram` function
+    fontsize : int, str, or None
+        integer size in points or one of ['xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'] representing size of labels
+    nbins : int
+        the number of bins to use for each sample
+    plot_type : str or sequence
+        determines the matplotlib functions to use for univariate and bivariate
+        histogram
+        
+        - if `plot_type=='contourf'`: 'bar' and 'contourf' are used
+        - if `plot_type=='contour'`: 'plot' and 'contour' are used
+        - if `plot_type=='histogram'`: 'bar' and 'imshow' are used
+        - otherwise: plot_type should be a length-2 sequence of the form
+          (matplotlib_function_1D, matplotlib_function_2D)
+    reference_value_mean : sequence or None
+        sequence of reference values to place on plots. Each element of the
+        sequence (representing each random variable) can be either a number at
+        which to plot a reference line or None if no line should be plotted.
+        Alternatively, if `reference_value_mean` is set to None, no reference
+        lines are plotted for any variable
+    reference_value_covariance : numpy.ndarray or None
+        covariance with which to create reference ellipses around
+        `reference_value_mean`. Should be an NxN array where N is the number of
+        random variables. If any of `reference_value_mean` are None or
+        `reference_value_covariance` is None, then no ellipses are plotted
+    contour_confidence_levels : number or sequence of numbers
+        confidence level as a number between 0 and 1 or a 1D array of such
+        numbers. Only used if `matplotlib_function` is `'contour'` or
+        `'contourf'` or if `reference_value_mean` and
+        `reference_value_covariance` are both not None
+    minima : sequence
+        sequence of N variable minima to take into account when plotting
+        ellipses (only used if `reference_value_covariance` is not None)
+    maxima : sequence
+        sequence of variable maxima to take into account when plotting ellipses
+        (only used if `reference_value_covariance` is not None)
+    plot_limits : sequence or None
+        if None, bins are used to decide plot limits  
+        otherwise, a sequence of 2-tuples of the form (low, high) representing
+        the desired axis limits for each variable
+    tick_label_format_string : str
+        format string that can be called using
+        `tick_label_format_string.format(x=loc)` where `loc` is the location of
+        the tick in data coordinates
+    num_ticks : int
+        number of major ticks in each panel
+    minor_ticks_per_major_tick : int
+        number of minor ticks per major tick in each panel
+    xlabel_rotation : number
+        rotation of x-label in degrees
+    xlabelpad : number or None
+        pad size for xlabel or None if none should be used
+    ylabel_rotation : number
+        rotation of y-label in degrees
+    ylabelpad : number or None
+        pad size for ylabel or None if none should be used
     
-    returns: None if show is True, otherwise Figure instance with plot
+    Returns
+    -------
+    figure : matplotlib.Figure or None
+        if `show` is True, None is returned  
+        otherwise, the matplotlib.Figure instance plotted on is returned
     """
     if not have_matplotlib:
         raise no_matplotlib_error

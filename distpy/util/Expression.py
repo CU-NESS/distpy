@@ -1,10 +1,11 @@
 """
-File: Expression.py
-Author: Keith Tauscher
-Date: 30 Oct 2017
+Module containing a class the allows for the automation of the evaluation of
+generic models that can be represented by strings of Python code (and, if
+necessary, extra import strings).
 
-Description: File containing class which allows for the automation of the
-             evaluation of generic models.
+**File**: $DISTPY/distpy/util/Expression.py  
+**Author**: Keith Tauscher  
+**Date**: 14 May 2021
 """
 import importlib
 import numpy as np
@@ -22,28 +23,39 @@ except:
 
 class Expression(Savable, Loadable):
     """
-    Class which allows for the automation of the evaluation of generic models.
+    A class that allows for the automation of the evaluation of generic models
+    that can be represented by strings of Python code (and, if necessary, extra
+    import strings).
     """
     def __init__(self, string, num_arguments=None, import_strings=[],\
         kwargs={}, should_throw_error=False):
         """
-        Initializes the expression with the given form and requiring the given
-        imports.
+        Initializes the `distpy.util.Expression.Expression` with the given form
+        and requiring the given imports.
         
-        string: str form of the expression to evaluate with {#} in place of
-                arguments (e.g. '{0}+{1}')
-        num_arguments: if given, assumed to be the number of arguments accepted
-                                 by this Expression
-                       otherwise, dynamically found from the numbers of the
-                                  arguments in the expression string.
-        import_strings: sequence of import strings of one of the following
-                        forms: 'import XXXXX', 'import XXXXX as XXXXX',
-                        'from XXXXX import XXXXX'
-        kwargs: keyword arguments needed to to evaluate the expression. These
-                are only calculated once as opposed to being evaluated every
-                time the Expression is evaluated
-        should_throw_error: boolean determining whether an error should be
-                            thrown if this Expression can't be saved.
+        Parameters
+        ----------
+        string : str
+            snippet of Python code representing the expression to evaluate with
+            {#} in place of arguments (e.g. `"{0}+{1}"`)
+        num_arguments : int or None
+            if given, assumed to be the number of arguments accepted by this
+            `distpy.util.Expression.Expression`  
+            otherwise, dynamically found from the numbers of the arguments in
+            the expression string
+        import_strings : sequence
+            sequence of import strings of one of the following forms:
+            `"import XXXXX"`, `"import XXXXX as XXXXX"`,
+            `"from XXXXX import XXXXX"`
+        kwargs: dict
+            dictionary of keyword arguments needed to to evaluate the
+            `distpy.util.Expression.Expression`. The names defined in this
+            dictionary can be used freely as variables in the string and the
+            values are only calculated once as opposed to being evaluated every
+            time the `distpy.util.Expression.Expression` is evaluated.
+        should_throw_error : bool
+            determines whether an error should be thrown if this
+            `distpy.util.Expression.Expression` can't be saved
         """
         self.should_throw_error = should_throw_error
         self.string = string
@@ -55,8 +67,8 @@ class Expression(Savable, Loadable):
     @property
     def should_throw_error(self):
         """
-        Property storing the boolean switch determining if errors are thrown
-        when this Expression is being saved.
+        The boolean switch determining if errors are thrown when this
+        `distpy.util.Expression.Expression` is being saved.
         """
         if not hasattr(self, '_should_throw_error'):
             raise AttributeError("should_throw_error was referenced before " +\
@@ -67,9 +79,12 @@ class Expression(Savable, Loadable):
     def should_throw_error(self, value):
         """
         Setter for the switch determining if errors are thrown when this
-        Expression is being saved.
+        `distpy.util.Expression.Expression` is being saved.
         
-        value: either True or False
+        Parameters
+        ----------
+        value : bool
+            True if error should be thrown, False otherwise
         """
         if type(value) in bool_types:
             self._should_throw_error = value
@@ -79,8 +94,9 @@ class Expression(Savable, Loadable):
     @property
     def string(self):
         """
-        Property storing the string form of this expression where strings of
-        the form '{#}' are in place of the arguments.
+        The string form (i.e. snippet of Python code) of this
+        `distpy.util.Expression.Expression` where strings of the form `'{#}'`
+        (with `'#'` replaced by an index) are in place of the arguments.
         """
         if not hasattr(self, '_string'):
             raise AttributeError("string referenced before it was set.")
@@ -91,8 +107,11 @@ class Expression(Savable, Loadable):
         """
         Setter for the string form of this expression.
         
-        value: str where strings of the form '{#}' are in place of the
-               arguments (e.g. '{0}+{1}')
+        Parameters
+        ----------
+        value : str
+            snippet of Python code with strings of the form '{#}' in place of
+            the arguments (e.g. '{0}+{1}')
         """
         if isinstance(value, basestring):
             self._string = value
@@ -102,7 +121,8 @@ class Expression(Savable, Loadable):
     @property
     def num_arguments(self):
         """
-        Property storing the number of arguments this expression requires.
+        The number of arguments this `distpy.util.Expression.Expression`
+        requires.
         """
         if not hasattr(self, '_num_arguments'):
             self._num_arguments = 0
@@ -113,9 +133,14 @@ class Expression(Savable, Loadable):
     @num_arguments.setter
     def num_arguments(self, value):
         """
-        Setter for the number of arguments to supply to this Expression.
+        Setter for the number of arguments to supply to this
+        `distpy.util.Expression.Expression`.
         
-        value: non-negative integer
+        Parameters
+        ----------
+        value : int or None
+           non-negative integer representing the number of arguments.  
+           If None, the number of arguments is inferred from the string itself
         """
         if type(value) is type(None):
             return
@@ -128,8 +153,8 @@ class Expression(Savable, Loadable):
     @property
     def import_strings(self):
         """
-        Property storing the strings describing the imports necessary to
-        perform before evaluation of this Expression.
+        The sequence of strings describing the imports necessary to perform
+        before evaluation of this `distpy.util.Expression.Expression`.
         """
         if not hasattr(self, '_import_strings'):
             raise AttributeError("import_strings referenced before it was " +\
@@ -141,7 +166,12 @@ class Expression(Savable, Loadable):
         """
         Setter for the import_strings property.
         
-        value: list of strings representing simple import statements
+        Parameters
+        ----------
+        value : sequence
+            sequence of import strings of one of the following forms:
+            `"import XXXXX"`, `"import XXXXX as XXXXX"`,
+            `"from XXXXX import XXXXX"`
         """
         if all([isinstance(element, basestring) for element in value]):
             self._import_strings = [element for element in value]
@@ -152,7 +182,8 @@ class Expression(Savable, Loadable):
     @property
     def imports(self):
         """
-        Property storing the modules/objects imported by the import_strings.
+        List of modules/objects imported by
+        `distpy.util.Expression.Expression.import_strings`.
         """
         if not hasattr(self, '_imports'):
             self._imports = {}
@@ -178,7 +209,11 @@ class Expression(Savable, Loadable):
     @property
     def kwargs(self):
         """
-        Keyword arguments to use in evaluating the expression.
+        Dictionary of keyword arguments needed to to evaluate the
+        `distpy.util.Expression.Expression`. The names defined in this
+        dictionary can be used freely as variables in the string and the values
+        are only calculated once as opposed to being evaluated every time the
+        `distpy.util.Expression.Expression` is evaluated.
         """
         if not hasattr(self, '_kwargs'):
             raise AttributeError("kwargs was referenced before it was set.")
@@ -187,10 +222,17 @@ class Expression(Savable, Loadable):
     @kwargs.setter
     def kwargs(self, value):
         """
-        Setter for the kwargs used when evaluating this Expression
+        Setter for the kwargs used when evaluating this
+        `distpy.util.Expression.Expression`
         
-        value: dict with string keys of values to use when evaluating
-               expression
+        Parameters
+        ----------
+        value : dict
+            dictionary of keyword arguments needed to to evaluate the
+            `distpy.util.Expression.Expression`. The names defined in this
+            dictionary can be used freely as variables in the string and the
+            values are only calculated once as opposed to being evaluated every
+            time the `distpy.util.Expression.Expression` is evaluated.
         """
         if isinstance(value, dict):
             if all([isinstance(key, basestring) for key in value]):
@@ -203,11 +245,18 @@ class Expression(Savable, Loadable):
     
     def fill_hdf5_group(self, group, kwargs_links=None):
         """
-        Fills the given hdf5 file group with information about this Expression.
+        Fills the given hdf5 file group with information about this
+        `distpy.util.Expression.Expression`.
         
-        group: hdf5 file group to fill with information about this Expression
-        kwargs_links: dictionary of links to aid in saving kwargs, if possible
-                      and necessary
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this
+            `distpy.util.Expression.Expression`
+        kwargs_links : dict or None
+            dictionary of links to aid in saving
+            `distpy.util.Expression.Expression.kwargs`, if possible and
+            necessary
         """
         group.attrs['class'] = 'Expression'
         group.attrs['string'] = self.string
@@ -236,9 +285,14 @@ class Expression(Savable, Loadable):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads an Expression object from the given hdf5 group.
+        Loads an `distpy.util.Expression.Expression` object from the given hdf5
+        group.
         
-        group: hdf5 file group from which to load an Expression object
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group from which to load an
+            `distpy.util.Expression.Expression` object
         """
         if ('class' in group.attrs) and (group.attrs['class'] == 'Expression'):
             string = group.attrs['string']
@@ -261,13 +315,23 @@ class Expression(Savable, Loadable):
     
     def __call__(self, *args, **kwargs):
         """
-        Evaluates this expression at the given arguments.
+        Evaluates this `distpy.util.Expression.Expression` at the given
+        arguments.
         
-        *args: arguments at which to evaluate expression
-        **kwargs: extra keyword arguments with which to define context of
-                  expression string
+        Parameters
+        ----------
+        args : sequence
+            argument values at which to evaluate
+            `distpy.util.Expression.Expression.string` snippet
+        kwargs : dict
+            extra keyword arguments with which to define context of
+            `distpy.util.Expression.Expression.string`
         
-        returns: object dependent on given expression string
+        Returns
+        -------
+        value : 
+            evaluated object whose type depends on form of
+            `distpy.util.Expression.Expression.string`
         """
         num_arguments_given = len(args)
         if num_arguments_given == self.num_arguments:
@@ -285,11 +349,19 @@ class Expression(Savable, Loadable):
     
     def __eq__(self, other):
         """
-        Checks for equality between other and this Expression.
+        Checks for equality between other and this
+        `distpy.util.Expression.Expression`.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : 
+            object to check for equality
         
-        returns: False unless other is equivalent to this Expression
+        Returns
+        -------
+        result : bool
+            False unless `other` is equivalent to this
+            `distpy.util.Expression.Expression`
         """
         if not isinstance(other, Expression):
             return False
@@ -308,11 +380,19 @@ class Expression(Savable, Loadable):
     
     def __ne__(self, other):
         """
-        Checks for inequality between other and this Expression.
+        Checks for inequality between other and this
+        `distpy.util.Expression.Expression`.
         
-        other: object to check for inequality
+        Parameters
+        ----------
+        other : object
+            object to check for inequality
         
-        returns: True unless other is equivalent to this Expression
+        Returns
+        -------
+        result : bool
+            True unless other is equivalent to this
+            `distpy.util.Expression.Expression`
         """
         return (not self.__eq__(other))
     

@@ -1,11 +1,22 @@
 """
-File: pylinex/util/h5py_extensions.py
-Author: Keith Tauscher
-Date: 8 Oct 2017
+Module containing classes and functions which:
 
-Description: File containing functions which extend the ability to link to
-             extant datasets. Using the functions here, slices of extant
-             datasets can be stored indirectly (and, thus, efficiently).
+- extend the ability to link to extant datasets
+  (`distpy.util.h5py_extensions.HDF5Link`). The extended capability allows
+  slices of existing datasets to be referenced; so, if every other element of a
+  dataset `A` should be saved as a dataset `B` in the same file, only one copy
+  of each data point must be saved in the binary file, reducing file sizes
+- create (`distpy.util.h5py_extensions.create_hdf5_dataset`) and load
+  (`distpy.util.h5py_extensions.get_hdf5_value`) datasets robustly, allowing
+  both for datasets that are linked using the
+  `distpy.util.h5py_extensions.HDF5Link` class and those that are not
+- save (`distpy.util.h5py_extensions.save_dictionary`) and load
+  (`distpy.util.h5py_extensions.load_dictionary`) dictionaries (of savable
+  objects) into hdf5 groups
+
+**File**: $DISTPY/distpy/util/h5py_extensions.py  
+**Author**: Keith Tauscher  
+**Date**: 14 May 2021
 """
 import numpy as np
 from .TypeCategories import sequence_types, numerical_types, bool_types
@@ -30,11 +41,19 @@ class HDF5Link(object):
         """
         Initializes a new DatasetLink with the given parameters.
         
-        link: either extant h5py.Dataset or string absolute path from within
-              file (only used if hard_link is not given)
-        slices: if None, data is not sliced
-                otherwise, slices should be a tuple of slices desrcibing the
-                           slicing to apply to the data when reading/writing
+        Parameters
+        ----------
+        link : h5py.Dataset or str
+            either an extant h5py.Dataset object to link to or the absolute
+            string path in the files directory structure leading to the Dataset
+            to link.
+        slices : None, slice, or sequence of slices
+            if None, data is not sliced  
+            if a single slice, `slices=(slices,)` is applied and it is
+            interpreted as a tuple of slices as below  
+            if a tuple of slices, it should describe the slicing to apply to
+            the data in the extant dataset to get the data in the newly linked
+            dataset being created
         """
         is_string = isinstance(link, basestring)
         is_dataset = isinstance(link, h5py.Dataset)
@@ -61,23 +80,32 @@ def create_hdf5_dataset(group, name, data=None, link=None):
 
     The 3 methods of calling are:
     
-    1) create_hdf5_dataset(group, name, data=data)
-        -- creates a new Dataset at group[name] storing data
-    2) create_hdf5_dataset(group, name, link=link)
-        -- creates a new hard or soft link to the extant h5py.Dataset (or
+    1. `create_hdf5_dataset(group, name, data=data)`
+        - creates a new Dataset at group[name] storing data
+    2. `create_hdf5_dataset(group, name, link=link)`
+        - creates a new hard or soft link to the extant h5py.Dataset (or
            h5py.Group) referenced to by link
-    3) create_hdf5_dataset(group, name, data=data, link=link)
-        -- if link is None, same as method 1. otherwise, same as method 2.
+    3. `create_hdf5_dataset(group, name, data=data, link=link)`
+        - if link is None, same as method 1. otherwise, same as method 2.
     
-    group: the h5py.Group object in which to create this dataset/reference/link
-    name: the name inside the group of the dataset/reference/link to create
-    data: if None, link (to an extant dataset) must be provided
-          otherwise, data must be a numpy.ndarray object
-    link: HDF5Link to extant dataset (or arg or list of args with which to
-          create one)
+    Parameters
+    ----------
+    group : h5py.Group
+        the hdf5 Group in which to create this dataset/reference/link
+    name : str
+        the name inside the group of the dataset/reference/link to create
+    data : numpy.ndarray or None
+        if None, link (to an extant dataset) must be provided  
+        otherwise, data must be a numpy.ndarray object
+    link : `distpy.util.h5py_extensions.HDF5Link` or None
+        link to extant dataset (or arg or list of args with which to create
+        one)
     
-    returns h5py.Dataset object if one is newly created here
-            HDF5Link object otherwise
+    Returns
+    -------
+    dataset : h5py.Dataset or `distpy.util.h5py_extensions.HDF5Link`
+        h5py.Dataset object if one is newly created by this function  
+        `distpy.util.h5py_extensions.HDF5Link` object otherwise
     """
     if type(link) is type(None):
         if type(data) is type(None):
@@ -119,13 +147,20 @@ def create_hdf5_dataset(group, name, data=None, link=None):
 
 def get_hdf5_value(obj):
     """
-    Gets the numpy.ndarray data stored in obj, whether directly or indirectly.
+    Gets the data stored in obj, whether directly or indirectly.
     
-    obj: either a h5py.Dataset or a region reference created with the
-         create_hdf5_dataset function defined here.
+    Parameters
+    ----------
+    obj : h5py.Dataset or h5py.Group
+        hdf5 object from which to load data. if h5py.Dataset is provided, the
+        data is loaded directly. if a h5py.Group that was created by the
+        `distpy.util.h5py_extensions.create_hdf5_dataset` function is given,
+        the referenced data is loaded
     
-    returns: the numpy.ndarray stored, whether directly or indirectly, in the
-             given object
+    Returns
+    -------
+    data : numpy.ndarray
+        the data stored, whether directly or indirectly, in the given object
     """
     try:
         if '__string_sequence_robust__' in obj.attrs:
@@ -164,9 +199,13 @@ def save_dictionary(dictionary, group):
     """
     Saves the given dictionary to the given hdf5 file group.
     
-    dictionary: dictionary of numbers, bools, numpy.ndarrays, and Savable
-                objects
-    group: hdf5 file group in which to save the given dictionary
+    Parameters
+    ----------
+    dictionary : dict
+        dictionary of numbers, bools, numpy.ndarrays, and
+        `distpy.util.Savable.Savable` objects
+    group : h5py.Group
+        hdf5 file group in which to save the given dictionary
     """
     group.attrs['__isdictionary__'] = True
     for key in dictionary:
@@ -191,14 +230,22 @@ def save_dictionary(dictionary, group):
 
 def load_dictionary(group, **classes_to_load):
     """
-    Loads a dictionary of numbers, bools, numpy.ndarrays, and Savable objects
-    from the given hdf5 file group.
+    Loads a dictionary of numbers, bools, numpy.ndarrays, and
+    `distpy.util.Savable.Savable` objects from the given hdf5 file group.
     
-    group: the hdf5 file group from which to load the dictionary.
-    classes: dictionary of class objects whose keys correspond to the name of
-             the variable with that class
+    Parameters
+    ----------
+    group : h5py.Group
+        the hdf5 file group from which to load the dictionary.
+    classes : dict
+        dictionary of class objects whose keys correspond to the name of the
+        variable with that class. This is for any `distpy.util.Savable.Savable`
+        objects in the dictionary
     
-    returns: dictionary loaded from the given hdf5 file group
+    Returns
+    -------
+    value : dict
+        dictionary loaded from the given hdf5 file group
     """
     dictionary = {}
     try:
