@@ -23,6 +23,8 @@ from distpy.distribution.GammaDistribution import GammaDistribution
 from distpy.distribution.SechDistribution import SechDistribution
 from distpy.distribution.SechSquaredDistribution import SechSquaredDistribution
 from distpy.distribution.GaussianDistribution import GaussianDistribution
+from distpy.distribution.SparseGaussianDistribution import\
+    SparseGaussianDistribution
 from distpy.distribution.GeometricDistribution import GeometricDistribution
 from distpy.distribution.GriddedDistribution import GriddedDistribution
 from distpy.distribution.ParallelepipedDistribution import\
