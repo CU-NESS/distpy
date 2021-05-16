@@ -9,6 +9,7 @@ Description: File containing class representing a transform composed of two
 """
 import numpy as np
 from .Transform import Transform
+from .NullTransform import NullTransform
 
 class CompositeTransform(Transform):
     """
@@ -25,6 +26,26 @@ class CompositeTransform(Transform):
         """
         self.inner_transform = inner_transform
         self.outer_transform = outer_transform
+    
+    @staticmethod
+    def generate_from_list(*transforms):
+        """
+        Generates a CompositeTransform
+        """
+        if len(transforms) == 0:
+            return NullTransform()
+        elif len(transforms) == 1:
+            if isinstance(transforms[0], Transform):
+                return transforms[0]
+            else:
+                raise TypeError("A non-Transform object was passed to the " +\
+                    "generate_from_list function.")
+        else:
+            current_transform = transforms[0]
+            for transform in transforms[1:]:
+                current_transform =\
+                    CompositeTransform(current_transform, transform)
+            return current_transform
     
     @property
     def inner_transform(self):
