@@ -1,10 +1,10 @@
 """
-File: distpy/transform/LoadTransform.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing functions which load `distpy.transform.Transform.Transform`
+objects from hdf5 files or hdf5 file groups.
 
-Description: File containing functions which load Transform objects from hdf5
-             files or hdf5 file groups.
+**File**: $DISTPY/distpy/transform/LoadTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 16 May 2021
 """
 from .NullTransform import NullTransform
 from .BoxCoxTransform import BoxCoxTransform
@@ -36,11 +36,19 @@ else:
 
 def load_transform_from_hdf5_group(group):
     """
-    Loads a Transform object from an hdf5 file group.
+    Loads a `distpy.transform.Transform.Transform` object from an hdf5 file
+    group.
     
-    group: the hdf5 file group from which to load the Transform
+    Parameters
+    ----------
+    group : h5py.Group
+        the hdf5 file group from which to load the
+        `distpy.transform.Transform.Transform`
     
-    returns: Transform object of the correct type
+    Returns
+    -------
+    loaded_transform : `distpy.transform.Transform.Transform`
+        object loaded from the given group
     """
     try:
         class_name = group.attrs['class']
@@ -102,11 +110,18 @@ def load_transform_from_hdf5_group(group):
 
 def load_transform_from_hdf5_file(file_name):
     """
-    Loads a Transform object from the given hdf5 file.
+    Loads a `distpy.transform.Transform.Transform` object from an hdf5 file.
     
-    file_name: string name of hdf5 file from which to load Transform object
+    Parameters
+    ----------
+    file_name : str
+        the name of the hdf5 file from which to load the
+        `distpy.transform.Transform.Transform`
     
-    return: Transform object of the correct type
+    Returns
+    -------
+    loaded_transform : `distpy.transform.Transform.Transform`
+        object loaded from the given file
     """
     if have_h5py:
         hdf5_file = h5py.File(file_name, 'r')

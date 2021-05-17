@@ -1,10 +1,10 @@
 """
-File: distpy/transform/AffineTransform.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a transformation of the form:
+$$x\\longrightarrow sx+t$$
 
-Description: File containing class representing an affine transformation
-             (linear transformations and translations).
+**File**: $DISTPY/distpy/transform/AffineTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -13,16 +13,19 @@ from .Transform import Transform
 
 class AffineTransform(Transform):
     """
-    Class representing an affine transformation (linear transformations and
-    translations).
+    Class representing a transformation of the form: $$x\\longrightarrow sx+t$$
     """
     def __init__(self, scale_factor, translation):
         """
-        Initializes a new affine transformation with the given scale factor (A)
-        and translation (b). The resulting transform will implement x -> Ax+b
+        Initializes a new `AffineTransform` which represents the following
+        transformation: $$x\\longrightarrow sx+t$$
         
-        scale_factor: number by which to multiply inputs
-        translation: number to add to scaled inputs
+        Parameters
+        ----------
+        scale_factor : number
+            scaling factor, \\(s\\)
+        translation : number
+            translation, \\(t\\)
         """
         self.scale_factor = scale_factor
         self.translation = translation
@@ -30,8 +33,7 @@ class AffineTransform(Transform):
     @property
     def scale_factor(self):
         """
-        Property storing the factor by which inputs are multiplied to generate
-        the final output.
+        The factor by which inputs are multiplied.
         """
         if not hasattr(self, '_scale_factor'):
             raise AttributeError("scale_factor referenced before it was set.")
@@ -40,9 +42,12 @@ class AffineTransform(Transform):
     @scale_factor.setter
     def scale_factor(self, value):
         """
-        Setter for the scale factor.
+        Setter for the `AffineTransform.scale_factor`.
         
-        value: must be a single real number
+        Parameters
+        ----------
+        value : number
+            a single real number
         """
         if type(value) in numerical_types:
             self._scale_factor = value
@@ -52,8 +57,7 @@ class AffineTransform(Transform):
     @property
     def translation(self):
         """
-        Property storing the vector which is added to scaled input to generate
-        the final output.
+        The number added to the scaled input.
         """
         if not hasattr(self, '_translation'):
             raise AttributeError("translation referenced before it was set.")
@@ -62,9 +66,12 @@ class AffineTransform(Transform):
     @translation.setter
     def translation(self, value):
         """
-        Setter for the translation.
+        Setter for `AffineTransform.translation`.
         
-        value: must be a single real number
+        Parameters
+        ----------
+        value : number
+            a single real number
         """
         if type(value) in numerical_types:
             self._translation = value
@@ -73,106 +80,182 @@ class AffineTransform(Transform):
     
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this
+        `AffineTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`. If
+            `value` is \\(x\\), then `derivative` is \\(s\\), where \\(s\\) is
+            `AffineTransform.scale_factor`
         """
         return ((0. * value) + self.scale_factor)
     
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `AffineTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is \\(0\\)
         """
         return (0. * value)
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `AffineTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is \\(0\\)
         """
         return (0. * value)
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `AffineTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the log of the derivative of transformation in same format
+            as `value`. If `value` is \\(x\\), then `derivative` is \\(|s|\\),
+            where \\(s\\) is `AffineTransform.scale_factor`
         """
         return ((0. * value) + np.log(np.abs(self.scale_factor)))
     
     def derivative_of_log_derivative(self, value):
         """
-        Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        Computes the derivative of the natural logarithm of the absolute value
+        of the derivative of the function underlying this `AffineTransform` at
+        the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(0\\)
         """
         return (0. * value)
     
     def second_derivative_of_log_derivative(self, value):
         """
-        Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        Computes the second derivative of the natural logarithm of the absolute
+        value of the derivative of the function underlying this
+        `AffineTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the second derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(0\\)
         """
         return (0. * value)
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `AffineTransform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`. If `value` is \\(x\\),
+            then `transformed` is \\(sx+t\\), where \\(s\\) and \\(t\\) are
+            `AffineTransform.scale_factor` and `AffineTransform.translation`,
+            respectively
         """
         return ((self.scale_factor * value) + self.translation)
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `AffineTransform` to the value and returns
+        the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`. If `value` is \\(y\\),
+            then `inverted` is \\((y-t)/s\\), where \\(s\\) and \\(t\\) are
+            `AffineTransform.scale_factor` and `AffineTransform.translation`,
+            respectively.
         """
         return ((value - self.translation) / self.scale_factor)
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `AffineTransform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            `'Affine(s,t)'`, where `s` and `t` are
+            `AffineTransform.scale_factor` and `AffineTransform.translation`,
+            respectively
         """
         return 'Affine({0:.2g},{1:.2g})'.format(self.scale_factor,\
             self.translation)
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this `AffineTransform`
+        so it can be loaded later.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this `AffineTransform`
         """
         group.attrs['class'] = 'AffineTransform'
         group.attrs['scale_factor'] = self.scale_factor
@@ -180,11 +263,19 @@ class AffineTransform(Transform):
     
     def __eq__(self, other):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Checks the given object for equality with this `AffineTransform`.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns True if both Transforms are the same
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `AffineTransform` with the
+            same `AffineTransform.scale_factor` and
+            `AffineTransform.translation`
         """
         if isinstance(other, AffineTransform):
             scale_factors_equal = np.isclose(self.scale_factor,\

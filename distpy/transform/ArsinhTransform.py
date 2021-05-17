@@ -1,14 +1,11 @@
 """
-File: distpy/transform/ArsinhTransform.py
-Author: Keith Tauscher
-Date: 2 Oct 2018
+Module containing class representing a transformation of the form:
+$$x\\longrightarrow \\begin{cases} x & s = 0 \\\\ \\sinh{(sx)}/s & s > 0 \\\\\
+\\text{arcsinh}{(sx)} / s & s < 0 \\end{cases}$$
 
-Description: File containing class representing transform which takes sinh or
-             arcsinh value. It was originally given in:
-             Shuhmann, R.L., Joachimi, B., Peiris, H.V., Gaussianization for
-             fast and accurate inference from cosmological data, Monthly
-             Notices of the Royal Astronomical Society, Volume 459, Issue 2,
-             21 June 2016, Pages 1916-1928 https://doi.org/10.1093/mnras/stw738
+**File**: $DISTPY/distpy/transform/ArsinhTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 from __future__ import division
 from ..util import real_numerical_types
@@ -17,22 +14,28 @@ from .Transform import Transform
 
 class ArsinhTransform(Transform):
     """
-    Class representing a transform which takes sinh or arcsinh of value.
+    Class representing a transformation of the form: $$x\\longrightarrow\
+    \\begin{cases} x & s = 0 \\\\ \\sinh{(sx)}/s & s > 0 \\\\\
+    \\text{arcsinh}{(sx)} / s & s < 0 \\end{cases}$$
     """
     def __init__(self, shape):
         """
-        Initializes a new BoxCoxTransform with the given shape.
+        Initializes a new `ArsinhTransform` which represents the following
+        transformation: $$x\\longrightarrow \\begin{cases} x & s = 0 \\\\\
+        \\sinh{(sx)}/s & s > 0 \\\\\
+        \\text{arcsinh}{(sx)} / s & s < 0 \\end{cases}$$
         
-        shape: single real number.
-               Sinh used if shape>0, Arcsinh used if shape<0
+        Parameters
+        ----------
+        shape : number
+            parameter determining shape of transformation, \\(s\\)
         """
         self.shape = shape
     
     @property
     def shape(self):
         """
-        Property determining the function which is taken of this transform's
-        argument.
+        The number determining the function which is applied to inputs.
         """
         if not hasattr(self, '_shape'):
             raise AttributeError("shape was referenced before it was set.")
@@ -41,10 +44,12 @@ class ArsinhTransform(Transform):
     @shape.setter
     def shape(self, value):
         """
-        Setter for the property determining the function which is taken of this
-        transform's argument.
+        Setter for `ArsinhTransform.shape`
         
-        value: single number, greater than or equal to 0
+        Parameters
+        ----------
+        value : number
+            non-negative number
         """
         if type(value) in real_numerical_types:
             self._shape = value
@@ -53,12 +58,22 @@ class ArsinhTransform(Transform):
     
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this
+        `ArsinhTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`. If
+            `value` is \\(x\\), then `derivative` is
+            \\(\\begin{cases} 1 & s = 0 \\\\ \\cosh{(sx)} & s > 0 \\\\\
+            \\big(1+(sx)^2\\big)^{-1/2} & s < 0 \\end{cases}\\), where \\(s\\)
+            is `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return np.cosh(self.shape * (value))
@@ -71,11 +86,21 @@ class ArsinhTransform(Transform):
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `ArsinhTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\begin{cases} 0 & s = 0 \\\\ s\\ \\sinh{(sx)} & s > 0 \\\\\
+            -s\\frac{(sx)}{\\big(1+(sx)^2\\big)^{3/2}} & s < 0 \\end{cases}\\),
+            where \\(s\\) is `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return self.shape * np.sinh(self.shape * (value))
@@ -87,12 +112,22 @@ class ArsinhTransform(Transform):
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `ArsinhTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\begin{cases} 0 & s = 0 \\\\ s^2\\ \\cosh{(sx)} & s > 0 \\\\\
+            s^2\\frac{2(sx)^2-1}{\\big(1+(sx)^2\\big)^{5/2}} & s < 0\
+            \\end{cases}\\), where \\(s\\) is `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return (self.shape ** 2) * np.cosh(self.shape * value)
@@ -105,12 +140,24 @@ class ArsinhTransform(Transform):
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `ArsinhTransform` at the given
+        value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the log of the derivative of transformation in same format
+            as `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\begin{cases} 0 & s = 0 \\\\\
+            \\ln{\\big(\\cosh{(sx)}\\big)} & s > 0 \\\\\
+            -\\frac{1}{2}\\ln{\\big(1+(sx)^2\\big)} & s < 0 \\end{cases}\\),
+            where \\(s\\) is `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return np.log(np.cosh(self.shape * value))
@@ -121,12 +168,24 @@ class ArsinhTransform(Transform):
     
     def derivative_of_log_derivative(self, value):
         """
-        Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        Computes the derivative of the natural logarithm of the absolute value
+        of the derivative of the function underlying this `ArsinhTransform` at
+        the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(\\begin{cases} 0 & s = 0 \\\\\
+            s\\ \\tanh{(sx)} & s > 0 \\\\\
+            -s\\frac{(sx)}{1+(sx)^2} & s < 0 \\end{cases}\\), where \\(s\\) is
+            `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return self.shape * np.tanh(self.shape * value)
@@ -138,14 +197,24 @@ class ArsinhTransform(Transform):
     
     def second_derivative_of_log_derivative(self, value):
         """
-        Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        Computes the second derivative of the natural logarithm of the absolute
+        value of the derivative of the function underlying this
+        `ArsinhTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the second derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(\\begin{cases} 0 & s = 0\\\\\
+            s^2\\ \\text{sech}^2{(sx)} & s > 0 \\\\\
+            s^2\\frac{(sx)^2-1}{\\big(1+(sx)^2\\big)^2} & s < 0\
+            \\end{cases}\\), where \\(s\\) is `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return np.power(\
@@ -158,11 +227,22 @@ class ArsinhTransform(Transform):
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `ArsinhTransform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`. If `value` is \\(x\\),
+            then `transformed` is \\(\\begin{cases} x & s = 0 \\\\\
+            \\sinh{(sx)}/s & s > 0 \\\\\
+            \\text{arcsinh}{(sx)}/s & s < 0 \\end{cases}\\), where \\(s\\) is
+            `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return np.sinh(self.shape * value) / self.shape
@@ -173,11 +253,23 @@ class ArsinhTransform(Transform):
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `ArsinhTransform` to the value and returns
+        the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`. If `value` is \\(y\\),
+            then `inverted` is \\(\\begin{cases} y & s = 0 \\\\\
+            \\text{arcsinh}{(sy)}/s & s > 0 \\\\\
+            \\sinh{(sx)}/s & s < 0 \\end{cases}\\), where \\(s\\) is
+            `ArsinhTransform.shape`
         """
         if self.shape > 0:
             return (np.arcsinh(self.shape * value) / self.shape)
@@ -188,8 +280,18 @@ class ArsinhTransform(Transform):
     
     def __eq__(self, other):
         """
-        Checks for equality with other. Returns True iff other is an
-        ArsinhTransform with the same parameters.
+        Checks the given object for equality with this `ArsinhTransform`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `ArsinhTransform` with the
+            same `ArsinhTransform.shape`
         """
         if isinstance(other, ArsinhTransform):
             return np.isclose(self.shape, other.shape, atol=1e-6, rtol=1e-6)
@@ -198,17 +300,24 @@ class ArsinhTransform(Transform):
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `ArsinhTransform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            `'Arsinh(s)'`, where `s` is `ArsinhTransform.shape`
         """
         return 'Arsinh({0:.2g})'.format(self.shape)
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this `ArsinhTransform`
+        so it can be loaded later.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this `ArsinhTransform`
         """
         group.attrs['class'] = 'ArsinhTransform'
         group.attrs['shape'] = self.shape

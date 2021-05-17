@@ -1,9 +1,13 @@
 """
-File: distpy/transform/TransformList.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing a class representing a list of
+`distpy.transform.Transform.Transform` objects, which allows it represent
+(separable) multivariate transformations. It has methods to transform (and
+untransform) first derivative vectors (gradients) and second derivative
+matrices (hessians).
 
-Description: File containing a class representing a list of Transform objects.
+**File**: $DISTPY/distpy/transform/TransformList.py  
+**Author**: Keith Tauscher  
+**Date**: 16 May 2021
 """
 from __future__ import division
 from ..util import int_types, sequence_types, Savable, Loadable
@@ -16,49 +20,68 @@ from .CastTransform import castable_to_transform, cast_to_transform
 
 class TransformList(Savable, Loadable):
     """
-    Class representing a list of Transform objects.
+    Class representing a list of `distpy.transform.Transform.Transform`
+    objects, which allows it represent (separable) multivariate
+    transformations. It has methods to transform (and untransform) first
+    derivative vectors (gradients) and second derivative matrices (hessians).
     """
     def __init__(self, *transforms):
         """
-        Initializes a new TransformList.
+        Initializes a new `TransformList`.
         
-        transforms: Transform objects or objects which can be cast to Transform
-                    objects
+        Parameters
+        ----------
+        transforms : sequence
+            `distpy.transform.Transform.Transform` objects or objects which can
+            be cast to `distpy.transform.Transform.Transform` objects using the
+            the `distpy.transform.CastTransform.cast_to_transform` function.
         """
         self.transforms = transforms
     
     @staticmethod
     def cast(key, num_transforms=None):
         """
-        Casts key into a TransformList object. If num_transforms is non-None,
-        this function can also cast to a TransformList object of a specific
-        length.
+        Casts an object into a `TransformList` object. If num_transforms is
+        non-None, this function can also cast to a TransformList object of a
+        specific length.
         
-        key: either a TransformList, a list of Transforms (or things that can
-             be cast to transforms using the cast_to_transform function), or a
-             single transform
-        num_transforms: if None, 1) if key is a TransformList or list of
-                                    Transforms (or things that can be cast to
-                                    transforms using the cast_to_transform
-                                    function), then key implies num_transforms
-                                    without it needing to be given
-                                 2) if key is a Transform (or something that
-                                    can be cast to a Transform using the
-                                    cast_to_transform function), a
-                                    TransformList of length 1 is returned
-                                    containing only that Transform
-                        if positive integer, 1) if key is TransformList or list
-                                                of Transforms (or things that
-                                                can be cast to transforms using
-                                                the cast_to_transform
-                                                function), key is checked to
-                                                ensure it has this length
-                                             2) if key is Transform, key is
-                                                repeated this many times in the
-                                                returned TransformList.
+        Parameters
+        ----------
+        key : `TransformList` or `distpy.transform.Transform.Transform` or\
+        sequence
+            object to cast to a `TransformList`, either a `TransformList`, a
+            sequence of `distpy.transform.Transform.Transform` objects (or
+            things that can be cast to them using the
+            `distpy.transform.CastTransform.cast_to_transform` function), or a
+            single `distpy.transform.Transform.Transform` object
+        num_transforms : int or None
+            - if `num_transforms` is None:
+                - if `key` is a `TransformList` or list of
+                `distpy.transform.Transform.Transform` objects (or things that
+                can be cast to them using the
+                `distpy.transform.CastTransform.cast_to_transform` function),
+                then `key` implies `num_transforms` without it needing to be
+                given
+                - if `key` is a `distpy.transform.Transform.Transform` (or
+                something that can be cast to one using the
+                `distpy.transform.CastTransform.cast_to_transform` function), a
+                `TransformList of length 1 is returned containing only that
+                `distpy.transform.Transform.Transform`
+            - if `num_transforms` is a positive integer:
+                - if `key` is a `TransformList` or sequence of
+                `distpy.transform.Transform.Transform` objects (or things that
+                can be cast to transforms using the
+                `distpy.transform.CastTransform.cast_to_transform function),
+                `key` is checked to ensure it has this length
+                - if `key` is a `distpy.transform.Transform.Transform`, `key`
+                is repeated this many times in the returned
+                `TransformList`.
         
-        returns: a TransformList object casted from the key, guaranteed to have
-                 length num_transforms if num_transforms is not None
+        Returns
+        -------
+        transform_list : `TransformList`
+            object casted from the key, guaranteed to have length
+            num_transforms if `num_transforms` is not None
         """
         if isinstance(key, TransformList):
             if (type(num_transforms) is not type(None)) and\
@@ -90,29 +113,32 @@ class TransformList(Savable, Loadable):
         return_transform_list_if_true=False):
         """
         Function determining whether the given key can be cast into a
-        TransformList object.
-    
-        key: object to attempt to check for castability to a transform list
-             (see cast staticmethod for what keys will work)
-        num_transforms: number of transforms in TransformList to cast (see cast
-                        staticmethod with details on this parameter)
-        return_transform_list_if_true: 1) If True and the given key can be
-                                          successfully cast to a TransformList
-                                          object (with the given number of
-                                          transforms if num_transforms is
-                                          given), that actual TransformList
-                                          object is returned.
-                                       2) Otherwise, this parameter has no
-                                          effect. If False (default), this
-                                          function is guaranteed to return a
-                                          bool.
-    
-        returns: False: if key cannot be cast into a Transform without an error
-                 True: if key can be cast into a Transform without an error and
-                       return_transform_if_true is False
-                 a Transform object: if key can be cast into a Transform
-                                     without an error and
-                                     return_transform_if_true is True
+        `TransformList` object.
+        
+        Parameters
+        ----------
+        key : object
+            object to attempt to check for castability (see
+            `TransformList.cast` static method for what types of `key` will
+            work)
+        num_transforms : int or None
+            number of transformations to store in casted object (see
+            `TransformList.cast` static method for details on this parameter)
+        return_transform_list_if_true : bool
+            determines what should be returned if `key` can be successfully
+            cast to a `TransformList` with the desired number of elements
+        
+        Returns
+        -------
+        cast_result : bool or `TransformList`
+            - if `key` can be successfully cast to a
+            `TransformList` with the desired number of elements, this method
+            returns:
+                - the casted `TransformList` if `return_transform_list_if_true`
+                is True
+                - True if `return_transform_list_if_true` is False
+            - if `key` cannot be successfully cast to a `TransformList` with
+            the desired number of elements, this method returns False
         """
         try:
             transform_list =\
@@ -128,7 +154,8 @@ class TransformList(Savable, Loadable):
     @property
     def transforms(self):
         """
-        Property storing list of Transform objects at the heart of this object.
+        List of `distpy.transform.Transform.Transform` objects at the heart of
+        this container.
         """
         if not hasattr(self, '_transforms'):
             raise AttributeError("transforms referenced before it was set.")
@@ -137,10 +164,15 @@ class TransformList(Savable, Loadable):
     @transforms.setter
     def transforms(self, value):
         """
-        Setter for the Transform objects at the heart of this object.
+        Setter for the sequence of `distpy.transform.Transform.Transform`
+        objects at the heart of this object.
         
-        value: sequence of Transform objects or objects which can be cast to
-               Transform objects
+        Parameters
+        ----------
+        value : sequence
+            `distpy.transform.Transform.Transform` objects or objects which can
+            be cast to `distpy.transform.Transform.Transform` objects using the
+            the `distpy.transform.CastTransform.cast_to_transform` function.
         """
         if type(value) in sequence_types:
             if all([castable_to_transform(element) for element in value]):
@@ -155,7 +187,8 @@ class TransformList(Savable, Loadable):
     @property
     def num_transforms(self):
         """
-        Property storing the number of transforms in this TransformList.
+        The number of `distpy.transform.Transform.Transform` objects in this
+        `TransformList`.
         """
         if not hasattr(self, '_num_transforms'):
             self._num_transforms = len(self.transforms)
@@ -163,23 +196,34 @@ class TransformList(Savable, Loadable):
     
     def __len__(self):
         """
-        Finds the length of this TransformList.
+        Finds the length of this `TransformList`.
         
-        returns: number of Transform objects in this TransformList
+        Returns
+        -------
+        length : int
+            number of `distpy.transform.Transform.Transform` objects in this
+            `TransformList`
         """
         return self.num_transforms
     
     def apply(self, untransformed_point, axis=-1):
         """
-        Transforms the given point from the untransformed space to the
+        Transforms the given point(s) from the untransformed space to the
         transformed space.
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the transformed point in a numpy.ndarray of same shape as
-                 untransformed_point
+        Returns
+        -------
+        transformed_point : numpy.ndarray
+            the parameter values in the transformed point space in a
+            `numpy.ndarray` of same shape as `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -189,16 +233,46 @@ class TransformList(Savable, Loadable):
             point[this_slice] = transform(point[this_slice])
         return point
     
+    def __call__(self, untransformed_point, axis=-1):
+        """
+        Transforms the given point(s) from the untransformed space to the
+        transformed space. This method simply calls the
+        `TransformList.__call__` method.
+        
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
+        
+        Returns
+        -------
+        transformed_point : numpy.ndarray
+            the parameter values in the transformed point space in a
+            `numpy.ndarray` of same shape as `untransformed_point`
+        """
+        return self.apply(untransformed_point, axis=axis)
+    
     def derivative(self, untransformed_point, axis=-1):
         """
-        Finds derivative of transforms at given point.
+        Finds the derivatives of the underlying transformations at the given
+        point(s).
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the derivative of the transform in a numpy.ndarray of same
-                 shape as untransformed_point
+        Returns
+        -------
+        derivatives : numpy.ndarray
+            the derivatives of the transformations in a `numpy.ndarray` of same
+            shape as `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -210,14 +284,22 @@ class TransformList(Savable, Loadable):
     
     def second_derivative(self, untransformed_point, axis=-1):
         """
-        Finds second_derivative of transforms at given point.
+        Finds the second derivatives of the underlying transformations at the
+        given point(s).
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the second derivative of the transform in a numpy.ndarray of
-                 same shape as untransformed_point
+        Returns
+        -------
+        derivatives : numpy.ndarray
+            the second derivatives of the transformations in a `numpy.ndarray`
+            of same shape as `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -229,14 +311,22 @@ class TransformList(Savable, Loadable):
     
     def third_derivative(self, untransformed_point, axis=-1):
         """
-        Finds third derivative of transforms at given point.
+        Finds the third derivatives of the underlying transformations at the
+        given point(s).
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the third derivative of the transform in a numpy.ndarray of
-                 same shape as untransformed_point
+        Returns
+        -------
+        derivatives : numpy.ndarray
+            the third derivatives of the transformations in a `numpy.ndarray`
+            of same shape as `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -248,14 +338,22 @@ class TransformList(Savable, Loadable):
     
     def log_derivative(self, untransformed_point, axis=-1):
         """
-        Finds natural log of derivative of transforms at given point.
+        Finds the natural log of the derivatives of the underlying
+        transformations at the given point(s).
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the log of the derivative of the transform in a numpy.ndarray
-                 of same shape as untransformed_point
+        Returns
+        -------
+        derivatives : numpy.ndarray
+            the log derivatives of the transformations in a `numpy.ndarray` of
+            same shape as `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -267,15 +365,22 @@ class TransformList(Savable, Loadable):
     
     def derivative_of_log_derivative(self, untransformed_point, axis=-1):
         """
-        Finds derivative of the log of the derivative of transforms at given
-        point.
+        Finds the derivatives of the log derivatives of the underlying
+        transformations at the given point(s).
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the derivative of the log of the derivative of the transform
-                 in a numpy.ndarray of same shape as untransformed_point
+        Returns
+        -------
+        derivatives : numpy.ndarray
+            the derivatives of the log derivatives of the transformations in a
+            `numpy.ndarray` of same shape as `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -289,15 +394,23 @@ class TransformList(Savable, Loadable):
     def second_derivative_of_log_derivative(self, untransformed_point,\
         axis=-1):
         """
-        Finds second derivative of the log of the derivative of transforms at
-        given point.
+        Finds the second derivatives of the log derivatives of the underlying
+        transformations at the given point(s).
         
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        untransformed_point : numpy.ndarray
+            untransformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to transform
         
-        returns: the second derivative of the log of the transform's derivative
-                 in a numpy.ndarray of same shape as untransformed_point
+        Returns
+        -------
+        derivatives : numpy.ndarray
+            the second derivatives of the log derivatives of the
+            transformations in a `numpy.ndarray` of same shape as
+            `untransformed_point`
         """
         point = untransformed_point.copy()
         axis = (axis % point.ndim)
@@ -308,31 +421,24 @@ class TransformList(Savable, Loadable):
                 point[this_slice])
         return point
     
-    def __call__(self, untransformed_point, axis=-1):
-        """
-        Transforms the given point from the untransformed space to the
-        transformed space.
-        
-        untransformed_point: numpy.ndarray of untransformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
-        
-        returns: the transformed point in a numpy.ndarray of same shape as
-                 untransformed_point
-        """
-        return self.apply(untransformed_point, axis=axis)
-    
     def apply_inverse(self, transformed_point, axis=-1):
         """
-        Detransforms the given point from the transformed space to the
+        Detransforms the given point(s) from the transformed space to the
         untransformed space.
         
-        transformed_point: numpy.ndarray of transformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        transformed_point : numpy.ndarray
+            transformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to untransform
         
-        returns: the untransformed point in a numpy.ndarray of same shape as
-                 transformed_point
+        Returns
+        -------
+        untransformed_point : numpy.ndarray
+            untransformed parameter values in a `numpy.ndarray` of same shape
+            as `transformed_point`
         """
         point = transformed_point.copy()
         axis = (axis % point.ndim)
@@ -344,15 +450,23 @@ class TransformList(Savable, Loadable):
     
     def I(self, transformed_point, axis=-1):
         """
-        Detransforms the given point from the transformed space to the
-        untransformed space.
+        Detransforms the given point(s) from the transformed space to the
+        untransformed space. This method simply calls the
+        `TransformList.apply_inverse` method.
         
-        transformed_point: numpy.ndarray of transformed point values
-        axis: axis of the array corresponding to the list of transforms at the
-              heart of this TransformList, default -1
+        Parameters
+        ----------
+        transformed_point : numpy.ndarray
+            transformed point values
+        axis : int
+            the index of the axis of the array corresponding to the parameters
+            to untransform
         
-        returns: the untransformed point in a numpy.ndarray of same shape as
-                 transformed_point
+        Returns
+        -------
+        untransformed_point : numpy.ndarray
+            untransformed parameter values in a `numpy.ndarray` of same shape
+            as `transformed_point`
         """
         return self.apply_inverse(transformed_point, axis=axis)
     
@@ -361,15 +475,29 @@ class TransformList(Savable, Loadable):
         """
         Detransforms the gradient (assuming it was evaluated at the given
         point) from the transformed space to the untransformed space. Assuming
-        df/dy_i is the gradient in the transformed space (y), this function
-        encodes the equality:
-        df/dx_i=(df/dy_i)*(dy_i/dx_i)
+        \\(\\frac{\\partial f}{\\partial y_i}\\) is the gradient in the
+        transformed space, \\(y\\), this function encodes the equality:
+        $$\\frac{\\partial f}{\\partial x_i} = \
+        \\left(\\frac{\\partial f}{\\partial y_i}\\right) \\times \
+        \\left(\\frac{dy_i}{dx_i}\\right).$$
         
-        transformed_gradient: the gradient in the transformed space, df/dy_i
-        untransformed_point: the input point in the untransformed space, x_i
-        axis: axis of the derivative in the gradient array
+        Parameters
+        ----------
+        transformed_gradient : numpy.ndarray
+            the gradient in the transformed space,
+            \\(\\frac{\\partial f}{\\partial y_i}\\)
+        untransformed_point : numpy.ndarray
+            the input point in the untransformed space, \\(x\\)
+        axis : int
+            integer index of the axis of the derivative in
+            `transformed_gradient`
         
-        returns: numpy.ndarray of same shape as transformed_gradient
+        Returns
+        -------
+        untransformed_gradient : numpy.ndarray
+            gradient in untransformed space,
+            \\(\\frac{\\partial f}{\\partial x_i}\\), in a `numpy.ndarray` of
+            same shape as `transformed_gradient`
         """
         gradient = transformed_gradient.copy()
         axis = (axis % gradient.ndim)
@@ -382,14 +510,27 @@ class TransformList(Savable, Loadable):
     def transform_covariance(self, untransformed_covariance,\
         untransformed_point, axis=(-2, -1)):
         """
-        Uses the detransform_gradient function twice to change the given
-        covariance from untransformed space to transformed space.
+        Uses the `TransformList.detransform_gradient` method twice to change
+        the given covariance matrix from untransformed space to transformed
+        space. Mathematically, this performs $$C^\\prime_{ij} =\
+        C_{ij}\\times\\left(\\frac{dy_i}{dx_i}\\right)\
+        \\times \\left(\\frac{dy_j}{dx_j}\\right).$$
         
-        untransformed_covariance: the covariance in the untransformed space
-        untransformed_point: the point at which the covariance is defined in
-                             the untransformed space
-        axis: a tuple containing the two integer indices of the axes
-              representing the covariance matrix.
+        Parameters
+        ----------
+        untransformed_covariance : numpy.ndarray
+            the covariance in the untransformed space, \\(C_{ij}\\)
+        untransformed_point : numpy.ndarray
+            point at which the covariance is defined in the untransformed space
+        axis : sequence
+            a 2-tuple containing the two integer indices of the axes
+            representing the covariance matrix.
+        
+        Returns
+        -------
+        transformed_covariance : numpy.ndarray
+            the covariance in untransformed space, \\(C^\\prime_{ij}\\), in
+            `numpy.ndarray` of same shape as `untransformed_covariance`
         """
         covariance = untransformed_covariance.copy()
         covariance = self.detransform_gradient(untransformed_covariance,\
@@ -403,15 +544,29 @@ class TransformList(Savable, Loadable):
         """
         Transforms the gradient (assuming it was evaluated at the given
         point) from the untransformed space to the transformed space. Assuming
-        that df/dx_i is the derivative in the untransformed space (x) and the
-        transformed space is y, this function encodes the following equality:
-        df/dy_i=(df/dx_i)/(dy_i/dx_i)
+        that \\(\\frac{\\partial f}{\\partial x_i}\\) is the derivative in the
+        untransformed space, \\(x\\), and the transformed space is \\(y\\),
+        this function encodes the following equality:
+        $$\\frac{\\partial f}{\\partial y_i}=\
+        \\frac{\\left(\\frac{\\partial f}{\\partial x_i}\\right)}\
+        {\\left(\\frac{dy_i}{dx_i}\\right)}.$$
         
-        transformed_gradient: the gradient in the transformed space, df/dy_i
-        untransformed_point: the input point in the untransformed space, x_i
-        axis: axis of the derivative in the gradient array
+        Parameters
+        ----------
+        untransformed_gradient : numpy.ndarray
+            the gradient in the transformed space,
+            \\(\\frac{\\partial f}{\\partial y_i}\\)
+        untransformed_point : numpy.ndarray
+            the input point in the untransformed space, \\(x\\)
+        axis : int
+            integer index of the axis of the derivative in the gradient array
         
-        returns: numpy.ndarray of same shape as transformed_gradient
+        Returns
+        -------
+        transformed_gradient : numpy.ndarray
+            gradient in transformed space,
+            \\(\\frac{\\partial f}{\\partial y_i}\\), as a `numpy.ndarray` of
+            same shape as `transformed_gradient`
         """
         gradient = untransformed_gradient.copy()
         axis = (axis % gradient.ndim)
@@ -424,22 +579,41 @@ class TransformList(Savable, Loadable):
     def detransform_hessian(self, transformed_hessian, transformed_gradient,\
         untransformed_point, first_axis=-2):
         """
-        Detransforms the hessian (assuming it was evaluated at the given point)
+        Detransforms the Hessian (assuming it was evaluated at the given point)
         from the transformed space to the untransformed space. Assuming
-        d2f/dy_idy_j is the Hessian in the transformed space (y) and df/dy_i is
-        the gradient in the transformed space, this function encodes the
-        equality:
-        d2f/dx_idx_j=(d2f/dy_idy_j)*(dy_i/dx_i)*(dy_jdx_j)+
-                     (\delta_ij)*(df/dy_i)*(d2y_i/dx_i2)
+        \\(\\frac{\\partial^2 f}{\\partial y_i\\ \\partial y_j}\\) is the
+        Hessian in the transformed space, \\(y\\), and
+        \\(\\frac{\\partial f}{\\partial y_i}\\) is the gradient in the
+        transformed space, this function encodes the equality:
+        $$\\frac{\\partial^2f}{\\partial x_i\\ \\partial x_j}=\
+        \\left(\\frac{\\partial^2f}{\\partial y_i\\ \\partial y_j}\\right)\
+        \\times\\left(\\frac{dy_i}{dx_i}\\right)\\times\
+        \\left(\\frac{dy_j}{dx_j}\\right)+ \\delta_{ij}\\times\
+        \\left(\\frac{\\partial f}{\\partial y_i}\\right)\\times\
+        \\left(\\frac{d^2y_i}{dx_i^2}\\right),$$ where \\(\\delta_{ij}=\
+        \\begin{cases} 1 & i = j \\\\ 0 & i\\ne j \\end{cases}\\).
         
-        transformed_hessian: Hessian in the transformed space, (d2f/dy_idy_j)
-        transformed_gradient: gradient in the transformed space, (df/dy_i)
-        untransformed_point: the input point in the untransformed space, x_i
-        first_axis: first axis of the derivative in the hessian array (once its
-                    mod is taken, this should be the same axis of the
-                    derivative axis of transformed_gradient)
+        Parameters
+        ----------
+        transformed_hessian : numpy.ndarray
+            Hessian in the transformed space,
+            \\(\\frac{\\partial^2f}{\\partial y_i\\ \\partial y_j}\\)
+        transformed_gradient : numpy.ndarray
+            gradient in the transformed space,
+            \\(\\frac{\\partial f}{\\partial y_i}\\)
+        untransformed_point : numpy.ndarray
+            the input point in the untransformed space, \\(x\\)
+        first_axis : int
+            first axis of the derivative in the hessian array (once its mod is
+            taken, this should be the same axis of the derivative axis of
+            `transformed_gradient`)
         
-        returns: numpy.ndarray of same shape as transformed_hessian
+        Returns
+        -------
+        untransformed_hessian : numpy.ndarray
+            Hessian in the untransformed space,
+            \\(\\frac{\\partial^2f}{\\partial x_i\\ \\partial x_j}\\), in a
+            `numpy.ndarray` of the same shape as `transformed_hessian`
         """
         hessian = transformed_hessian.copy()
         first_axis = (first_axis % hessian.ndim)
@@ -460,23 +634,40 @@ class TransformList(Savable, Loadable):
         """
         Transforms the hessian (assuming it was evaluated at the given point)
         from the untransformed space to the transformed space. Assuming
-        d2f/dx_idx_j is the Hessian in the untransformed space (x) and df/dy_i
-        is the gradient in the transformed space, this function encodes the
-        equality:
-                          (d2f/dx_idx_j-(\delta_ij)*(df/dy_i)*(d2y_i/dx_i2))
-        d2f/dy_idy_j=   -------------------------------------------------------
-                                      ((dy_i/dx_i)*(dy_j/dx_j))
+        \\(\\frac{\\partial^2f}{\\partial x_i\\ \\partial x_j}\\) is the
+        Hessian in the untransformed space, \\(x\\), and
+        \\(\\frac{\\partial f}{\\partial y_i}\\) is the gradient in the
+        transformed space, this function encodes the equality:
+        $$\\frac{\\partial^2f}{\\partial y_i\\ \\partial y_j} =\
+        \\frac{\\left(\\frac{\\partial^2f}{\\partial x_i\\ \
+        \\partial x_j} \\right)-\\delta_{ij}\\times\
+        \\left(\\frac{\\partial f}{\\partial y_i}\\right)\\times\
+        \\left(\\frac{d^2y_i}{dx_i^2}\\right)}{\
+        \\left(\\frac{dy_i}{dx_i}\\right)\\times\
+        \\left(\\frac{dy_j}{dx_j}\\right)},$$ where \\(\\delta_{ij}=\
+        \\begin{cases} 1 & i = j \\\\ 0 & i\\ne j \\end{cases}\\).
         
-        untransformed_hessian: the hessian in the untransformed space,
-                               d2f/dx_idx_j
-        transformed_gradient: the gradient in the transformed space, df/dy_i
-        untransformed_point: the input point in the untransformed space, x_i
-        first_axis: first axis of the derivative in the hessian array (once its
-                    mod is taken, this should be the same axis of the
-                    derivative axis of transformed_gradient)
+        Parameters
+        ----------
+        untransformed_hessian : numpy.ndarray
+            the hessian in the untransformed space,
+            \\(\\frac{\\partial^2f}{\\partial x_i\\ \\partial x_j}\\)
+        transformed_gradient : numpy.ndarray
+            the gradient in the transformed space,
+            \\(\\frac{\\partial f}{\\partial y_i}\\)
+        untransformed_point : numpy.ndarray
+            the input point in the untransformed space, \\(x\\)
+        first_axis : int
+            first axis of the derivative in the hessian array (once its mod is
+            taken, this should be the same axis of the derivative axis of
+            `transformed_gradient`)
         
-        returns: numpy.ndarray of same shape as untransformed_hessian,
-                 d2f/dy_idy_j
+        Returns
+        -------
+        transformed_hessian : numpy.ndarray
+            Hessian in transformed space,
+            \\(\\frac{\\partial^2 f}{\\partial y_i\\ \\partial y_j}\\), as a
+            `numpy.ndarray` of same shape as `untransformed_hessian`
         """
         hessian = untransformed_hessian.copy()
         first_axis = (first_axis % hessian.ndim)
@@ -495,24 +686,39 @@ class TransformList(Savable, Loadable):
     def transform_derivatives(self, untransformed_derivatives,\
         untransformed_point, axis=-2):
         """
-        Detransforms the given gradient and hessian from the transformed space
-        to the untransformed space.
+        Transforms the given gradient and hessian from the untransformed space
+        to the transformed space. For details on how the transformed
+        derivatives are computed, see the `TransformList.transform_gradient`
+        and `TransformList.transform_hessian` methods.
         
-        untransformed_derivatives: tuple of form (untransformed_gradient,
-                                   untransformed_hessian)
-                                   where untransformed_gradient is the gradient
-                                   in the untransformed space and
-                                   untransformed_hessian is the hessian in the
-                                   untransformed space
-        untransformed_point: the point at which the gradient and hessian were
-                             evaluated
-        axis: axis (which will be modded by the untransformed_hessian ndim)
-              corresponding to the untransformed_gradient's derivative
-              dimension and the first derivative dimension of the
-              untransformed_hessian
+        Parameters
+        ----------
+        untransformed_derivatives : tuple
+            `(untransformed_gradient, untransformed_hessian)` where
+            `untransformed_gradient` is the gradient in the untransformed
+            space, \\(\\frac{\\partial f}{\\partial x_i}\\), and
+            `untransformed_hessian` is the hessian in the untransformed space,
+            \\(\\frac{\\partial^2 f}{\\partial x_i\\ \\partial x_j}\\), both
+            given as `numpy.ndarray` objects
+        untransformed_point : numpy.ndarray
+            the point in untransformed space, \\(x\\), at which the gradient
+            and hessian were evaluated
+        axis : int
+            index of axis (which will be modded by the
+            `untransformed_hessian.ndim`) corresponding to the derivative axis
+            of `untransformed_gradient` and the first derivative dimrension of
+            `untransformed_hessian`
         
-        returns: (transformed_gradient, transformed_hessian) with same
-                 shape as untransformed_gradient and untransformed_hessian
+        Returns
+        -------
+        transformed_derivatives : tuple
+            `(transformed_gradient, transformed_hessian)` where
+            `transformed_gradient` and `transformed_hessian` are the gradient,
+            \\(\\frac{\\partial f}{\\partial y_i}\\), and the hessian,
+            \\(\\frac{\\partial^2f}{\\partial y_i\\ \\partial y_j}\\),
+            respectively, in transformed space. They are `numpy.ndarray`
+            objects with the same shapes as `untransformed_gradient` and
+            `untransformed_hessian`
         """
         (gradient, hessian) = untransformed_derivatives
         axis = (axis % hessian.ndim)
@@ -526,21 +732,38 @@ class TransformList(Savable, Loadable):
         untransformed_point, axis=-2):
         """
         Detransforms the given gradient and hessian from the transformed space
-        to the untransformed space.
+        to the untransformed space. For details on how the untransformed
+        derivatives are computed, see the `TransformList.detransform_gradient`
+        and `TransformList.detransform_hessian` methods.
         
-        transformed_derivatives: tuple of form
-                                 (transformed_gradient, transformed_hessian)
-                                 where transformed_gradient is the gradient in
-                                 the transformed space and transformed_hessian
-                                 is the hessian in the transformed space
-        untransformed_point: the point at which the gradient and hessian were
-                             evaluated
-        axis: axis (which will be modded by the transformed_hessian ndim)
-              corresponding to the transformed_gradient's derivative dimension
-              and the first derivative dimension of the transformed_hessian
+        Parameters
+        ----------
+        transformed_derivatives : tuple
+            `(transformed_gradient, transformed_hessian)` where
+            `transformed_gradient` is the gradient in the transformed space,
+            \\(\\frac{\\partial f}{\\partial y_i}\\), and `transformed_hessian`
+            is the hessian in the transformed space,
+            \\(\\frac{\\partial^2 f}{\\partial y_i\\ \\partial y_j}\\), both
+            given as `numpy.ndarray` objects
+        untransformed_point : numpy.ndarray
+            the point in untransformed space, \\(x\\), at which the gradient
+            and hessian were evaluated
+        axis : int
+            index of axis (which will be modded by the
+            `transformed_hessian.ndim`) corresponding to the derivative axis
+            of `transformed_gradient` and the first derivative dimrension of
+            `transformed_hessian`
         
-        returns: (detransformed_gradient, detransformed_hessian) with same
-                 shape as transformed_gradient and transformed_hessian
+        Returns
+        -------
+        untransformed_derivatives : tuple
+            `(untransformed_gradient, untransformed_hessian)` where
+            `untransformed_gradient` and `untransformed_hessian` are the
+            gradient, \\(\\frac{\\partial f}{\\partial x_i}\\), and the
+            hessian, \\(\\frac{\\partial^2f}{\\partial x_i\\ \\partial x_j}\\),
+            respectively, in untransformed space. They are `numpy.ndarray`
+            objects with the same shapes as `transformed_gradient` and
+            `transformed_hessian`
         """
         (gradient, hessian) = transformed_derivatives
         axis = (axis % hessian.ndim)
@@ -553,10 +776,12 @@ class TransformList(Savable, Loadable):
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this
-        TransformList.
+        `TransformList`.
         
-        group: hdf5 file group to fill with information about this
-               TransformList
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this `TransformList`
         """
         for (itransform, transform) in enumerate(self.transforms):
             subgroup = group.create_group('transform_{}'.format(itransform))
@@ -565,11 +790,17 @@ class TransformList(Savable, Loadable):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a TransformList object from the given hdf5 file group.
+        Loads a `TransformList` object from the given hdf5 file group.
         
-        group: the hdf5 file group from which to load a TransformList
+        Parameters
+        ----------
+        group : h5py.Group
+            the hdf5 file group from which to load a `TransformList`
         
-        returns: a TransformList object derived from the give hdf5 file group
+        Returns
+        -------
+        loaded_transform_list : `TransformList`
+            object loaded from the given hdf5 file group
         """
         transforms = []
         while 'transform_{}'.format(len(transforms)) in group:
@@ -579,26 +810,38 @@ class TransformList(Savable, Loadable):
     
     def __iter__(self):
         """
-        Returns an iterator over this TransformList. Since TransformList
-        objects are their own iterators, this method returns self after
-        resetting the internal iteration variable.
+        Allows for iteration over this `TransformList`.
+        
+        Returns
+        -------
+        transform_list : `TransformList`
+            `TransformList` objects are their own iterators; so, this method
+            returns this object after resetting the internal iteration
+            variable.
         """
         self._iteration = 0
         return self
     
     def __next__(self):
         """
-        Finds the next element in the iteration over this TransformList.
+        Finds the next element in the iteration over this `TransformList`. This
+        method simply calls the `TransformList.next` method.
         
-        returns: next Transform object in this TransformList
+        Returns
+        -------
+        transform : `distpy.transform.Transform.Transform`
+            the next object in this `TransformList`
         """
         return self.next()
     
     def next(self):
         """
-        Finds the next element in the iteration over this TransformList.
+        Finds the next element in the iteration over this `TransformList`.
         
-        returns: next Transform object in this TransformList
+        Returns
+        -------
+        transform : `distpy.transform.Transform.Transform`
+            the next object in this `TransformList`
         """
         if self._iteration == self.num_transforms:
             del self._iteration
@@ -609,10 +852,14 @@ class TransformList(Savable, Loadable):
     
     def append(self, transform):
         """
-        Appends the given Transform object (or object castable as a transform)
-        to this TransformList.
+        Appends the given object to this `TransformList`.
         
-        transform: must be a Transform or castable as a transform
+        Parameters
+        ----------
+        transform : `distpy.transform.Transform.Transform` or str or None
+            any object that can be cast to a
+            `distpy.transform.Transform.Transform` by the
+            `distpy.transform.CastTransform.cast_to_transform` function
         """
         if castable_to_transform(transform):
             self.transforms.append(cast_to_transform(transform))
@@ -625,8 +872,15 @@ class TransformList(Savable, Loadable):
     
     def extend(self, transform_list):
         """
-        Extends this TransformList by concatenating the Transform objects
-        stored in this TransformList with the ones stored in transform_list.
+        Extends this `TransformList` by appending the objects stored in
+        `transform_list`.
+        
+        Parameters
+        ----------
+        transform_list : `TransformList` or sequence
+            either a `TransformList` or a sequence of objects that can be cast
+            to `distpy.transform.Transform.Transform` objects using the
+            `distpy.transform.CastTransform.cast_to_transform` function
         """
         if isinstance(transform_list, TransformList):
             self.transforms.extend(transform_list.transforms)
@@ -643,8 +897,8 @@ class TransformList(Savable, Loadable):
     @property
     def inverse(self):
         """
-        Property storing the TransformList object storing the inverse of all of
-        the transforms in this TransformList.
+        A `TransformList` object that stores the inverse of all of the
+        `distpy.transform.Transform.Transform` objects in this `TransformList`.
         """
         if not hasattr(self, '_inverse'):
             self._inverse = TransformList(*[invert_transform(transform)\
@@ -653,14 +907,22 @@ class TransformList(Savable, Loadable):
     
     def __add__(self, other):
         """
-        "Adds" this TransformList to other by returning a new TransformList
-        object with the Transforms in both objects.
+        "Adds" this `TransformList` to `other` by returning a new
+        `TransformList` object with the `distpy.transform.Transform.Transform`
+        objects from both lists.
         
-        other: either a Transform (or something castable as a Transform) or a
-               TransformList
+        Parameters
+        ----------
+        other : `TransformList` or `distpy.transform.Transform.Transform` or\
+        str or None
+            object containing `distpy.transform.Transform.Transform` object(s)
+            to add
         
-        returns: a TransformList composed of all of the Transforms in this
-                 TransformList as well as the Transform(s) in other
+        Returns
+        -------
+        combined : `TransformList`
+            combination of the `distpy.transform.Transform.Transform` objects
+            in `self` and `other`
         """
         if isinstance(other, TransformList):
             return TransformList(*(self.transforms + other.transforms))
@@ -674,12 +936,22 @@ class TransformList(Savable, Loadable):
     
     def __iadd__(self, other):
         """
-        "Adds" other to this TransformList to other by appending/extending its
-        transforms to this object. Note that this does not create a new
-        TransformList.
+        "Adds" `other` to this `TransformList` to by appending/extending its
+        `distpy.transform.Transform.Transform` objects to this object. Note
+        that this does not create a new `TransformList`.
         
-        other: either a Transform (or something castable as a Transform) or a
-               TransformList
+        Parameters
+        ----------
+        other : `TransformList` or `distpy.transform.Transform.Transform` or\
+        str or None
+            object containing `distpy.transform.Transform.Transform` object(s)
+            to add
+        
+        Returns
+        -------
+        transform_list : `TransformList`
+            this object after `distpy.transform.Transform.Transform` object(s)
+            from `other` are added to it
         """
         if isinstance(other, TransformList):
             self.extend(other)
@@ -693,16 +965,26 @@ class TransformList(Savable, Loadable):
     
     def __mul__(self, other):
         """
-        "Multiplies" other by this TransformList by forming a new TransformList
-        of composite transforms with this TransformList's Transforms forming
-        the inner transforms and other's Transforms forming the outer
-        transforms.
+        "Multiplies" this `TransformList` by `other` by forming a new
+        `TransformList` of
+        `distpy.transform.CompositeTransform.CompositeTransform` objects with
+        this object's `distpy.transform.Transform.Transform` objects forming the
+        `distpy.transform.CompositeTransform.CompositeTransform.inner_transform`
+        objects and `other`'s `distpy.transform.Transform.Transform` objects
+        forming the
+        `distpy.transform.CompositeTransform.CompositeTransform.outer_transform`
+        objects.
         
-        other: must be a TransformList object with the same number of Transform
-               objects
+        Parameters
+        ----------
+        other : `TransformList
+            another `TransformList` object containing the same number of
+            `distpy.transform.Transform.Transform` objects
         
-        returns: TransformList of combined transforms with this TransformList
-                 holding the inner transform and other holding outer transforms
+        Returns
+        -------
+        composite_transform_list : `TransformList`
+            container filled with combined transformations
         """
         if not isinstance(other, TransformList):
             raise TypeError("TransformList objects can only be multiplied " +\
@@ -722,12 +1004,19 @@ class TransformList(Savable, Loadable):
     
     def sublist(self, indices):
         """
-        Creates and returns a sublist of this TransformList corresponding to
-        the given indices.
+        Creates a sublist of this `TransformList` corresponding to `indices`.
         
-        indices: either a sequence of integer indices or a slice
+        Parameters
+        ----------
+        indices : sequence or slice
+            object determining which `distpy.transform.Transform.Transform`
+            objects to include in the returned value
         
-        returns a TransformList object
+        Returns
+        -------
+        result : `TransformList`
+           new container containing specified elements from this
+           `TransformList`
         """
         if isinstance(indices, slice):
             return TransformList(*self.transforms[indices])
@@ -742,13 +1031,18 @@ class TransformList(Savable, Loadable):
     
     def __getitem__(self, index):
         """
-        Gets a specific element or set of elements of the Transforms sequence.
+        Gets a specific element or set of elements from this container.
         
-        index: the index of the element(s) to retrieve. Can be an integer, a
-               slice, or a sequence of integers.
+        Parameters
+        ----------
+        index : int or sequence or slice
+            index or indices of the element(s) to retrieve
         
-        returns: a Transform object if index is an integer or a TransformList
-                 object otherwise
+        Returns
+        -------
+        element : `distpy.transform.Transform.Transform` or `TransformList`
+            either single element from this container (if `index` is an `int`)
+            or a new `TransformList` containing the specified elements
         """
         if type(index) in int_types:
             return self.transforms[index]
@@ -760,7 +1054,7 @@ class TransformList(Savable, Loadable):
     @property
     def is_null(self):
         """
-        Property storing whether this TransformList encodes the
+        Boolean describing whether this `TransformList` encodes the
         len(self)-length null transformation.
         """
         for transform in self.transforms:
@@ -770,12 +1064,19 @@ class TransformList(Savable, Loadable):
     
     def __eq__(self, other):
         """
-        Checks if other is a TransformList with the same Transforms as this
+        Checks if `other` is a `TransformList` with the same elements as this
         one.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True iff other is TransformList with same Transforms
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `TransformList` with the same
+            elements
         """
         if isinstance(other, TransformList):
             if len(self) == len(other):
@@ -790,11 +1091,19 @@ class TransformList(Savable, Loadable):
     
     def __ne__(self, other):
         """
-        Ensures that (a!=b) == (not (a==b)).
+        Checks if `other` is a `TransformList` with the same elements as this
+        one.
         
-        other: object to check for inequality
+        Parameters
+        ----------
+        other : object
+            object to check for inequality
         
-        returns: False iff other is TransformList with same Transforms
+        Returns
+        -------
+        result : bool
+            False if and only if `other` is a `TransformList` with the same
+            elements
         """
         return (not self.__eq__(other))
 

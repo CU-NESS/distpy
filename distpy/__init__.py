@@ -2,7 +2,7 @@
 `distpy` is a `Python` package designed to represent, draw from, evaluate, and
 plot many different kinds of distributions.
 
-**File**: $DISTPY/distpy/\_\_init\_\_.py  
+**File**: $DISTPY/distpy/\\_\\_init\\_\\_.py  
 **Author**: Keith Tauscher  
 **Update date**: 14 May 2021
 """
@@ -46,7 +46,28 @@ from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file, MetropolisHastingsSampler
 
-class_names = ['distpy.util.Expression.Expression']
+class_names = ['distpy.util.Expression.Expression',\
+    'distpy.transform.Transform.Transform',\
+    'distpy.transform.TransformSet.TransformSet',\
+    'distpy.transform.TransformList.TransformList',\
+    'distpy.transform.AffineTransform.AffineTransform',\
+    'distpy.transform.ArcsinTransform.ArcsinTransform',\
+    'distpy.transform.ArsinhTransform.ArsinhTransform',\
+    'distpy.transform.BoxCoxTransform.BoxCoxTransform',\
+    'distpy.transform.CompositeTransform.CompositeTransform',\
+    'distpy.transform.Exp10Transform.Exp10Transform',\
+    'distpy.transform.ExponentialTransform.ExponentialTransform',\
+    'distpy.transform.ExponentiatedTransform.ExponentiatedTransform',\
+    'distpy.transform.LogTransform.LogTransform',\
+    'distpy.transform.Log10Transform.Log10Transform',\
+    'distpy.transform.LoggedTransform.LoggedTransform',\
+    'distpy.transform.LogisticTransform.LogisticTransform',\
+    'distpy.transform.NullTransform.NullTransform',\
+    'distpy.transform.PowerTransform.PowerTransform',\
+    'distpy.transform.ProductTransform.ProductTransform',\
+    'distpy.transform.ReciprocalTransform.ReciprocalTransform',\
+    'distpy.transform.SineTransform.SineTransform',\
+    'distpy.transform.SumTransform.SumTransform']
 # init not included in magic_names because __init__ is automatically documented
 # hash not included because it appears automatically
 magic_names = ['new', 'del', 'repr', 'str', 'bytes', 'format', 'lt', 'le',\
@@ -61,7 +82,7 @@ magic_names = ['new', 'del', 'repr', 'str', 'bytes', 'format', 'lt', 'le',\
     'imatmul', 'itruediv', 'ifloordiv', 'idiv', 'imod', 'ipow', 'ilshift',\
     'irshift', 'iand', 'ior', 'ixor', 'neg', 'pos', 'abs', 'invert',\
     'complex', 'int', 'float', 'index', 'round', 'trunc', 'floor', 'ceil',\
-    'enter', 'exit', 'await', 'aiter', 'anext', 'aenter', 'aexit']
+    'next', 'enter', 'exit', 'await', 'aiter', 'anext', 'aenter', 'aexit']
 __pdoc__ = {}
 for magic_name in magic_names:
     for class_name in class_names:

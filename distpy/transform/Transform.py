@@ -1,123 +1,207 @@
 """
-File: distpy/transform/Transform.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing base class for all transformations.
 
-Description: File containing base class for all built-in transformations.
+**File**: $DISTPY/distpy/transform/Transform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 import numpy as np
 from ..util import Savable
 
+cannot_instantiate_transform_error =\
+    NotImplementedError("Transform cannot be directly instantiated.")
+
 class Transform(Savable):
     """
-    Class representing a transformation.
+    Base class for all transformations.
     """
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this `Transform` at
+        the given value(s). This method must be implemented by all subclasses
+        of `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `Transform` at the given value(s). This method must be implemented by
+        all subclasses  of `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the second
+            derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `Transform` at the given value(s). This method must be implemented by
+        all subclasses  of `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the third
+            derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `Transform` at the given value(s). This
+        method must be implemented by all subclasses of `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the log
+            derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of log derivative of transformation in same format as `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def derivative_of_log_derivative(self, value):
         """
         Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        the function underlying this `Transform` at the given value(s). This
+        method must be implemented by all subclasses of `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
+            of the log derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of log derivative of transformation in same
+            format as `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def second_derivative_of_log_derivative(self, value):
         """
         Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        derivative of the function underlying this `Transform` at the given
+        value(s). This method must be implemented by all subclasses of
+        `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the second
+            derivative of the log derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of log derivative of transformation in
+            same format as `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `Transform` to the value and returns the result. This
+        method must be implemented by all subclasses of `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def __call__(self, value):
         """
-        Calling a transform object is simply an alias for the apply(value)
-        function.
+        Applies this `Transform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`
         """
         return self.apply(value)
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `Transform` to the value and returns the
+        result. This method must be implemented by all subclasses of
+        `Transform`.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def I(self, value):
         """
-        This function is an alias for the apply_inverse function.
+        Applies the inverse of this `Transform` to the value and returns the
+        result (alias for `Transform.apply_inverse`).
         
-        value: number to which to apply inverse transformation
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value which, when this transform is applied to it, gives value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`
         """
         return self.apply_inverse(value)
     
@@ -125,12 +209,17 @@ class Transform(Savable):
         """
         Untransforms the given minimum.
         
-        transformed_minimum: the minimum in transformed space,
-                             None represents -np.inf
+        Parameters
+        ----------
+        transformed_minimum : number or None
+            the minimum in transformed space with None representing -np.inf
         
-        returns: if untransformed_minimum is finite, it is returned. Otherwise,
-                 None is returned to indicate that the untransformed_minimum is
-                 minus infinity
+        Returns
+        -------
+        untransformed_minimum : number or None
+            if `untransformed_minimum` is finite, it is returned.  
+            Otherwise, None is returned to indicate that
+            `untransformed_minimum` is minus infinity
         """
         if type(transformed_minimum) is type(None):
             untransformed_minimum = self.apply_inverse(-np.inf)
@@ -145,12 +234,17 @@ class Transform(Savable):
         """
         Untransforms the given maximum.
         
-        transformed_maximum: the maximum in transformed space,
-                             None represents +np.inf
+        Parameters
+        ----------
+        transformed_maximum : number or None
+            the maximum in transformed space with None representing +np.inf
         
-        returns: if untransformed_maximum is finite, it is returned. Otherwise,
-                 None is returned to indicate that the untransformed_maximum is
-                 infinite
+        Returns
+        -------
+        untransformed_maximum : number or None
+            if `untransformed_maximum` is finite, it is returned.  
+            Otherwise, None is returned to indicate that
+            `untransformed_maximum` is plus infinity
         """
         if type(transformed_maximum) is type(None):
             untransformed_maximum = self.apply_inverse(np.inf)
@@ -165,12 +259,17 @@ class Transform(Savable):
         """
         Transforms the given minimum.
         
-        untransformed_minimum: the minimum in untransformed space,
-                               None represents -np.inf
+        Parameters
+        ----------
+        untransformed_minimum : number or None
+            the minimum in untransformed space with None representing -np.inf
         
-        returns: if transformed_minimum is finite, it is returned. Otherwise,
-                 None is returned to indicate that the transformed_minimum is
-                 minus infinity
+        Returns
+        -------
+        transformed_minimum : number or None
+            if `transformed_minimum` is finite, it is returned.  
+            Otherwise, None is returned to indicate that
+            `transformed_minimum` is minus infinity
         """
         if type(untransformed_minimum) is type(None):
             transformed_minimum = self.apply(-np.inf)
@@ -185,12 +284,17 @@ class Transform(Savable):
         """
         Transforms the given maximum.
         
-        untransformed_maximum: the maximum in untransformed space,
-                               None represents +np.inf
+        Parameters
+        ----------
+        untransformed_maximum : number or None
+            the maximum in untransformed space with None representing +np.inf
         
-        returns: if transformed_maximum is finite, it is returned. Otherwise,
-                 None is returned to indicate that the transformed_maximum is
-                 infinite
+        Returns
+        -------
+        transformed_maximum : number or None
+            if `transformed_maximum` is finite, it is returned.  
+            Otherwise, None is returned to indicate that
+            `transformed_maximum` is plus infinity
         """
         if type(untransformed_maximum) is type(None):
             transformed_maximum = self.apply(np.inf)
@@ -203,48 +307,84 @@ class Transform(Savable):
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `Transform`. This method must be
+        implemented by all subclasses of `Transform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            string that can be cast into this `Transform`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
+    
+    def __str__(self):
+        """
+        Generates a string version of this `Transform`. It calls the subclass
+        implementation of the `Transform.to_string` method.
+        
+        Returns
+        -------
+        representation : str
+            string that can be cast into this `Transform`
+        """
+        return self.to_string()
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this transform. This
+        method must be implemented by all subclasses of `Transform`.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this `Transform`
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
     
     def __eq__(self, other):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this transform. This
+        method must be implemented by all subclasses of `Transform`.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : object
+            another object to check for equality
         
-        returns True if both Transforms are the same
+        Returns
+        -------
+        result : bool
+            True if and only if both `self` and `other` are the same
         """
-        raise NotImplementedError("Transform cannot be directly instantiated.")
+        raise cannot_instantiate_transform_error
 
     def __ne__(self, other):
         """
         Asserts that checks for equality are consistent with checks for
         inequality.
         
-        other: object to check for inequality
+        Parameters
+        ----------
+        other : object
+            another object to check for inequality
         
-        returns: opposite of __eq__
+        Returns
+        -------
+        result : bool
+            False if and only if both `self` and `other` are the same
         """
         return (not self.__eq__(other))
     
     def __bool__(self):
         """
         This method makes it so that if-statements can be performed with
-        variables storing Transforms as their expressions. If the variable
-        contains a non-None Transform, it will return False.
+        variables storing `Transform` objects as their expressions. If the
+        variable contains a non-None `Transform`, it will return False.
         
-        returns: True
+        Returns
+        -------
+        result : bool
+            True
         """
         return True
 

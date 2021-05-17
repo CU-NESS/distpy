@@ -1,10 +1,11 @@
 """
-File: distpy/transform/TransformSet.py
-Author: Keith Tauscher
-Date: 22 Feb 2018
+Module containing class representing an unordered set of
+`distpy.transform.Transform.Transform` objects indexed by string parameter
+names.
 
-Description: File containing a class representing an unordered set of Transform
-             objects indexed by string parameters.
+**File**: $DISTPY/distpy/transform/TransformSet.py  
+**Author**: Keith Tauscher  
+**Date**: 15 May 2021
 """
 from ..util import sequence_types, Savable, Loadable
 from .NullTransform import NullTransform
@@ -22,19 +23,26 @@ except:
 
 class TransformSet(Savable, Loadable):
     """
-    Class representing an unordered set of Transform objects indexed by string
-    parameters.
+    Class representing an unordered set of
+    `distpy.transform.Transform.Transform` objects indexed by string
+    parameter names.
     """
     def __init__(self, transforms, parameters=None):
         """
-        Initializes a new TransformSet object with the given transforms and
-        parameters.
+        Initializes a new `TransformSet` object with the given
+        `distpy.transform.Transform.Transform` objects and  string parameter
+        names.
         
-        transforms: either a dictionary of Transform objects indexed by strings
-                    or a sequence of Transform objects
-        parameters: sequence of parameters to which sequence of transforms
-                    apply. parameters is only required (and only used) if
-                    transforms is a sequence as opposed to a dictionary
+        Parameters
+        ----------
+        transforms : dict or sequence
+            either a dictionary of `distpy.transform.Transform.Transform`
+            objects indexed by strings or a sequence of
+            `distpy.transform.Transform.Transform` objects
+        parameters : sequence or None
+            sequence of string parameter names to which sequence of transforms
+            apply. `parameters` is only required (and only used) if
+            `transforms` is a sequence as opposed to a dictionary
         """
         if isinstance(transforms, dict):
             if any([(not isinstance(key, basestring)) for key in transforms]):
@@ -68,8 +76,8 @@ class TransformSet(Savable, Loadable):
     @property
     def transforms(self):
         """
-        Property storing a dictionary of Transform objects indexed by string
-        keys.
+        The dictionary of `distpy.transform.Transform.Transform` objects
+        indexed by string keys that stores the data of this container.
         """
         if not hasattr(self, '_transforms'):
             raise AttributeError("transforms referenced before it was set.")
@@ -78,8 +86,7 @@ class TransformSet(Savable, Loadable):
     @property
     def inverse(self):
         """
-        Property storing a TransformSet with the same keys and inverse
-        transforms.
+        A `TransformSet` with the same keys and inverse transformations.
         """
         if not hasattr(self, '_inverse'):
             self._inverse = TransformSet(\
@@ -89,13 +96,20 @@ class TransformSet(Savable, Loadable):
     
     def subset(self, parameters):
         """
-        Creates and returns another TransformSet object corresponding to the
-        transforms in this TransformSet that are indexed by the given
-        parameters.
+        Creates and returns another `TransformSet` object corresponding to
+        the `distpy.transform.Transform.Transform` objects in this
+        `TransformSet` that are indexed by the given parameters.
         
-        parameters: set of strings
+        Parameters
+        ----------
+        parameters : set
+            a set of string parameter names describing the keys to include in
+            the returned subset
         
-        returns: a TransformSet object
+        Returns
+        -------
+        transform_subset : `TransformSet`
+            subset of this `TransformSet` object
         """
         if isinstance(parameters, set):
             if all([isinstance(element, basestring) for element in key]):
@@ -114,14 +128,21 @@ class TransformSet(Savable, Loadable):
     
     def transform_list(self, parameters):
         """
-        Creates and returns a TransformList object corresponding to the
-        transforms in this TransformSet that are indexed by the given
-        parameters.
+        Creates and returns a `distpy.transform.TransformList.TransformList`
+        object corresponding to the transforms in this `TransformSet` that are
+        indexed by the given parameters.
         
-        parameters: sequence of strings which are unique keys of transforms in
-                    this TransformSet
+        Parameters
+        ----------
+        parameters : sequence
+            sequence of strings which are unique keys of transforms in this
+            `TransformSet` in the order that they should be included in the
+            returned `distpy.transform.TransformList.TransformList` object
         
-        returns: a TransformList object of the same length as parameters
+        Returns
+        -------
+        transform_list : `distpy.transform.TransformList.TransformList`
+            list form of this `TransformSet`
         """
         if type(parameters) in sequence_types:
             if all([isinstance(element, basestring)\
@@ -143,20 +164,32 @@ class TransformSet(Savable, Loadable):
     
     def __getitem__(self, key):
         """
-        Gets the transform associated with the given key.
+        Gets the `distpy.transform.Transform.Transform` associated with the
+        given key.
         
-        key: a string parameter associated with the desired Transform object,
-             an unordered set of such keys, or a sequence of such keys
+        Parameters
+        ----------
+        key : str or set or sequence
+            a string parameter associated with the desired
+            `distpy.transform.Transform.Transform` object, an unordered set of
+            such keys, or a sequence of such keys
         
-        returns: if key is a string, Transform stored under given string key
-                 if key is a set, TransformSet containing only the transforms
-                                  associated with the strings in key
-                 if key is a sequence (list, tuple, etc.), a TransformList
-                                                           containing the
-                                                           transforms
-                                                           associated with the
-                                                           given strings in the
-                                                           order given in key
+        Returns
+        -------
+        value : `distpy.transform.Transform.Transform` or `TransformSet` or\
+        `distpy.transform.TransformList.TransformList`
+            `value` depends on the type of `key`
+            
+            - if `key` is a string, `value` is the
+            `distpy.transform.Transform.Transform` stored under parameter name
+            given by `key`
+            - if `key` is a set, `value` is a `TransformSet` containing only
+            the `distpy.transform.Transform.Transform` objects associated with
+            the parameter names in `key`
+            - if `key` is a sequence (list, tuple, etc.), `value` is a
+            `distpy.transform.TransformList.TransformList` containing the
+            `distpy.transform.Transform.Transform` objects associated with the
+            parameter names given in `key` (in the same order)
         """
         if isinstance(key, set):
             return self.subset(key)
@@ -170,19 +203,29 @@ class TransformSet(Savable, Loadable):
     
     def __iter__(self):
         """
-        Returns an iterator over this TransformSet, which is the same as the
-        iterator of the internal transforms dictionary. The iterator will
-        return a new string key each iteration.
+        Finds an iterator over this `TransformSet`, which is the same as the
+        iterator of the internal `TransformSet.transforms` dictionary. The
+        iterator will return a new string key each iteration.
+        
+        Returns
+        -------
+        iterator : dict_keyiterator
+            iterator returned by the underlying dictionary of
+            `distpy.transform.Transform.Transform` objects (indexed by string
+            parameter names)
         """
         return self.transforms.__iter__()
     
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this
-        TransformSet.
+        `TransformSet`.
         
-        group: hdf5 file group in which to save information about this
-               TransformSet
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group in which to save information about this
+            `TransformSet`
         """
         subgroup = group.create_group('transforms')
         for parameter in self.transforms:
@@ -195,10 +238,16 @@ class TransformSet(Savable, Loadable):
         """
         Loads a TransformSet object from the given hdf5 file group.
         
-        group: hdf5 file group which previously had a TransformSet object saved
-               in it
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group which previously had a `TransformSet` object saved
+            in it
         
-        returns: a TransformSet object loaded from the given hdf5 file group
+        Returns
+        -------
+        transform_set : `TransformSet`
+            `transform_set` as loaded from the given hdf5 file group
         """
         subgroup = group['transforms']
         transforms = {par: load_transform_from_hdf5_group(subgroup[par])\
@@ -207,83 +256,120 @@ class TransformSet(Savable, Loadable):
     
     def apply(self, untransformed_parameters):
         """
-        Applies the Transform objects in this TransformSet to the given
-        untransformed parameter values.
+        Applies the `distpy.transform.Transform.Transform` objects in this
+        `TransformSet` to the given untransformed parameter values.
         
-        untransformed_parameters: a dictionary of parameter values (in the
-                                  untransformed space) with the same keys as
-                                  this TransformSet
+        Parameters
+        ----------
+        untransformed_parameters : dict
+            a dictionary of parameter values (in the untransformed space) with
+            the same string keys as this `TransformSet`
         
-        returns: a dictionary of transformed parameter values
+        Returns
+        -------
+        transformed_parameters : dict
+            a dictionary of parameter values (in the transformed space) with
+            the same string keys as this `TransformSet`
         """
         return {par: self[par](untransformed_parameters[par]) for par in self}
     
     def __call__(self, untransformed_parameters):
         """
-        Applies the Transform objects in this TransformSet to the given
-        untransformed parameter values. Equivalent to apply function.
+        Applies the `distpy.transform.Transform.Transform` objects in this
+        `TransformSet` to the given untransformed parameter values. This method
+        simply calls the `TransformSet.apply` method.
         
-        untransformed_parameters: a dictionary of parameter values (in the
-                                  untransformed space) with the same keys as
-                                  this TransformSet
+        Parameters
+        ----------
+        untransformed_parameters : dict
+            a dictionary of parameter values (in the untransformed space) with
+            the same string keys as this `TransformSet`
         
-        returns: a dictionary of transformed parameter values
+        Returns
+        -------
+        transformed_parameters : dict
+            a dictionary of parameter values (in the transformed space) with
+            the same string keys as this `TransformSet`
         """
         return self.apply(untransformed_parameters)
     
     def apply_inverse(self, transformed_parameters):
         """
-        Applies the inverses of the Transform objects in this TransformSet to
-        the given parameters values (given in the transformed space)
+        Applies the inverses of the `distpy.transform.Transform.Transform`
+        objects in this `TransformSet` to the given parameters values (given in
+        the transformed space).
         
-        transformed_parameters: a dictionary of parameter values (in the
-                                transformed space) with the same keys as this
-                                TransformSet
+        Parameters
+        ----------
+        transformed_parameters : dict
+            a dictionary of parameter values (in the transformed space) with
+            the same string keys as this `TransformSet`
         
-        returns: a dictionary of untransformed parameter values
+        Returns
+        -------
+        untransformed_parameters : dict
+            a dictionary of parameter values (in the untransformed space) with
+            the same string keys as this `TransformSet`
         """
         return {par: self[par].I(transformed_parameters[par]) for par in self}
     
     def I(self, transformed_parameters):
         """
-        Applies the inverses of the Transform objects in this TransformSet to
-        the given parameters values (given in the transformed space)
+        Applies the inverses of the `distpy.transform.Transform.Transform`
+        objects in this `TransformSet` to the given parameters values (given in
+        the transformed space). This method simply calls the
+        `TransformSet.apply_inverse` method.
         
-        transformed_parameters: a dictionary of parameter values (in the
-                                transformed space) with the same keys as this
-                                TransformSet
+        Parameters
+        ----------
+        transformed_parameters : dict
+            a dictionary of parameter values (in the transformed space) with
+            the same string keys as this `TransformSet`
         
-        returns: a dictionary of untransformed parameter values
+        Returns
+        -------
+        untransformed_parameters : dict
+            a dictionary of parameter values (in the untransformed space) with
+            the same string keys as this `TransformSet`
         """
         return self.apply_inverse(transformed_parameters)
     
     def __contains__(self, key):
         """
-        Checks if the given key has a Transform object in this TransformSet
-        associated with it.
+        Checks if the given key has a `distpy.transform.Transform.Transform`
+        object associated with it in this `TransformSet`.
         
-        key: string parameter value
+        Parameters
+        ----------
+        key : str
+            name of parameter to check for
         
-        returns: True if there is a Transform object in this TransformSet
-                 associated with the given key
+        Returns
+        -------
+        check_value : bool
+            True if there is a `distpy.transform.Transform.Transform object in
+            this `TransformSet` associated with `key`
         """
         return (key in self.transforms)
     
     def __len__(self):
         """
-        Finds the number of Transform objects contained in this TransformSet
-        object.
+        Finds the number of `distpy.transform.Transform.Transform` objects
+        contained in this `TransformSet` object.
         
-        returns: integer number of Transform objects stored in this
-                 TransformSet
+        Returns
+        -------
+        length : int
+            integer number of `distpy.transform.Transform.Transform` objects
+            stored in this `TransformSet`
         """
         return len(self.transforms)
     
     @property
     def is_null(self):
         """
-        Property storing whether this TransformSet encodes the
-        len(self)-length null transformation.
+        Boolean describing whether this `TransformSet` encodes the
+        `len(self)`-length null transformation.
         """
         for parameter in self.transforms:
             if not isinstance(self.transforms[parameter], NullTransform):
@@ -292,13 +378,19 @@ class TransformSet(Savable, Loadable):
     
     def __eq__(self, other):
         """
-        Checks to see if self and other are equal or unequal
+        Checks to see if `self` and `other` are the same.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True if self and other encode the same Transform objects and
-                      string parameters
-                 False otherwise
+        Returns
+        -------
+        result : bool
+            True if and only if `self` and `other` encode the same
+            `distpy.transform.Transform.Transform` objects and string
+            parameters
         """
         if not isinstance(other, TransformSet):
             return False
@@ -314,13 +406,19 @@ class TransformSet(Savable, Loadable):
     
     def __ne__(self, other):
         """
-        Checks to see if self and other are unequal or equal.
+        Checks to see if `self` and `other` are different.
         
-        other: object to check for inequality
+        Parameters
+        ----------
+        other : object
+            object to check for inequality
         
-        returns: False if self and other encode the same Transform objects and
-                       string parameters
-                 True otherwise
+        Returns
+        -------
+        result : bool
+            False if and only if `self` and `other` encode the same
+            `distpy.transform.Transform.Transform` objects and string
+            parameters
         """
         return (not self.__eq__(other))
 

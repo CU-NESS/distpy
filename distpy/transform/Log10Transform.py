@@ -1,10 +1,10 @@
 """
-File: distpy/transform/Log10Transform.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a transformation of the form:
+$$x\\longrightarrow \\log_{10}{(x)}$$
 
-Description: File containing class representing a Transform which performs
-             logarithms base 10 on its inputs.
+**File**: $DISTPY/distpy/transform/Log10Transform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 import numpy as np
 from .Transform import Transform
@@ -13,116 +13,198 @@ ln10 = np.log(10)
 
 class Log10Transform(Transform):
     """
-    Class representing a transform based on the base-10 logarithm function.
+    Class representing a transformation of the form:
+    $$x\\longrightarrow \\log_{10}{(x)}$$
     """
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this
+        `Log10Transform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`. If
+            `value` is \\(x\\), then `derivative` is
+            \\(\\frac{1}{\\ln{10}\\times x}\\)
         """
         return 1. / (ln10 * value)
     
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `Log10Transform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(-\\frac{1}{\\ln{10}\\times x^2}\\)
         """
         return (-1.) / (ln10 * (value ** 2))
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `Log10Transform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\frac{2}{\\ln{10}\\times x^3}\\)
         """
         return 2. / (ln10 * (value ** 3))
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `Log10Transform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the log of the derivative of transformation in same format
+            as `value`. If `value` is \\(x\\), then `derivative` is
+            \\(-\\ln{(\\ln{10}\\times x)}\\)
         """
         return -np.log(ln10 * value)
     
     def derivative_of_log_derivative(self, value):
         """
-        Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        Computes the derivative of the natural logarithm of the absolute value
+        of the derivative of the function underlying this `Log10Transform` at
+        the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(-\\frac{1}{x}\\)
         """
         return (-1.) / value
     
     def second_derivative_of_log_derivative(self, value):
         """
-        Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        Computes the second derivative of the natural logarithm of the absolute
+        value of the derivative of the function underlying this
+        `Log10Transform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the second derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(\\frac{1}{x^2}\\)
         """
         return 1. / (value ** 2)
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `Log10Transform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`. If `value` is \\(x\\),
+            then `transformed` is \\(\\log_{10}{(x)}\\)
         """
         return np.log10(value)
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `Log10Transform` to the value and returns
+        the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`. If `value` is \\(y\\),
+            then `inverted` is \\(10^y\\)
         """
         return np.power(10., value)
     
     def __eq__(self, other):
         """
-        Checks for equality with other. Returns True iff other is a
-        Log10Transform.
+        Checks the given object for equality with this `Log10Transform`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `Log10Transform`
         """
         return isinstance(other, Log10Transform)
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `Log10Transform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            `'log10'`
         """
         return 'log10'
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this `Log10Transform`
+        so it can be loaded later.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this `Log10Transform`
         """
         group.attrs['class'] = 'Log10Transform'
 

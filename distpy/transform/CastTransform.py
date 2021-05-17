@@ -1,15 +1,18 @@
 """
-File: distpy/transform/CastTransform.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing function (`distpy.transform.CastTransform.cast_to_transform`)
+which casts strings/objects to `distpy.transform.Transform.Transform` objects.
+This casting is loose. For example, `None` is cast to a
+`distpy.transform.NullTransform.NullTransform` object, `'ln'` is cast to a
+`distpy.transform.LogTransform.LogTransform`, and any
+`distpy.transform.Transform.Transform` object is guaranteed to cast into
+itself. This module also contains a function
+(`distpy.transform.CastTransform.castable_to_transform`) which returns a
+boolean describing whether a given key object can be cast into a
+`distpy.transform.Transform.Transform`.
 
-Description: File containing function (cast_to_transform) which cast
-             strings/objects to Transform objects. This casting is loose. For
-             example, None is cast to a NullTransform object, 'ln' is cast to a
-             LogTransform, and any Transform object is guaranteed to cast into
-             itself. This file also contains a function (castable_to_transform)
-             which returns a boolean describing whether a given key object can
-             be cast into a Transform.
+**File**: $DISTPY/distpy/transform/CastTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 16 May 2021
 """
 from .Transform import Transform
 from .NullTransform import NullTransform
@@ -34,12 +37,17 @@ except:
 
 def cast_to_transform(key):
     """
-    Loads a Transform from the given string key.
+    Loads a `distpy.transform.Transform.Transform` from the given `key`.
     
-    key: either (1) None, (2) a string key from specifying which transform to
-         load, or (3) a Transform object which will be parroted back
+    Parameters
+    ----------
+    key : str or None or `distpy.transform.Transform.Transform`
+        object to cast to a `distpy.transform.Transform.Transform`
     
-    returns: Transform object of the correct type
+    Returns
+    -------
+    casted_transform : `distpy.transform.Transform.Transform`
+        object cast from `key`
     """
     if type(key) is type(None):
         return NullTransform()
@@ -105,22 +113,30 @@ def cast_to_transform(key):
 
 def castable_to_transform(key, return_transform_if_true=False):
     """
-    Function determining whether the given key can be cast into a Transform
-    object.
+    Function determining whether the given key can be cast into a
+    `distpy.transform.Transform.Transform` using the
+    `distpy.transform.CastTransform.cast_to_transform` function.
     
-    key: either (1) None, (2) a string key from specifying which transform to
-         load, or (3) a Transform object which will be parroted back
-    return_transform_if_true: If True and the given key can successfully be
-                              cast to a Transform object, that actual Transform
-                              object is returned. Otherwise, this parameter has
-                              no effect. If False (default), this function is
-                              guaranteed to return a bool.
+    Parameters
+    ----------
+    key : object
+        object to check for castability. See
+        `distpy.transform.CastTransform.cast_to_transform` function for what
+        types of `key` will work
+    return_transform_if_true : bool
+        determines what should be returned if `key` can be successfully
+        cast to a `distpy.transform.Transform.Transform`
     
-    returns: False: if key cannot be cast into a Transform without an error
-             True: if key can be cast into a Transform without an error and
-                   return_transform_if_true is False
-             a Transform object: if key can be cast into a Transform without an
-                                 error and return_transform_if_true is True
+    Returns
+    -------
+    cast_result : bool or `distpy.transform.Transform.Transform`
+        - if `key` can be successfully cast to a
+        `distpy.transform.Transform.Transform`, this method returns:
+            - the casted `distpy.transform.Transform.Transform` if
+            `return_transform_if_true` is True
+            - True if `return_transform_if_true` is False
+        - if `key` cannot be successfully cast to a
+        `distpy.transform.Transform.Transform`, this method returns False
     """
     try:
         transform = cast_to_transform(key)

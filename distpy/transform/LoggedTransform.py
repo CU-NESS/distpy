@@ -1,30 +1,35 @@
 """
-File: distpy/transform/LoggedTransform.py
-Author: Keith Tauscher
-Date: 12 Feb 2017
+Module containing class representing a transformation of the form:
+$$x\\longrightarrow \\ln{\\big(f(x)\\big)}$$
 
-Description: File containing class describing the natural logarithm of an
-             arbitrary transformation.
+**File**: $DISTPY/distpy/transform/LoggedTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 import numpy as np
 from .Transform import Transform
 
 class LoggedTransform(Transform):
     """
-    Class representing the logarithm of an arbitrary transformation.
+    Class representing a transformation of the form:
+    $$x\\longrightarrow \\ln{\\big(f(x)\\big)}$$
     """
     def __init__(self, transform):
         """
-        Initializes a new LoggedTransform of the given transform.
+        Initializes a new `LoggedTransform` which represents the following
+        transformation: $$x\\longrightarrow \\ln{\\big(f(x)\\big)}$$
         
-        transform: must be a Transform object
+        Parameters
+        ----------
+        transform : `distpy.transform.Transform.Transform`
+            transformation applied before taking the logarithm, \\(f\\)
         """
         self.transform = transform
     
     @property
     def transform(self):
         """
-        Property storing the transform which this is the logarithm of.
+        The transform which this is the log of.
         """
         if not hasattr(self, '_transform'):
             raise AttributeError("transform referenced before it was set.")
@@ -33,9 +38,12 @@ class LoggedTransform(Transform):
     @transform.setter
     def transform(self, value):
         """
-        Setter for the transform which this is the logarithm of.
+        Setter for `ExponentiatedTransform.transform`.
         
-        value: must be a Transform object
+        Parameters
+        ----------
+        value : `distpy.transform.Transform.Transform`
+            the transformation to take the log of
         """
         if isinstance(value, Transform):
             self._transform = value
@@ -44,23 +52,41 @@ class LoggedTransform(Transform):
     
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this
+        `LoggedTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`. If
+            `value` is \\(x\\), then `derivative` is
+            \\(\\frac{f^\\prime(x)}{f(x)}\\), where \\(f\\) is the function
+            representation of `LoggedTransform.transform`
         """
         return self.transform.derivative(value) / self.transform(value)
     
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `LoggedTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\frac{f^{\\prime\\prime}(x)\\times f(x)-\
+            \\big(f^\\prime(x)\\big)^2}{\\big(f(x)\\big)^2}\\)
         """
         func = self.transform(value)
         func_deriv = self.transform.derivative(value)
@@ -69,12 +95,23 @@ class LoggedTransform(Transform):
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `LoggedTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\frac{f^{\\prime\\prime\\prime}(x)\\times\\big(f(x)\\big)^2 -\
+            3f^{\\prime\\prime}(x)\\times f^\\prime(x)\\times f(x) +\
+            2\\big(f^\\prime(x)\\big)^3}{\\big(f(x)\\big)^3}\\), where \\(f\\)
+            is the function representation of `LoggedTransform.transform`
         """
         func = self.transform(value)
         func_deriv = self.transform.derivative(value)
@@ -86,85 +123,155 @@ class LoggedTransform(Transform):
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `LoggedTransform` at the given
+        value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the log of the derivative of transformation in same format
+            as `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\ln{\\big|f^\\prime(x)\\big|} - \\ln{\\big(f(x)\\big)}\\),
+            where \\(f\\) is the function representation of
+            `LoggedTransform.transform`
         """
         return self.transform.log_derivative(value) - self.apply(value)
     
     def derivative_of_log_derivative(self, value):
         """
-        Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        Computes the derivative of the natural logarithm of the absolute value
+        of the derivative of the function underlying this `LoggedTransform` at
+        the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is
+            \\(\\frac{f^{\\prime\\prime}(x)}{f^\\prime(x)} -\
+            \\frac{f^\\prime(x)}{f(x)}\\), where \\(f\\) is the function
+            representation of `LoggedTransform.transform`
         """
         return self.transform.derivative_of_log_derivative(value) -\
             self.derivative(value)
     
     def second_derivative_of_log_derivative(self, value):
         """
-        Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        Computes the second derivative of the natural logarithm of the absolute
+        value of the derivative of the function underlying this
+        `LoggedTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the second derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(\
+            \\left(\\frac{f^{\\prime\\prime\\prime}(x)\\times f^\\prime(x) -\
+            \\big(f^{\\prime\\prime}(x)\\big)^2}{\\big(f^\\prime(x)\\big)^2}\
+            \\right) - \\left(\\frac{f^{\\prime\\prime}(x)\\times f(x) -\
+            \\big(f^\\prime(x)\\big)^2}{\\big(f(x)\\big)^2}\\right)\\), where
+            \\(f\\) is the function representation of
+            `LoggedTransform.transform`
         """
         return self.transform.second_derivative_of_log_derivative(value) -\
             self.second_derivative(value)
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `LoggedTransform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`. If `value` is \\(x\\),
+            then `transformed` is \\(\\ln{\\big(f(x)\\big)}\\), where \\(f\\)
+            is the function representation of `LoggedTransform.transform`
         """
-        return np.log(self.transform(value))
+        return np.log(np.abs(self.transform(value)))
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `LoggedTransform` to the value and returns
+        the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`. If `value` is \\(y\\),
+            then `inverted` is \\(f^{-1}\\big(e^y\\big)\\), where \\(f\\) is
+            the function representation of `LoggedTransform.transform`
         """
         return self.transform.apply_inverse(np.exp(value))
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `LoggedTransform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            `'ln[t]'`, where `t` is the string representation of
+            `LoggedTransform.transform`
         """
         return 'ln[{!s}]'.format(self.transform.to_string())
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this `LoggedTransform`
+        so it can be loaded later.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this `LoggedTransform`
         """
         group.attrs['class'] = 'LoggedTransform'
         self.transform.fill_hdf5_group(group.create_group('transform'))
     
     def __eq__(self, other):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Checks the given object for equality with this `LoggedTransform`.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns True if both Transforms are the same
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `LoggedTransform` with the
+            same `LoggedTransform.transform`
         """
         if isinstance(other, LoggedTransform):
             return self.transform == other.transform

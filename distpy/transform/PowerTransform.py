@@ -1,10 +1,10 @@
 """
-File: distpy/transform/PowerTransform.py
-Author: Keith Tauscher
-Date: 3 Apr 2019
+Module containing class representing a transformation of the form:
+$$x\\longrightarrow x^p$$
 
-Description: File containing class representing transforms which take a power
-             of the their inputs.
+**File**: $DISTPY/distpy/transform/PowerTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -13,20 +13,24 @@ from .Transform import Transform
 
 class PowerTransform(Transform):
     """
-    Class representing a transform based on the power function.
+    Class representing a transformation of the form: $$x\\longrightarrow x^p$$
     """
     def __init__(self, power):
         """
-        Initializes a PowerTransform.
+        Initializes a new `PowerTransform` which represents the following
+        transformation: $$x\\longrightarrow x^p$$
         
-        power: positive number to which power inputs are put
+        Parameters
+        ----------
+        power : number
+            power to apply, \\(p\\)
         """
         self.power = power
     
     @property
     def power(self):
         """
-        Property storing the power at the heart of this distribution.
+        The power to raise inputs to.
         """
         if not hasattr(self, '_power'):
             raise AttributeError("power was referenced before it was set.")
@@ -35,9 +39,12 @@ class PowerTransform(Transform):
     @power.setter
     def power(self, value):
         """
-        Setter for the power at the heart of this distribution.
+        Setter for the `PowerTransform.power`.
         
-        value: a positive number
+        Parameters
+        ----------
+        value : number
+            a non-zero number
         """
         if type(value) in real_numerical_types:
             if value > 0:
@@ -50,7 +57,7 @@ class PowerTransform(Transform):
     @property
     def log_abs_power(self):
         """
-        Property storing the natural logarithm of the power property.
+        The natural logarithm of the absolute value of `PowerTransform.power`.
         """
         if not hasattr(self, '_log_abs_power'):
             self._log_abs_power = np.log(np.abs(self.power))
@@ -58,98 +65,178 @@ class PowerTransform(Transform):
     
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this
+        `PowerTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`. If
+            `value` is \\(x\\), then `derivative` is \\(px^{p-1}\\), where
+            \\(p\\) is `PowerTransform.power`
         """
         return self.power * np.power(value, self.power - 1)
     
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `PowerTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(p(p-1)x^{p-2}\\), where \\(p\\) is `PowerTransform.power`
         """
         return\
             (self.power * (self.power - 1) * np.power(value, self.power - 2))
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `PowerTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(p(p-1)(p-2)x^{p-3}\\), where \\(p\\) is `PowerTransform.power`
         """
         return (self.power * (self.power - 1) * (self.power - 2) *\
             np.power(value, self.power - 3))
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `PowerTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the log of the derivative of transformation in same format
+            as `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\ln{|p|} + (p-1)\\ln{(x)}\\), where \\(p\\) is
+            `PowerTransform.power`
         """
         return (self.log_abs_power + ((self.power - 1) * np.log(value)))
     
     def derivative_of_log_derivative(self, value):
         """
-        Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        Computes the derivative of the natural logarithm of the absolute value
+        of the derivative of the function underlying this `PowerTransform` at
+        the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(\\frac{p-1}{x}\\), where \\(p\\) is
+            `PowerTransform.power`
         """
         return ((self.power - 1) / value)
     
     def second_derivative_of_log_derivative(self, value):
         """
-        Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        Computes the second derivative of the natural logarithm of the absolute
+        value of the derivative of the function underlying this
+        `AffineTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the second derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is \\(\\frac{1-p}{x^2}\\), where \\(p\\) is
+            `PowerTransform.power`
         """
         return ((1 - self.power) / (value ** 2))
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `PowerTransform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`. If `value` is \\(x\\),
+            then `transformed` is \\(x^p\\), where \\(p\\) is
+            `PowerTransform.power`
         """
         return np.power(value, self.power)
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `PowerTransform` to the value and returns
+        the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`. If `value` is \\(y\\),
+            then `inverted` is \\(y^{1/p}\\), where \\(p\\) is
+            `PowerTransform.power`
         """
         return np.power(value, 1 / self.power)
     
     def __eq__(self, other):
         """
-        Checks for equality with other. Returns True iff other is a
-        PowerTransform with the same power.
+        Checks the given object for equality with this `PowerTransform`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `PowerTransform` with the
+            same `PowerTransform.power`
         """
         if isinstance(other, PowerTransform):
             return (self.power == other.power)
@@ -158,17 +245,24 @@ class PowerTransform(Transform):
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `PowerTransform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            `'Power p'`, where `p` is `PowerTransform.power`
         """
         return 'Power {:.2g}'.format(self.power)
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this `PowerTransform`
+        so it can be loaded later.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this `PowerTransform`
         """
         group.attrs['class'] = 'PowerTransform'
         group.attrs['power'] = self.power

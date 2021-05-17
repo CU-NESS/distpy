@@ -1,10 +1,50 @@
 """
-File: distpy/transform/__init__.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing many classes representing transformations of many forms.
 
-Description: Imports classes in this module so that any given class, CLASS, can
-             be imported using "from distpy import CLASS"
+- The `distpy.transform.Transform.Transform` base class represents univariate
+transforms. It has many subclasses that represent elementary functions
+(`distpy.transform.NullTransform.NullTransform`,
+`distpy.transform.AffineTransform.AffineTransform`,
+`distpy.transform.ArcsinTransform.ArcsinTransform`,
+`distpy.transform.ArsinhTransform.ArsinhTransform`,
+`distpy.transform.BoxCoxTransform.BoxCoxTransform`,
+`distpy.transform.Exp10Transform.Exp10Transform`,
+`distpy.transform.ExponentialTransform.ExponentialTransform`,
+`distpy.transform.Log10Transform.Log10Transform`,
+`distpy.transform.LogisticTransform.LogisticTransform`,
+`distpy.transform.LogTransform.LogTransform`,
+`distpy.transform.PowerTransform.PowerTransform`,
+`distpy.transform.ReciprocalTransform.ReciprocalTransform`,
+`distpy.transform.SineTransform.SineTransform`). It also has subclasses that
+modify or combine `distpy.transform.Transform.Transform` objects
+(`distpy.transform.CompositeTransform.CompositeTransform`,
+`distpy.transform.ExponentiatedTransform.ExponentiatedTransform`,
+`distpy.transform.LoggedTransform.LoggedTransform`,
+`distpy.transform.ProductTransform.ProductTransform`,
+`distpy.transform.SumTransform.SumTransform`).
+- The `distpy.transform.CastTransform.cast_to_transform` and
+`distpy.transform.CastTransform.castable_to_transform` functions cast objects
+(usually strings) to `distpy.transform.Transform.Transform` objects and check
+if objects can be cast to `distpy.transform.Transform.Transform` objects,
+respectively.
+- The `distpy.transform.LoadTransform.load_transform_from_hdf5_group` and
+`distpy.transform.LoadTransform.load_transform_from_hdf5_file` functions load
+`distpy.transform.Transform.Transform` objects of unknown subclass from hdf5
+files or groups.
+- The `distpy.transform.InvertTransform.invert_transform` function creates
+`distpy.transform.Transform.Transform` objects that invert given
+`distpy.transform.Transform.Transform` objects of any subclass.
+- The `distpy.transform.TransformList.TransformList` and
+`distpy.transform.TransformSet.TransformSet` classes are containers (ordered
+and unordered, respectively) for `distpy.transform.Transform.Transform`
+objects, allowing for representation of multivariate transformations. In
+particular, the `distpy.transform.TransformList.TransformList` class allows for
+transforming and detransforming of gradient vectors and hessian matrices using
+the chain rule.
+
+**File**: $DISTPY/distpy/transform/\\_\\_init\\_\\_.py  
+**Author**: Keith Tauscher  
+**Date**: 15 May 2021
 """
 from distpy.transform.Transform import Transform
 from distpy.transform.NullTransform import NullTransform

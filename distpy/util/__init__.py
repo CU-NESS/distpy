@@ -11,7 +11,7 @@ Introduces utilities used throughout the package, including:
 - a class that uses strings to represent an `distpy.util.Expression.Expression`
   that can be modified and have arguments passed to it before being evaluated
 
-**File**: $DISTPY/distpy/util/\_\_init\_\_.py  
+**File**: $DISTPY/distpy/util/\\_\\_init\\_\\_.py  
 **Author**: Keith Tauscher  
 **Date**: 14 May 2021
 """

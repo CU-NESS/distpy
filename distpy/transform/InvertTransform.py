@@ -1,10 +1,11 @@
 """
-File: distpy/transform/InvertTransform.py
-Author: Keith Tauscher
-Date: 3 Apr 2019
+Module containing a function which can compute the inverse of any
+`distpy.transform.Transform.Transform` object (whose class is included in
+`distpy.transform`).
 
-Description: File containing a function which computes the inverse of
-             transforms.
+**File**: $DISTPY/distpy/transform/InvertTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 16 May 2021
 """
 from __future__ import division
 from .AffineTransform import AffineTransform
@@ -28,11 +29,18 @@ from .SineTransform import SineTransform
 
 def invert_transform(transform):
     """
-    Computes the Transform that is the inverse of the given Transform object.
+    Computes the inverse of the given `distpy.transform.Transform.Transform`
+    object.
     
-    transform: a Transform object
+    Parameters
+    ----------
+    transform : `distpy.transform.Transform.Transform`
+        `distpy.transform.Transform.Transform` to invert
     
-    returns: a Transform object which represents the inverse of transform
+    Returns
+    -------
+    inverse : `distpy.transform.Transform.Transform`
+        inverse of `transform`
     """
     if isinstance(transform, AffineTransform):
         return AffineTransform(1 / transform.scale_factor,\

@@ -1,11 +1,10 @@
 """
-File: distpy/transform/Transform.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a transformation of the form:
+$$x\\longrightarrow f\\big(g(x)\\big)$$
 
-Description: File containing class representing a transform composed of two
-             separate transformations, an inner one (applied first) and an
-             outer one (applied second).
+**File**: $DISTPY/distpy/transform/CompositeTransform.py  
+**Author**: Keith Tauscher  
+**Date**: 17 May 2021
 """
 import numpy as np
 from .Transform import Transform
@@ -13,16 +12,20 @@ from .NullTransform import NullTransform
 
 class CompositeTransform(Transform):
     """
-    Class representing a transformation which is composed of two separate
-    transformations, an inner one (applied first) and an outer one (applied
-    second).
+    Class representing a transformation of the form:
+    $$x\\longrightarrow f\\big(g(x)\\big)$$
     """
     def __init__(self, inner_transform, outer_transform):
         """
-        Initializes a new CompositeTransform, h(x).
+        Initializes a new `CompositeTransform` which represents the following
+        transformation: $$x\\longrightarrow f\\big(g(x)\\big)$$
         
-        inner_transform: if h(x)=f(g(x)), inner_transform is g
-        outer_transform: if h(x)=f(g(x)), outer_transform is f
+        Parameters
+        ----------
+        inner_transform : `distpy.transform.Transform.Transform`
+            first transformation applied, \\(f\\)
+        translation : `distpy.transform.Transform.Transform`
+            second transformation applied, \\(g\\)
         """
         self.inner_transform = inner_transform
         self.outer_transform = outer_transform
@@ -30,7 +33,24 @@ class CompositeTransform(Transform):
     @staticmethod
     def generate_from_list(*transforms):
         """
-        Generates a CompositeTransform
+        Generates a `CompositeTransform` from an arbitrary number of
+        `distpy.transform.Transform.Transform` objects. Since the
+        `CompositeTransform` only works with two
+        `distpy.transform.Transform.Transform` objects at a time, this static
+        method will create a nested series of `CompositeTransform` and return
+        the complete one.
+        
+        Parameters
+        ----------
+        transforms : sequence
+            arbitrary length sequence of `distpy.transform.Transform.Transform`
+            objects. They should be ordered in the same order as they are
+            evaluated in the desired `CompositeTransform`
+        
+        Returns
+        -------
+        composite_transform : `CompositeTransform`
+            object representing the composite of all given transformations
         """
         if len(transforms) == 0:
             return NullTransform()
@@ -50,8 +70,7 @@ class CompositeTransform(Transform):
     @property
     def inner_transform(self):
         """
-        Property storing the innermost (first applied) transform composing this
-        Transform.
+        The innermost (first applied) transform.
         """
         if not hasattr(self, '_inner_transform'):
             raise AttributeError("inner_transform referenced before it was " +\
@@ -61,10 +80,12 @@ class CompositeTransform(Transform):
     @inner_transform.setter
     def inner_transform(self, value):
         """
-        Setter for the innermost (first applied) transform composing this
-        Transform.
+        Setter for `CompositeTransform.inner_transform`.
         
-        value: must be a Transform object
+        Parameters
+        ----------
+        value : `distpy.transform.Transform.Transform`
+            transformation to apply first
         """
         if isinstance(value, Transform):
             self._inner_transform = value
@@ -75,8 +96,7 @@ class CompositeTransform(Transform):
     @property
     def outer_transform(self):
         """
-        Property storing the outermost (last applied) transform composing this
-        Transform.
+        The outermost (last applied) transform.
         """
         if not hasattr(self, '_outer_transform'):
             raise AttributeError("outer_transform referenced before it was " +\
@@ -86,10 +106,12 @@ class CompositeTransform(Transform):
     @outer_transform.setter
     def outer_transform(self, value):
         """
-        Setter for the outermost (first applied) transform composing this
-        Transform.
+        Setter for `CompositeTransform.outer_transform`.
         
-        value: must be a Transform object
+        Parameters
+        ----------
+        value : `distpy.transform.Transform.Transform`
+            transformation to apply last
         """
         if isinstance(value, Transform):
             self._outer_transform = value
@@ -99,12 +121,23 @@ class CompositeTransform(Transform):
     
     def derivative(self, value):
         """
-        Computes the derivative of the function underlying this Transform at
-        the given value(s).
+        Computes the derivative of the function underlying this
+        `CompositeTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of derivative of transformation in same format as `value`. If
+            `value` is \\(x\\), then `derivative` is
+            \\(f^\\prime\\big(g(x)\\big)\\times g^\\prime(x)\\), where \\(f\\)
+            and \\(g\\) are the function representations of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         inner_transformed_value = self.inner_transform(value)
         outer_derivative =\
@@ -115,11 +148,21 @@ class CompositeTransform(Transform):
     def second_derivative(self, value):
         """
         Computes the second derivative of the function underlying this
-        Transform at the given value(s).
+        `CompositeTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of second derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(f^{\\prime\\prime}\\big(g(x)\\big)\\times\
+            \\big(g^\\prime(x)\\big)^2 + f^\\prime\\big(g(x)\\big)\\times\
+            g^{\\prime\\prime}(x)\\)
         """
         inner_transformed_value = self.inner_transform(value)
         outer_first_derivative =\
@@ -134,12 +177,27 @@ class CompositeTransform(Transform):
     
     def third_derivative(self, value):
         """
-        Computes the third derivative of the function underlying this Transform
-        at the given value(s).
+        Computes the third derivative of the function underlying this
+        `CompositeTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of third derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of third derivative of transformation in same format as
+            `value`. If `value` is \\(x\\), then `derivative` is
+            \\(f^{\\prime\\prime\\prime}\\big(g(x)\\big)\\times\
+            \\big(g^\\prime(x)\\big)^3 +\
+            3\\times f^{\\prime\\prime}\\big(g(x)\\big)\\times\
+            g^\\prime(x)\\times g^{\\prime\\prime}(x) +\
+            f^\\prime\\big(g(x)\\big)\\times g^{\\prime\\prime\\prime}(x)\\),
+            where \\(f\\) and \\(g\\) are the function representations of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         inner_transformed_value = self.inner_transform(value)
         outer_first_derivative =\
@@ -159,36 +217,70 @@ class CompositeTransform(Transform):
     
     def log_derivative(self, value):
         """
-        Computes the natural logarithm of the derivative of the function
-        underlying this Transform at the given value(s).
+        Computes the natural logarithm of the absolute value of the derivative
+        of the function underlying this `CompositeTransform` at the given
+        value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the log of the derivative of transformation in same format
+            as `value`. If `value` is \\(x\\), then `derivative` is
+            \\(\\ln{\\big|f^\\prime\\big(g(x)\\big)\\big|}+\
+            \\ln{\\big|g^\\prime(x)\\big|}\\), where \\(f\\) and \\(g\\) are
+            the function representations of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         return np.log(np.abs(self.derivative(value)))
     
     def derivative_of_log_derivative(self, value):
         """
-        Computes the derivative of the natural logarithm of the derivative of
-        the function underlying this Transform at the given value(s).
+        Computes the derivative of the natural logarithm of the absolute value
+        of the derivative of the function underlying this `CompositeTransform` 
+        at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of derivative of log derivative in same format as value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the derivative of the log of the derivative of
+            transformation in same format as `value`. If `value` is \\(x\\),
+            then `derivative` is
+            \\(\\frac{f^{\\prime\\prime}\\big(g(x)\\big)\\times\
+            g^\\prime(x)}{f^\\prime\\big(g(x)\\big)} +\
+            \\frac{g^{\\prime\\prime}(x)}{g^\\prime(x)}\\), where \\(f\\) and
+            \\(g\\) are the function representations of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         return self.second_derivative(value) / self.derivative(value)
     
     def second_derivative_of_log_derivative(self, value):
         """
-        Computes the second derivative of the natural logarithm of the
-        derivative of the function underlying this Transform at the given
-        value(s).
+        Computes the second derivative of the natural logarithm of the absolute
+        value of the derivative of the function underlying this
+        `CompositeTransform` at the given value(s).
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the derivative
         
-        returns: value of second derivative of log derivative in same format as
-                 value
+        Returns
+        -------
+        derivative : number or sequence
+            value of the second derivative of the log of the derivative of
+            transformation in same format as `value`.
         """
         first = self.derivative(value)
         second = self.second_derivative(value)
@@ -197,38 +289,71 @@ class CompositeTransform(Transform):
     
     def apply(self, value):
         """
-        Applies this transform to the value and returns the result.
+        Applies this `CompositeTransform` to the value and returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the
+            transformation
         
-        returns: value of function in same format as value
+        Returns
+        -------
+        transformed : number or sequence
+            transformed value same format as `value`. If `value` is \\(x\\),
+            then `transformed` is \\(f\\big(g(x)\\big)\\), where \\(f\\) and
+            \\(g\\) represent the functional forms of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         return self.outer_transform(self.inner_transform(value))
     
     def apply_inverse(self, value):
         """
-        Applies the inverse of this transform to the value.
+        Applies the inverse of this `CompositeTransform` to the value and
+        returns the result.
         
-        value: single number or numpy.ndarray of values
+        Parameters
+        ----------
+        value : number or sequence
+            number or sequence of numbers at which to evaluate the inverse
+            transformation
         
-        returns: value of inverse function in same format as value
+        Returns
+        -------
+        inverted : number or sequence
+            untransformed value same format as `value`. If `value` is \\(y\\),
+            then `inverted` is \\(g^{-1}\\big(f^{-1}(y)\\big)\\), where \\(f\\)
+            and \\(g\\) represent the functional forms of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         return self.inner_transform.I(self.outer_transform.I(value))
     
     def to_string(self):
         """
-        Generates a string version of this Transform.
+        Generates a string version of this `CompositeTransform`.
         
-        returns: value which can be cast into this Transform
+        Returns
+        -------
+        representation : str
+            `'(o then i)'`, where `o` and `i` are the string representations of
+            `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`, respectively
         """
         return '({0!s} then {1!s})'.format(self.inner_transform.to_string,\
             self.outer_transform.to_string)
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Fills the given hdf5 file group with data about this
+        `CompositeTransform` so it can be loaded later.
         
-        group: hdf5 file group to which to write data about this transform
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to which to write data about this
+            `CompositeTransform`
         """
         group.attrs['class'] = 'CompositeTransform'
         self.inner_transform.fill_hdf5_group(\
@@ -238,11 +363,19 @@ class CompositeTransform(Transform):
     
     def __eq__(self, other):
         """
-        Fills the given hdf5 file group with data about this transform.
+        Checks the given object for equality with this `CompositeTransform`.
         
-        other: object to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns True if both Transforms are the same
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `CompositeTransform` with
+            the same `CompositeTransform.outer_transform` and
+            `CompositeTransform.inner_transform`
         """
         if isinstance(other, CompositeTransform):
             inner_transforms_equal =\
