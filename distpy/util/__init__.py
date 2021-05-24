@@ -10,6 +10,7 @@ Introduces utilities used throughout the package, including:
   triangle plots (`distpy.util.TrianglePlot`)  
 - a class that uses strings to represent an `distpy.util.Expression.Expression`
   that can be modified and have arguments passed to it before being evaluated
+- a class that represents 
 
 **File**: $DISTPY/distpy/util/\\_\\_init\\_\\_.py  
 **Author**: Keith Tauscher  
@@ -25,4 +26,6 @@ from distpy.util.h5py_extensions import create_hdf5_dataset, get_hdf5_value,\
 from distpy.util.TrianglePlot import univariate_histogram,\
     confidence_contour_2D, bivariate_histogram, triangle_plot
 from distpy.util.Expression import Expression
+from distpy.util.SparseSquareBlockDiagonalMatrix import\
+    SparseSquareBlockDiagonalMatrix
 

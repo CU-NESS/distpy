@@ -10,7 +10,8 @@ from distpy.util import create_hdf5_dataset, get_hdf5_value, HDF5Link,\
     save_dictionary, load_dictionary, Savable, Loadable, bool_types,\
     int_types, float_types, real_numerical_types, complex_numerical_types,\
     numerical_types, sequence_types, univariate_histogram,\
-    confidence_contour_2D, bivariate_histogram, triangle_plot, Expression
+    confidence_contour_2D, bivariate_histogram, triangle_plot, Expression,\
+    SparseSquareBlockDiagonalMatrix
 from distpy.transform import Transform, NullTransform, BoxCoxTransform,\
     LogTransform, ArsinhTransform, ExponentialTransform, Exp10Transform,\
     Log10Transform, PowerTransform, SineTransform, ArcsinTransform,\
@@ -46,7 +47,8 @@ from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file, MetropolisHastingsSampler
 
-class_names = ['distpy.util.Expression.Expression',\
+class_names = ['distpy.util.Expression.Expression', 'distpy.util.' +\
+    'SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix',\
     'distpy.transform.Transform.Transform',\
     'distpy.transform.TransformSet.TransformSet',\
     'distpy.transform.TransformList.TransformList',\
@@ -67,7 +69,9 @@ class_names = ['distpy.util.Expression.Expression',\
     'distpy.transform.ProductTransform.ProductTransform',\
     'distpy.transform.ReciprocalTransform.ReciprocalTransform',\
     'distpy.transform.SineTransform.SineTransform',\
-    'distpy.transform.SumTransform.SumTransform']
+    'distpy.transform.SumTransform.SumTransform',\
+    'distpy.distribution.SparseGaussianDistribution.' +\
+    'SparseGaussianDistribution']
 # init not included in magic_names because __init__ is automatically documented
 # hash not included because it appears automatically
 magic_names = ['new', 'del', 'repr', 'str', 'bytes', 'format', 'lt', 'le',\

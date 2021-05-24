@@ -1,78 +1,97 @@
 """
-File: distpy/distribution/SparseGaussianDistribution.py
-Author: Keith Tauscher
-Date: May 13 2021
+Module containing class representing Gaussian distribution with a block
+diagonal covariance matrix, \\(\\begin{bmatrix} \\boldsymbol{\\Sigma}_1 &\
+\\boldsymbol{0} & \\cdots & \\boldsymbol{0} \\\\ \\boldsymbol{0} &\
+\\boldsymbol{\\Sigma}_2 & \\cdots & \\boldsymbol{0} \\\\ \\vdots & \\vdots &\
+\\ddots & \\vdots \\\\ \\boldsymbol{0} & \\boldsymbol{0} & \\cdots &\
+\\boldsymbol{\\Sigma}_N \\end{bmatrix},\\) represented by a
+`distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`
+object.
 
-Description: File containing class representing Gaussian distribution with a
-             block diagonal covariance matrix.
+**File**: $DISTPY/distpy/distribution/SparseGaussianDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 22 May 2021
 """
 from __future__ import division
 import numpy as np
 import numpy.random as rand
-import numpy.linalg as npla
-import scipy.linalg as scila
-from scipy import sparse
-from ..util import numerical_types, int_types, sequence_types,\
-    create_hdf5_dataset, get_hdf5_value
+from ..util import real_numerical_types, int_types, sequence_types,\
+    create_hdf5_dataset, get_hdf5_value, SparseSquareBlockDiagonalMatrix
 from .Distribution import Distribution
 from .GaussianDistribution import GaussianDistribution
 
 natural_log_two_pi = np.log(2 * np.pi)
+try:
+    # this runs with no issues in python 2 but raises error in python 3
+    basestring
+except:
+    # this try/except allows for python 2/3 compatible string type checking
+    basestring = str
 
 class SparseGaussianDistribution(Distribution):
     """
     Class representing Gaussian distribution with a block diagonal covariance
-    matrix.
+    matrix, \\(\\begin{bmatrix} \\boldsymbol{\\Sigma}_1 & \\boldsymbol{0} &\
+    \\cdots & \\boldsymbol{0} \\\\ \\boldsymbol{0} & \\boldsymbol{\\Sigma}_2 &\
+    \\cdots & \\boldsymbol{0} \\\\ \\vdots & \\vdots & \\ddots & \\vdots \\\\\
+    \\boldsymbol{0} & \\boldsymbol{0} & \\cdots & \\boldsymbol{\\Sigma}_N\
+    \\end{bmatrix},\\) represented by a
+    `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`
+    object.
     """
-    def __init__(self, mean, covariance_list, metadata=None):
+    def __init__(self, mean, covariance, metadata=None):
         """
-        Initializes either a univariate or a multivariate
-        SparseGaussianDistribution.
+        Initializes a new `SparseGaussianDistribution`.
         
-        mean: a 1D array of numbers
-        covariance_list: a list of 2D arrays that are the blocks on the
-                         diagonal of the covariance matrix. The sum of sizes of
-                         the blocks should be the same as the length of mean
+        Parameters
+        ----------
+        mean : numpy.ndarray
+            1D array of numbers, \\(\\boldsymbol{\\mu}\\)
+        covariance : `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`
+            covariance matrix of the distribution, \\(\\boldsymbol{\\Sigma}\\)
+        metadata : object
+            extra data to store alongside the distribution. See
+            `distpy.distribution.Distribution.Distribution.metadata` for more
+            details
         """
         self.mean = mean
-        self.covariance_list = covariance_list
+        self.covariance = covariance
         self.metadata = metadata
+        # this will allow for __rmatmul__ to implement left matrix
+        # multiplication in the future, when numpy adds __matmul__ as a ufunc
+        # (in the future).
+        self.__array_ufunc__ = None
     
     @staticmethod
     def combine(*distributions):
         """
-        Combines many SparseGaussianDistribution objects into one by
+        Combines many `SparseGaussianDistribution` objects into one by
         concatenating their means and covariance matrices.
         
-        *distributions: a sequence of SparseGaussianDistribution and/or
-                        GaussianDistribution objects to combine
+        Parameters
+        ----------
+        distributions : sequence
+            a sequence of `SparseGaussianDistribution` objects to combine
         
-        returns: a single SparseGaussianDistribution object 
+        returns: a single `SparseGaussianDistribution` object 
         """
-        if all([(type(distribution) in\
-            [GaussianDistribution, SparseGaussianDistribution])\
+        if all([isinstance(distribution, SparseGaussianDistribution)\
             for distribution in distributions]):
-            (mean, covariance_list) = ([], [])
-            for distribution in distributions:
-                if isinstance(distribution, GaussianDistribution):
-                    mean.append(distribution.mean.A[0])
-                    covariance_list.append(distribution.covariance.A)
-                else:
-                    mean.append(distribution.mean)
-                    covariance_list.extend(distribution.covariance_list)
-            mean = np.concatenate(mean)
-            return SparseGaussianDistribution(mean, covariance_list)
+            new_mean = np.concatenate([distribution.mean\
+                for distribution in distributions])
+            new_covariance = SparseSquareBlockDiagonalMatrix.concatenate(\
+                *[distribution.covariance for distribution in distributions])
+            return SparseGaussianDistribution(new_mean, new_covariance)
         else:
             raise TypeError("At least one of the distributions given to " +\
                 "the SparseGaussianDistribution class' combine function " +\
-                "was neither a GaussianDistribution nor a " +\
-                "SparseGaussianDistribution.")
+                "was not a SparseGaussianDistribution.")
     
     @property
     def mean(self):
         """
-        Property storing the mean of this SparseGaussianDistribution in array
-        form.
+        The mean, \\(\\boldsymbol{\\mu}\\), of this
+        `SparseGaussianDistribution` in `numpy.ndarray` form.
         """
         if not hasattr(self, '_mean'):
             raise AttributeError("mean was referenced before it was set.")
@@ -81,11 +100,14 @@ class SparseGaussianDistribution(Distribution):
     @mean.setter
     def mean(self, value):
         """
-        Setter for the mean of this distribution
+        Setter for `SparseGaussianDistribution.mean`
         
-        value: a 1D numpy.ndarray of length numparams
+        Parameters
+        ----------
+        value : sequence
+            1D sequence of numbers
         """
-        if type(value) in numerical_types:
+        if type(value) in real_numerical_types:
             value = [value]
         if type(value) in sequence_types:
             value = np.array(value)
@@ -106,187 +128,98 @@ class SparseGaussianDistribution(Distribution):
             else:
                 self._mean = value
         else:
-            raise ValueError("The mean of a GaussianDistribution is not of " +\
-                "a recognizable type.")
-
+            raise ValueError("The mean of a SparseGaussianDistribution was " +\
+                "neither a number nor a sequence of numbers.")
+   
     @property
     def numparams(self):
         """
-        Finds and returns the number of parameters which this
-        GaussianDistribution describes (same as dimension of mean and
-        covariance).
+        The number of parameters which this `SparseGaussianDistribution`
+        describes (same as dimension of mean and covariance).
         """
         if not hasattr(self, '_numparams'):
             self._numparams = len(self.mean)
         return self._numparams
     
     @property
-    def covariance_list(self):
-        """
-        Property storing the list of covariance blocks.
-        """
-        if not hasattr(self, '_covariance_list'):
-            raise AttributeError("covariance_list was referenced before it " +\
-                "was set.")
-        return self._covariance_list
-    
-    @covariance_list.setter
-    def covariance_list(self, value):
-        """
-        Setter for the list of covariance blocks.
-        
-        value: a list of 2D arrays that are the blocks on the diagonal of the
-               covariance matrix. The sum of sizes of the blocks should be the
-               same as the length of mean
-        """
-        if type(value) in sequence_types:
-            new_value = []
-            for element in value:
-                if type(element) in numerical_types:
-                    new_element = np.array([[element]])
-                elif type(element) in sequence_types:
-                    new_element = np.array(element)
-                    new_element = (new_element + new_element.T) / 2
-                else:
-                    raise TypeError("At least one block of the covariance " +\
-                        "was set to neither a number nor a sequence.")
-                new_value.append(new_element)
-            if all([((element.ndim == 2) and\
-                (element.shape[0] == element.shape[1]))\
-                for element in new_value]):
-                if sum([element.shape[0] for element in new_value]) ==\
-                    self.numparams:
-                    self._covariance_list = new_value
-                else:
-                    raise ValueError("The sums of the sizes of the blocks " +\
-                        "in covariance_list was not the same as the length " +\
-                        "of the mean vector.")
-            else:
-                raise ValueError("At least one block of the " +\
-                    "covariance_list was not square.")
-        else:
-            raise TypeError("covariance_list was set to a non-sequence.")
-    
-    @property
     def covariance(self):
         """
-        Property storing the covariance matrix of this Gaussian as a
-        scipy.sparse.spmatrix.
+        The covariance matrix, \\(\\boldsymbol{\\Sigma}\\), of this Gaussian as
+        a
+        `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`.
         """
         if not hasattr(self, '_covariance'):
-            self._covariance = sparse.block_diag(self.covariance_list)
+            raise AttributeError("covariance was referenced before it was " +\
+                "set.")
         return self._covariance
     
-    @property
-    def mean_list(self):
+    @covariance.setter
+    def covariance(self, value):
         """
-        Property storing the means corresponding to each covariance block.
+        Setter for the `SparseGaussianDistribution.covariance` property that
+        stores the covariance matrix of this Gaussian distribution.
+        
+        value : `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`
+            `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`
+            object representing the full covariance matrix
         """
-        if not hasattr(self, '_mean_list'):
-            current_index = 0
-            self._mean_list = []
-            for block in self.covariance_list:
-                block_size = len(block)
-                self._mean_list.append(self.mean[current:current+block_size])
-                current = current + block_size
-        return self._mean_list
+        if isinstance(value, SparseSquareBlockDiagonalMatrix):
+            if value.dimension == self.numparams:
+                if value.positive_definite:
+                    self._covariance = value
+                else:
+                    raise ValueError("The covariance given to a " +\
+                        "SparseGaussianDistribution was not " +\
+                        "positive-definite.")
+            else:
+                raise ValueError(("The dimension of the covariance matrix " +\
+                    "({0:d}) was not equal to the dimension of the mean " +\
+                    "vector ({1:d}).").format(value.dimension, self.numparams))
+        else:
+            raise TypeError("covariance was set to a " +\
+                "non-SparseSquareBlockDiagonalMatrix object.")
     
     @property
     def log_determinant_covariance(self):
         """
-        Property storing the natural logarithm of the determinant of the
-        covariance matrix.
+        The natural logarithm of the determinant of the covariance matrix,
+        \\(\\ln{\\Vert\\boldsymbol{\\Sigma}\\Vert}\\).
         """
         if not hasattr(self, '_log_determinant_covariance'):
             self._log_determinant_covariance =\
-                sum([npla.slogdet(block)[1] for block in self.covariance_list])
+                self.covariance.sign_and_log_abs_determinant()[1]
         return self._log_determinant_covariance
-    
-    def _make_inverse_and_square_root_covariance_lists(self):
-        """
-        Finds the inverse, square root, and inverse square root of the
-        covariance blocks and stores them in internal properties, allowing
-        inverse_covariance, square_root_covariance, and
-        inverse_square_root_covariance properties to be referenced.
-        """
-        self._square_root_covariance_list = []
-        self._inverse_covariance_list = []
-        self._inverse_square_root_covariance_list = []
-        for block in self.covariance_list:
-            (eigenvalues, eigenvectors) = npla.eigh(block)
-            if np.any(eigenvalues <= 0):
-                raise ValueError(("Something went wrong, causing the " +\
-                    "square root of a block of the the covariance matrix " +\
-                    "of this SparseGaussianDistribution to have at least " +\
-                    "one complex element. The eigenvalues of the " +\
-                    "covariance matrix block are {!s}.").format(eigenvalues))
-            eigenvalues = np.sqrt(eigenvalues)
-            self._square_root_covariance_list.append(np.dot(\
-                eigenvectors * np.sqrt(eigenvalues)[None,:], eigenvectors.T))
-            self._inverse_covariance_list.append(\
-                np.dot(eigenvectors / eigenvalues[None,:], eigenvectors.T))
-            self._inverse_square_root_covariance_list.append(np.dot(\
-                eigenvectors / np.sqrt(eigenvalues)[None,:], eigenvectors.T))
-    
-    @property
-    def inverse_covariance_list(self):
-        """
-        Property storing the list of inverses of the covariance blocks.
-        """
-        if not hasattr(self, '_inverse_covariance_list'):
-            self._make_inverse_and_square_root_covariance_lists()
-        return self._inverse_covariance_list
     
     @property
     def inverse_covariance(self):
         """
-        Property storing the inverse of the covariance as a
-        scipy.sparse.spmatrix.
+        The inverse covariance, \\(\\boldsymbol{\\Sigma}^{-1}\\), as a
+        `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`.
         """
         if not hasattr(self, '_inverse_covariance'):
-            self._inverse_covariance =\
-                sparse.block_diag(self.inverse_covariance_list)
+            self._inverse_covariance = self.covariance.inverse()
         return self._inverse_covariance
-    
-    @property
-    def square_root_covariance_list(self):
-        """
-        Property storing the list of square roots of the covariance blocks.
-        """
-        if not hasattr(self, '_square_root_covariance_list'):
-            self._make_inverse_and_square_root_covariance_lists()
-        return self._square_root_covariance_list
     
     @property
     def square_root_covariance(self):
         """
-        Property storing the square root of the covariance matrix as a
-        scipy.sparse.spmatrix.
+        The square root covariance, \\(\\boldsymbol{\\Sigma}^{1/2}\\), as a
+        `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`.
         """
         if not hasattr(self, '_square_root_covariance'):
-            self._square_root_covariance =\
-                sparse.block_diag(self.square_root_covariance_list)
+            self._square_root_covariance = self.covariance.square_root()
         return self._square_root_covariance
-    
-    @property
-    def inverse_square_root_covariance_list(self):
-        """
-        Property storing the list of inverse square roots of the covariance
-        blocks.
-        """
-        if not hasattr(self, '_inverse_square_root_covariance_list'):
-            self._make_inverse_and_square_root_covariance_lists()
-        return self._inverse_square_root_covariance_list
     
     @property
     def inverse_square_root_covariance(self):
         """
-        Property storing the inverse square root of the covariance matrix as a
-        scipy.sparse.spmatrix.
+        The inverse square root covariance, \\(\\boldsymbol{\\Sigma}^{-1/2}\\),
+        as a
+        `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`.
         """
         if not hasattr(self, '_inverse_square_root_covariance'):
             self._inverse_square_root_covariance =\
-                sparse.block_diag(self.inverse_square_root_covariance_list)
+                self.covariance.inverse_square_root()
         return self._inverse_square_root_covariance
     
     def weight(self, array, axis=0):
@@ -294,55 +227,71 @@ class SparseGaussianDistribution(Distribution):
         Weights the given array by the inverse square root of the covariance
         matrix of this distribution.
         
-        array: the array to weight, can be any number of dimensions as long as
-               the specified one has length self.numparams
-        axis: index of the axis corresponding to the parameters
+        Parameters
+        ----------
+        array : numpy.ndarray
+            the array to weight, can be any number of dimensions as long as the
+            specified one has length given by
+            `SparseGaussianDistribution.numparams`
+        axis : int
+            index of the axis corresponding to the parameters
         
-        returns: numpy.ndarray of same shape as array corresponding to
-                 \(C^{-1/2} A\) where A is array shaped so that the matrix
-                 multiplication makes sense.
+        Returns
+        -------
+        weighted : numpy.ndarray
+            array of same shape as array corresponding to
+            \\(\\boldsymbol{\\Sigma}^{-1/2}\\boldsymbol{A}\\), where
+            \\(\\boldsymbol{A}\\) is array shaped so that the matrix
+            multiplication makes sense.
         """
         axis = axis % array.ndim
         if array.ndim == 1:
-            return self.inverse_square_root_covariance.dot(array)
+            return self.inverse_square_root_covariance.__matmul__(array)
         elif array.ndim == 2:
             if axis == 0:
-                return self.inverse_square_root_covariance.dot(array)
+                return\
+                    self.inverse_square_root_covariance.__matmul__(array.T).T
             else:
-                return self.inverse_square_root_covariance.dot(array.T).T
+                return self.inverse_square_root_covariance.__matmul__(array)
         else:
             before_shape = array.shape[:axis]
             after_shape = array.shape[(axis+1):]
-            if axis != 0:
-                weighted_array = np.rollaxis(array, axis, start=0)
-            weighted_array = np.reshape(weighted_array, (self.numparams, -1))
+            if axis == (array.ndim - 1):
+                weighted_array = array
+            else:
+                weighted_array = np.rollaxis(array, axis, start=array.ndim)
             weighted_array =\
-                self.inverse_square_root_covariance.dot(weighted_array)
-            weighted_array = np.reshape(weighted_array,\
-                (self.numparams,) + before_shape + after_shape)
-            if axis != 0:
-                weighted_array = np.rollaxis(weighted_array, 0, start=axis+1)
+                self.inverse_square_root_covariance.__matmul__(weighted_array)
+            if axis != (array.ndim - 1):
+                weighted_array =\
+                    np.rollaxis(weighted_array, array.ndim - 1, start=axis)
             return weighted_array
     
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        Dense matrix form of the covariance of this distribution as a
+        `numpy.ndarray`.
         """
         if not hasattr(self, '_variance'):
-            self._variance = self.covariance.toarray()
+            self._variance = self.covariance.dense()
         return self._variance
     
     def dense(self):
         """
-        Finds a standard GaussianDistribution object representing the same
-        random variate as this distribution does. This involves creating a
-        dense version of the covariance matrix, which may be prohibitive if the
-        dimension is large enough compared to system memory.
+        Finds a standard
+        `distpy.distribution.GaussianDistribution.GaussianDistribution` object
+        representing the same random variate as this distribution does. This
+        involves creating a dense version of the covariance matrix, which may
+        be prohibitive if the dimension is large enough compared to system
+        memory.
         
-        returns: a GaussianDistribution object
+        Returns
+        -------
+        dist : `distpy.distribution.GaussianDistribution.GaussianDistribution`
+            a dense form of this distribution
         """
-        return GaussianDistribution(self.mean, self.covariance.toarray(),\
+        return GaussianDistribution(self.mean, self.variance,\
             metadata=self.metadata)
     
     def __add__(self, other):
@@ -350,29 +299,36 @@ class SparseGaussianDistribution(Distribution):
         Adds the Gaussian random variate described by this distribution
         to the given object.
         
-        other: if other is a constant, the returned Gaussian is the same as
-                                       this one with other added to the mean
-                                       and the same covariance
-               if other is a 1D numpy.ndarray, it must be of the same length
-                                               as the dimension of this
-                                               GaussianDistribution. In this
-                                               case, the returned
-                                               GaussianDistribution is the
-                                               distribution of the sum of this
-                                               Gaussian variate with other
-               if other is a SparseGaussianDistribution, it must have the same
-                                                         number of parameters
-                                                         as this one
+        Parameters
+        ----------
+        other : number or `numpy.ndarray` or `SparseGaussianDistribution`
+            - if `other` is a constant, the returned Gaussian is the same as
+            this one with `other` added to the mean and the same covariance
+            - if `other` is a 1D numpy.ndarray, \\(\\boldsymbol{a}\\), it must
+            be of the same length as the dimension of this
+            `SparseGaussianDistribution`. In this case, the returned
+            `SparseGaussianDistribution` is the distribution of the sum of this
+            Gaussian variate with other, which has a translated mean,
+            \\(\\boldsymbol{\\mu}^\\prime=\\boldsymbol{\\mu}+\
+            \\boldsymbol{a}\\), but the same covariance,
+            \\(\\boldsymbol{\\Sigma}\\)
+            - if `other` is a `SparseGaussianDistribution` with mean
+            \\(\\boldsymbol{\\nu}\\) and covariance
+            \\(\\boldsymbol{\\Lambda}\\), the returned distribution has mean,
+            \\(\\boldsymbol{\\mu}+\\boldsymbol{\\nu}\\), and covariance,
+            \\(\\boldsymbol{\\Sigma}+\\boldsymbol{\\Lambda}\\)
         
-        returns: SparseGaussianDistribution representing the addition of this
-                 Gaussian variate with other
+        Returns
+        -------
+        sum : `SparseGaussianDistribution`
+            distribution of sum of the random variate described by this
+            distribution and `other`. See documentation of `other` above for
+            details.
         """
         if isinstance(other, SparseGaussianDistribution):
             if self.numparams == other.numparams:
                 new_mean = self.mean + other.mean
-                new_covariance_list =\
-                    SparseGaussianDistribution.add_covariance_lists(\
-                    self.covariance_list, other.covariance_list)
+                new_covariance = self.covariance + other.covariance
             else:
                 raise ValueError("Cannot add together two " +\
                     "SparseGaussianDistribution objects with different " +\
@@ -382,7 +338,7 @@ class SparseGaussianDistribution(Distribution):
             if other.ndim == 1:
                 if len(other) == self.numparams:
                     new_mean = self.mean + other
-                    new_covariance_list = self.covariance_list
+                    new_covariance = self.covariance
                 else:
                     raise ValueError("Cannot multiply Gaussian distributed " +\
                         "random vector by a vector of different size.")
@@ -391,77 +347,123 @@ class SparseGaussianDistribution(Distribution):
                     "random vector by a tensor with more than 1 index.")
         else:
             # assume other is a constant
-            new_mean = self.internal_mean.A[0] + other
-            new_covariance_list = self.covariance_list
-        return SparseGaussianDistribution(new_mean, new_covariance_list)
-    
-    @staticmethod
-    def add_covariance_lists(list1, list2):
-        """
-        Adds the two covariance_lists to create a semi-efficient (efficient on
-        average, but not guaranteed to be most efficient, especially if some
-        covariances are exactly cancelled between list1 and list2)
-        covariance_list that represents the sum of the covariance matrices
-        represented by the given covariance_lists.
-        
-        list1, list2: covariance_list properties of SparseGaussianDistribution
-                      objects to combine into one
-        
-        returns: a covariance_list processable in the __init__ method of the
-                 SparseGaussianDistribution class representing the sum of the
-                 covariances matrices represented by list1 and list2
-        """
-        if sum([len(element) for element in list1]) !=\
-            sum([len(element) for element in list2]):
-            raise ValueError("The two covariance_lists cannot be added " +\
-                "because they correspond to different size covariance " +\
-                "matrices.")
-        (index1, index2) = (0, 0)
-        (block1, block2) = (np.array([[]]), np.array([[]]))
-        current = []
-        while True:
-            if block1.size < max(1, block2.size):
-                if block1.size == 0:
-                    block1 = list1[index1]
-                else:
-                    block1 = scila.block_diag(block1, list1[index1])
-                index1 += 1
-            elif block2.size < block1.size:
-                if block2.size == 0:
-                    block2 = list2[index2]
-                else:
-                    block2 = scila.block_diag(block2, list2[index2])
-                index2 += 1
-            if block1.size == block2.size:
-                current.append(block1 + block2)
-                (block1, block2) = (np.array([[]]), np.array([[]]))
-            if (block1.size + block2.size) == 0:
-                if (index1 == len(list1)) or (index2 == len(list2)):
-                    break
-        return current
+            new_mean = self.mean + other
+            new_covariance = self.covariance
+        return SparseGaussianDistribution(new_mean, new_covariance)
     
     def __radd__(self, other):
         """
-        Returns the same thing as __add__ (this makes addition commutative).
+        Adds the Gaussian random variate described by this distribution
+        to the given object. Equivalent to `SparseGaussianDistribution.__add__`
+        method (making addition commutative).
+        
+        Parameters
+        ----------
+        other : number or `numpy.ndarray` or `SparseGaussianDistribution`
+            - if `other` is a constant, the returned Gaussian is the same as
+            this one with `other` added to the mean and the same covariance
+            - if `other` is a 1D numpy.ndarray, \\(\\boldsymbol{a}\\), it must
+            be of the same length as the dimension of this
+            `SparseGaussianDistribution`. In this case, the returned
+            `SparseGaussianDistribution` is the distribution of the sum of this
+            Gaussian variate with other, which has a translated mean,
+            \\(\\boldsymbol{\\mu}^\\prime=\\boldsymbol{\\mu}+\
+            \\boldsymbol{a}\\), but the same covariance,
+            \\(\\boldsymbol{\\Sigma}\\)
+            - if `other` is a `SparseGaussianDistribution` with mean
+            \\(\\boldsymbol{\\nu}\\) and covariance
+            \\(\\boldsymbol{\\Lambda}\\), the returned distribution has mean,
+            \\(\\boldsymbol{\\mu}+\\boldsymbol{\\nu}\\), and covariance,
+            \\(\\boldsymbol{\\Sigma}+\\boldsymbol{\\Lambda}\\)
+        
+        Returns
+        -------
+        sum : `SparseGaussianDistribution`
+            distribution of sum of the random variate described by this
+            distribution and `other`. See documentation of `other` above for
+            details.
         """
         return self.__add__(other)
     
     def __sub__(self, other):
         """
-        Returns the same thing as __add__ with an argument of (-other)
+        Adds the Gaussian random variate described by this distribution
+        to the negative of the given object.
+        
+        Parameters
+        ----------
+        other : number or `numpy.ndarray` or `SparseGaussianDistribution`
+            - if `other` is a constant, the returned Gaussian is the same as
+            this one with `other` subtracted from the mean and the same
+            covariance
+            - if `other` is a 1D numpy.ndarray, \\(\\boldsymbol{a}\\), it must
+            be of the same length as the dimension of this
+            `SparseGaussianDistribution`. In this case, the returned
+            `SparseGaussianDistribution` is the distribution of the sum of this
+            Gaussian variate with other, which has a translated mean,
+            \\(\\boldsymbol{\\mu}^\\prime=\\boldsymbol{\\mu}-\
+            \\boldsymbol{a}\\), but the same covariance,
+            \\(\\boldsymbol{\\Sigma}\\)
+            - if `other` is a `SparseGaussianDistribution` with mean
+            \\(\\boldsymbol{\\nu}\\) and covariance
+            \\(\\boldsymbol{\\Lambda}\\), the returned distribution has mean,
+            \\(\\boldsymbol{\\mu}-\\boldsymbol{\\nu}\\), and covariance,
+            \\(\\boldsymbol{\\Sigma}+\\boldsymbol{\\Lambda}\\)
+        
+        Returns
+        -------
+        sum : `SparseGaussianDistribution`
+            distribution of difference of the random variate described by this
+            distribution and `other`. See documentation of `other` above for
+            details.
         """
         return self.__add__(-other)
     
     def __rsub__(self, other):
         """
-        Returns the negative of the returned value of __sub__ (this makes
-        subtraction doable from either side).
+        Adds the Gaussian random variate described by this distribution
+        to the negative of the given object. Equivalent to
+        `SparseGaussianDistribution.__sub__(other).__neg__()`.
+        
+        Parameters
+        ----------
+        other : number or `numpy.ndarray` or `SparseGaussianDistribution`
+            - if `other` is a constant, the returned Gaussian is the same as
+            this one with `other` subtracted from the mean and the same
+            covariance
+            - if `other` is a 1D numpy.ndarray, \\(\\boldsymbol{a}\\), it must
+            be of the same length as the dimension of this
+            `SparseGaussianDistribution`. In this case, the returned
+            `SparseGaussianDistribution` is the distribution of the sum of this
+            Gaussian variate with other, which has a translated mean,
+            \\(\\boldsymbol{\\mu}^\\prime=\\boldsymbol{\\mu}-\
+            \\boldsymbol{a}\\), but the same covariance,
+            \\(\\boldsymbol{\\Sigma}\\)
+            - if `other` is a `SparseGaussianDistribution` with mean
+            \\(\\boldsymbol{\\nu}\\) and covariance
+            \\(\\boldsymbol{\\Lambda}\\), the returned distribution has mean,
+            \\(\\boldsymbol{\\mu}-\\boldsymbol{\\nu}\\), and covariance,
+            \\(\\boldsymbol{\\Sigma}+\\boldsymbol{\\Lambda}\\)
+        
+        Returns
+        -------
+        sum : `SparseGaussianDistribution`
+            distribution of difference of the random variate described by this
+            distribution and `other`. See documentation of `other` above for
+            details.
         """
         return self.__sub__(other).__neg__()
     
     def __neg__(self):
         """
-        Returns a new GaussianDistribution with a mean multiplied by -1.
+        Finds the distribution of the negative of the random variable this
+        distribution describes.
+        
+        Returns
+        -------
+        result : `SparseGaussianDistribution`
+            distribution with mean, \\(-\\boldsymbol{\\mu}\\), and covariance,
+            \\(\\boldsymbol{\\Sigma}\\)
         """
         return SparseGaussianDistribution(-self.mean, self.covariance_list)
     
@@ -470,63 +472,114 @@ class SparseGaussianDistribution(Distribution):
         Multiplies the Gaussian random variate described by this distribution
         by the given constant.
         
-        other: a constant number
+        Parameters
+        ----------
+        other : number
+            any non-zero scalar, \\(a\\)
         
-        returns: GaussianDistribution representing the product of the random
-                 variable with this distribution and the constant other
+        returns: `SparseGaussianDistribution`
+            distribution of the product of the random variable with this
+            distribution and the constant `other`, which has mean
+            \\(a\\boldsymbol{\\mu}\\) and covariance
+            \\(a^2\\boldsymbol{\\Sigma}\\)
         """
         new_mean = self.mean * other
-        new_covariance_list =\
-            [(block * (other ** 2)) for block in self.covariance_list]
-        return SparseGaussianDistribution(new_mean, new_covariance_list)
+        new_covariance = self.covariance * (other ** 2)
+        return SparseGaussianDistribution(new_mean, new_covariance)
     
     def __rmul__(self, other):
         """
-        Returns the same thing as __mul__ (this makes multiplication
-        commutative).
+        Multiplies the Gaussian random variate described by this distribution
+        by the given constant. Equivalent to
+        `SparseGaussianDistribution.__mul__` method so that multiplication is
+        commutative.
+        
+        Parameters
+        ----------
+        other : number
+            any non-zero scalar, \\(a\\)
+        
+        returns: `SparseGaussianDistribution`
+            distribution of the product of the random variable with this
+            distribution and the constant `other`, which has mean
+            \\(a\\boldsymbol{\\mu}\\) and covariance
+            \\(a^2\\boldsymbol{\\Sigma}\\)
         """
         return self.__mul__(other)
     
     def __div__(self, other):
         """
-        Returns the same thing as __mul__ with an argument of (1/other).
+        Divides the Gaussian random variate described by this distribution
+        by the given constant.
+        
+        Parameters
+        ----------
+        other : number
+            any non-zero scalar, \\(a\\)
+        
+        returns: `SparseGaussianDistribution`
+            distribution of the product of the random variable with this
+            distribution and the constant `other`, which has mean
+            \\(\\boldsymbol{\\mu}/a\\) and covariance
+            \\(\\boldsymbol{\\Sigma}/a^2\\)
         """
-        return self.__mul__(1 / other)
+        if other == 0:
+            raise ZeroDivisionError("Cannot divide by zero.")
+        else:
+            return self.__mul__(1 / other)
     
     def __matmul__(self, other):
         """
-        Finds and returns the distribution of the matrix product of other with
-        the random variable this distribution describes.
+        Finds and returns the distribution of a matrix product of this random
+        variate.
         
-        other: if other is a 1D numpy.ndarray, it must be of the same length
-                                               as the dimension of this
-                                               GaussianDistribution. In this
-                                               case, the returned
-                                               GaussianDistribution is the
-                                               distribution of the dot product
-                                               of this Gaussian variate with
-                                               other
-               if other is a 2D numpy.ndarray, it must have shape
-                                               (newparams, self.numparams)
-                                               where newparams<=self.numparams
-                                               The returned
-                                               GaussianDistribution is the
-                                               distribution of other (matrix)
-                                               multiplied with this Gaussian
-                                               variate
+        Parameters
+        ----------
+        other : numpy.ndarray or\
+        `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`
+            - if `other` is a 1D numpy.ndarray, \\(\\boldsymbol{v}\\), it must
+            have dimension `SparseGaussianDistribution.numparams`. In this
+            case, the returned distribution is the distribution of
+            \\(\\boldsymbol{v}\\cdot\\boldsymbol{x}\\), where
+            \\(\\boldsymbol{x}\\) is the random variate described by this
+            distribution. In particular, it returns a
+            `distpy.distribution.GaussianDistribution.GaussianDistribution`
+            with mean, \\(\\boldsymbol{v}\\cdot\\boldsymbol{\\mu}\\), and
+            covariance,
+            \\(\\boldsymbol{v}^T\\boldsymbol{\\Sigma}\\boldsymbol{v}\\)
+            - if `other` is a 2D numpy.ndarray, \\(\\boldsymbol{A}\\), it must
+            have shape `(m, n)`, where \\(n\\) is
+            `SparseGaussianDistribution.numparams` and \\(m\\le n\\). The
+            returned distribution is the distribution of
+            `other` (matrix) multiplied with this Gaussian variate,
+            \\(\\boldsymbol{x}\\), i.e. a
+            `distpy.distribution.GaussianDistribution.GaussianDistribution`
+            with mean, \\(\\boldsymbol{A}\\boldsymbol{x}\\), and covariance,
+            \\(\\boldsymbol{A}\\boldsymbol{\\Sigma}\\boldsymbol{A}^T\\). Note
+            that \\(\\boldsymbol{A}\\) must be full-rank (i.e. its rank must be
+            \\(m\\)).
+            - if `other` is a
+            `distpy.util.SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix`,
+            \\(\\boldsymbol{A}\\), it will return the same distribution given
+            above in the case of a 2D array `other`, except it will be returned
+            in a `SparseGaussianDistribution` instead of a
+            `distpy.distribution.GaussianDistribution.GaussianDistribution`
         
-        returns: GaussianDistribution object (note that this doesn't return a
-                 SparseGaussianDistribution object; restrictions would have to
-                 be placed on the matrix forms of other when it is 2D that are
-                 too complicated)
+        Returns
+        -------
+        distribution_of_product : `SparseGaussianDistribution` or\
+        `distpy.distribution.GaussianDistribution.GaussianDistribution`
+            the distribution of the product of this
+            `SparseGaussianDistribution` and `other`. See documentation for
+            `other` for details on the returned value for different inputs
         """
-        if type(other) in [list, tuple, np.ndarray]:
+        if type(other) in sequence_types:
             other = np.array(other)
             if other.ndim == 1:
                 if len(other) == self.numparams:
-                    new_mean = np.dot(self.mean, other)
+                    new_mean = np.vdot(self.mean, other)
                     new_covariance =\
-                        np.dot(self.covariance.dot(other), other)
+                        np.vdot(self.covariance.__matmul__(other), other)
                 else:
                     raise ValueError("Cannot multiply Gaussian distributed " +\
                         "random vector by a vector of different size.")
@@ -534,9 +587,10 @@ class SparseGaussianDistribution(Distribution):
                 if other.shape[1] == self.numparams:
                     if other.shape[0] <= self.numparams:
                         # other is a matrix with self.numparams columns
-                        new_mean = np.dot(other, self.mean)
-                        new_covariance =\
-                            np.dot(other, self.covariance.dot(other.T))
+                        new_mean = np.matmul(other, self.mean)
+                        new_covariance = np.matmul(\
+                            self.covariance.array_matrix_multiplication(other,\
+                            right=False), other.T)
                     else:
                         raise ValueError("Cannot multiply Gaussian " +\
                             "distributed random vector by matrix which " +\
@@ -551,44 +605,56 @@ class SparseGaussianDistribution(Distribution):
             else:
                 raise ValueError("Cannot multiply Gaussian distributed " +\
                     "random vector by a tensor with more than 2 indices.")
+        elif isinstance(other, SparseSquareBlockDiagonalMatrix):
+            new_mean = other.__matmul__(self.mean)
+            new_covariance =\
+                other.__matmul__(self.covariance.__matmul__(other.transpose()))
         else:
             raise TypeError("Matrix multiplication can only be done with " +\
                 "sequence types.")
-        return GaussianDistribution(new_mean, new_covariance)
+        return SparseGaussianDistribution(new_mean, new_covariance)
     
     def draw(self, shape=None, random=rand):
         """
-        Draws a point from this distribution using numpy.random.
+        Draws a point from this distribution using `numpy.random`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : tuple or int or None
+            - if None, returns single random variate as a 1D `numpy.ndarray` of
+            length `SparseGaussianDistribution.numparams`
+            - if int, \\(n\\), returns \\(n\\) random variates in a 2D
+            `numpy.ndarray` of shape
+            `(n, SparseGaussianDistribution.numparams)`
+            - if tuple of n ints, returns that many random variates in a
+            `numpy.ndarray` of shape
+            `shape+(SparseGaussianDistribution.numparams,)`
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns a numpy.ndarray containing the values from this draw
+        Returns
+        -------
+        random_values : numpy.ndarray
+            an array containing the values from this draw. See `shape` argument
+            for details on the shape of the return value for different inputs
         """
         if type(shape) is type(None):
-            return self.mean + self.square_root_covariance.dot(\
-                random.normal(0, 1, size=self.numparams))
-        else:
-            if type(shape) in int_types:
-                shape = (shape,)
-            flattened_shape = (self.numparams, np.prod(shape))
-            random_vector = random.normal(0, 1, size=flattened_shape)
-            values = self.mean[:,np.newaxis] +\
-                self.square_root_covariance.dot(random_vector)
-            return np.reshape(values.T, shape + (self.numparams,))
+            shape = ()
+        if type(shape) in int_types:
+            shape = (shape,)
+        values = random.normal(0, 1, size=shape+(self.numparams,))
+        mean_slice = ((np.newaxis,) * len(shape)) + (slice(None),)
+        return self.mean[mean_slice] +\
+            self.square_root_covariance.__matmul__(values)
     
     @property
     def log_value_constant_part(self):
         """
-        Property storing the constant part of the log value, i.e. the part of
-        the sum that has no dependence on the point at which the distribution
-        is being evaluated.
+        The constant part of the log value, i.e. the part of the sum that has
+        no dependence on the point at which the distribution is being
+        evaluated. It is equal to \\(-\\frac{1}{2}\\left(\
+        \\ln{\\left|\\boldsymbol{\\Sigma}\\right|} + N\\ln{(2\\pi)}\\right)\\).
         """
         if not hasattr(self, '_log_value_constant_part'):
             self._log_value_constant_part = (self.log_determinant_covariance +\
@@ -599,39 +665,62 @@ class SparseGaussianDistribution(Distribution):
         """
         Evaluates the log of the value of this distribution at the given point.
         
-        point: numpy.ndarray of shape (self.numparams,)
+        Parameters
+        ----------
+        point : numpy.ndarray
+            the point, \\(\\boldsymbol{x}\\), in a `numpy.ndarray` of shape
+            (self.numparams,)
         
-        returns: the log of the value of this distribution at the given point
+        Returns
+        -------
+        value : float
+            the log of the value of this distribution at the given point. It is
+            given by \\(-\\frac{1}{2}\\left[\
+            (\\boldsymbol{x}-\\boldsymbol{\\mu})^T\\boldsymbol{\\Sigma}^{-1}\
+            (\\boldsymbol{x}-\\boldsymbol{\\mu}) + N\\ln{(2\\pi)} +\
+            \\ln{\\left|\\boldsymbol{\\Sigma}\\right|}\\right]\\)
         """
         minus_mean = point - self.mean
-        exponent =\
-            np.dot(minus_mean, self.inverse_covariance.dot(minus_mean)) / (-2.)
+        exponent = np.vdot(minus_mean,\
+            self.inverse_covariance.__matmul__(minus_mean)) / (-2.)
         return self.log_value_constant_part + exponent
     
     def to_string(self):
         """
-        Finds and returns the string representation of this
-        SparseGaussianDistribution.
+        Finds the string representation of this `SparseGaussianDistribution`.
+        
+        Returns
+        -------
+        string : str
+            `"n-dim Sparse Normal"` where \\(n\\) is the dimension of this
+            distribution
         """
         return "{}-dim Sparse Normal".format(self.numparams)
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a GaussianDistribution with the same mean (down to 10^-9
-        level) and variance (down to 10^-12 dynamic range) and False otherwise.
-        Note that this will return false if other is a GaussianDistribution
-        even if it represents the same distribution as this
-        SparseGaussianDistribution.
+        Checks for equality of this distribution with other.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if other is a `SparseGaussianDistribution` with
+            the same mean and covariance. Note that this will return False if
+            `other` is a
+            `distpy.distribution.GaussianDistribution.GaussianDistribution`
+            even if it represents the same distribution as this
+            `SparseGaussianDistribution`.
         """
         if isinstance(other, SparseGaussianDistribution):
             if self.numparams == other.numparams:
                 mean_close =\
                     np.allclose(self.mean, other.mean, rtol=0, atol=1e-9)
-                covariance_close =\
-                    SparseGaussianDistribution.covariance_lists_close(\
-                    self.covariance_list, other.covariance_list, rtol=1e-12,\
-                    atol=0)
+                covariance_close = (self.covariance == other.covariance)
                 metadata_equal = self.metadata_equal(other)
                 return all([mean_close, covariance_close, metadata_equal])
             else:
@@ -639,108 +728,75 @@ class SparseGaussianDistribution(Distribution):
         else:
             return False
     
-    @staticmethod
-    def covariance_lists_close(list1, list2, **allclose_kwargs):
-        """
-        Checks if the given covariance_lists (which have been processed by the
-        __init__ method of the SparseGaussianDistribution class) are
-        equivalent up to the given tolerance.
-        
-        list1, list2: covariance_list properties of SparseGaussianDistribution
-                      objects
-        **allclose_kwargs: keyword arguments to pass to numpy.allclose function
-                           to determine tolerance. Generally, this should
-                           include rtol and/or atol to represent relative and
-                           absolute tolerances.
-        
-        returns: True if list1 and list2 represent the same covariance matrices
-                 (even if represented differently), False otherwise
-        """
-        if sum([len(element) for element in list1]) !=\
-            sum([len(element) for element in list2]):
-            return False
-        (index1, index2) = (0, 0)
-        (block1, block2) = (np.array([[]]), np.array([[]]))
-        while True:
-            if block1.size < max(1, block2.size):
-                if block1.size == 0:
-                    block1 = list1[index1]
-                else:
-                    block1 = scila.block_diag(block1, list1[index1])
-                index1 += 1
-            elif block2.size < block1.size:
-                if block2.size == 0:
-                    block2 = list2[index2]
-                else:
-                    block2 = scila.block_diag(block2, list2[index2])
-                index2 += 1
-            if block1.size == block2.size:
-                if not np.allclose(block1, block2, **allclose_kwargs):
-                    return False
-                (block1, block2) = (np.array([[]]), np.array([[]]))
-            if (block1.size + block2.size) == 0:
-                if (index1 == len(list1)) or (index2 == len(list2)):
-                    return True
-    
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable values in this distribution.
+        The minimum allowable values in this distribution. Since Gaussian
+        curves are never zero, there are no minima.
         """
         return ([None] * self.numparams)
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable values in this distribution.
+        The maximum allowable values in this distribution. Since Gaussian
+        curves are never zero, there are no maxima.
         """
         return ([None] * self.numparams)
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean (False) describing whether this distribution is discrete.
         """
         return False
     
-    def fill_hdf5_group(self, group, mean_link=None, covariance_links=None,\
+    def fill_hdf5_group(self, group, mean_link=None, covariance_link=None,\
         save_metadata=True):
         """
         Fills the given hdf5 file group with data from this distribution. The
         fact that this is a GaussianDistribution is saved along with the mean
         and covariance.
         
-        group: hdf5 file group to fill
-        mean_link: link to mean already existing in file (if it exists)
-        covariance_links: links to covariance blocks already existing in file
-                          (if they exists)
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group: h5py.Group
+            hdf5 file group to fill
+        mean_link : `distpy.util.h5py_extensions.HDF5Link` or None
+            link to extant dataset (or arg or list of args with which to create
+            one)
+        covariance_link : h5py.Group or None
+            group with extant covariance (if it exists)
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'SparseGaussianDistribution'
         create_hdf5_dataset(group, 'mean', data=self.mean, link=mean_link)
-        this_link = None
-        subgroup = group.create_group('covariance')
-        for (index, block) in enumerate(self.covariance_list):
-            if type(covariance_links) is not type(None):
-                this_link = covariance_links[index]
-            create_hdf5_dataset(subgroup, 'block_{:d}'.format(index),\
-                data=block, link=this_link)
+        if type(covariance_link) is type(None):
+            self.covariance.fill_hdf5_group(group.create_group('covariance'))
+        elif isinstance(covariance_link, basestring):
+            group['covariance'] = h5py.SoftLink(covariance_link)
+        elif isinstance(covariance_link, h5py.Group):
+            group['covariance'] = covariance_link
         if save_metadata:
             self.save_metadata(group)
     
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GaussianDistribution from the given hdf5 file group.
+        Loads a `SparseGaussianDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group: h5py.Group
+            hdf5 file group from which to load a distribution
         
-        returns: a SparseGaussianDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `SparseGaussianDistribution`
+            distribution loaded from the given hdf5 file group
         """
         try:
             assert group.attrs['class'] == 'SparseGaussianDistribution'
@@ -749,20 +805,15 @@ class SparseGaussianDistribution(Distribution):
                 "SparseGaussianDistribution.")
         metadata = Distribution.load_metadata(group)
         mean = get_hdf5_value(group['mean'])
-        (covariance_list, current_index) = ([], 0)
-        subgroup = group['covariance']
-        while 'block_{:d}'.format(current_index) in subgroup:
-            covariance_list.append(\
-                get_hdf5_value(subgroup['block_{:d}'.format(current_index)]))
-            current_index += 1
-        return SparseGaussianDistribution(mean, covariance_list,\
-            metadata=metadata)
+        covariance = SparseSquareBlockDiagonalMatrix.load_from_hdf5_group(\
+            group['covariance'])
+        return SparseGaussianDistribution(mean, covariance, metadata=metadata)
     
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean (True) describing whether this distribution's gradient can be
+        taken.
         """
         return True
     
@@ -771,18 +822,28 @@ class SparseGaussianDistribution(Distribution):
         Computes the derivatives of log_value(point) with respect to the
         parameters.
         
-        point: 1D vector at which to evaluate the derivatives
+        Parameters
+        ----------
+        point : numpy.ndarray
+            1D array of length given by `SparseGaussianDistribution.numparams`
+            containing parameter values at which to evaluate distribution,
+            \\(\\boldsymbol{x}\\)
         
-        returns: if this Gaussian is 1D, returns single value of derivative
-                 else, returns 1D vector of values of derivatives
+        Returns
+        -------
+        gradient : numpy.ndarray
+            1D vector of derivatives of log value, given by
+            \\(-\\boldsymbol{\\Sigma}^{-1}\
+            (\\boldsymbol{x}-\\boldsymbol{\\mu}),\\) where \\(x\\) is the value
+            of `point`
         """
-        return self.inverse_covariance.dot(self.mean - point)
+        return self.inverse_covariance.__matmul__(self.mean - point)
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean (True) describing whether this distribution's hessian can be
+        taken.
         """
         return True
     
@@ -791,17 +852,30 @@ class SparseGaussianDistribution(Distribution):
         Computes the second derivatives of log_value(point) with respect to the
         parameters.
         
-        point: vector at which to evaluate the derivatives
+        Parameters
+        ----------
+        point : numpy.ndarray
+            1D array of length given by `SparseGaussianDistribution.numparams`
+            containing parameter values at which to evaluate distribution
         
-        returns: 2D square matrix of second derivatives of log value
+        Returns
+        -------
+        hessian : numpy.ndarray
+            2D square matrix of second derivatives of log value, given by
+            \\(-\\boldsymbol{\\Sigma}^{-1}\\) regardless of the value of point
         """
-        return -self.inverse_covariance.toarray()
+        return -self.inverse_covariance.dense()
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Returns a deep copy of this `SparseGaussianDistribution`. This function
+        ignores metadata.
+        
+        Returns
+        -------
+        copied : `SparseGaussianDistribution`
+            a deep copy of this distribution, excluding metadata
         """
         return SparseGaussianDistribution(self.mean.copy(),\
-            [block.copy() for block in self.covariance_list])
+            self.covariance.copy())
 
