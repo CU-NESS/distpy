@@ -41,7 +41,7 @@ class BoxCoxTransform(Transform):
     @property
     def power(self):
         """
-        The power which is taken of the offset version of inputs.
+        The power which is taken of the offset version of inputs, \\(p\\).
         """
         if not hasattr(self, '_power'):
             raise AttributeError("power was referenced before it was set.")
@@ -68,7 +68,7 @@ class BoxCoxTransform(Transform):
     @property
     def offset(self):
         """
-        The offset applied to inputs.
+        The offset applied to inputs, \\(o\\).
         """
         if not hasattr(self, '_offset'):
             raise AttributeError("offset was referenced before it was set.")

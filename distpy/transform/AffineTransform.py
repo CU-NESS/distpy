@@ -33,7 +33,7 @@ class AffineTransform(Transform):
     @property
     def scale_factor(self):
         """
-        The factor by which inputs are multiplied.
+        The factor by which inputs are multiplied, \\(s\\).
         """
         if not hasattr(self, '_scale_factor'):
             raise AttributeError("scale_factor referenced before it was set.")
@@ -57,7 +57,7 @@ class AffineTransform(Transform):
     @property
     def translation(self):
         """
-        The number added to the scaled input.
+        The number added to the scaled input, \\(t\\).
         """
         if not hasattr(self, '_translation'):
             raise AttributeError("translation referenced before it was set.")

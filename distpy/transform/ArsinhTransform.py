@@ -35,7 +35,8 @@ class ArsinhTransform(Transform):
     @property
     def shape(self):
         """
-        The number determining the function which is applied to inputs.
+        The number, \\(s\\) determining the function which is applied to
+        inputs.
         """
         if not hasattr(self, '_shape'):
             raise AttributeError("shape was referenced before it was set.")

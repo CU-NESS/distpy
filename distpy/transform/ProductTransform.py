@@ -33,7 +33,7 @@ class ProductTransform(Transform):
     def transforms(self):
         """
         Length-2 list of `distpy.transform.Transform.Transform` objects being
-        multiplied.
+        multiplied, \\(f\\) and \\(g\\).
         """
         if not hasattr(self, '_transforms'):
             raise AttributeError("transforms referenced before it was set.")

@@ -29,7 +29,7 @@ class ExponentiatedTransform(Transform):
     @property
     def transform(self):
         """
-        The transform which this is the exponential of.
+        The transform which this is the exponential of, \\(f\\).
         """
         if not hasattr(self, '_transform'):
             raise AttributeError("transform referenced before it was set.")

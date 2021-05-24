@@ -23,9 +23,9 @@ class CompositeTransform(Transform):
         Parameters
         ----------
         inner_transform : `distpy.transform.Transform.Transform`
-            first transformation applied, \\(f\\)
-        translation : `distpy.transform.Transform.Transform`
-            second transformation applied, \\(g\\)
+            first transformation applied, \\(g\\)
+        outer_transform : `distpy.transform.Transform.Transform`
+            second transformation applied, \\(f\\)
         """
         self.inner_transform = inner_transform
         self.outer_transform = outer_transform
@@ -70,7 +70,7 @@ class CompositeTransform(Transform):
     @property
     def inner_transform(self):
         """
-        The innermost (first applied) transform.
+        The innermost (first applied) transform, \\(g\\).
         """
         if not hasattr(self, '_inner_transform'):
             raise AttributeError("inner_transform referenced before it was " +\
@@ -96,7 +96,7 @@ class CompositeTransform(Transform):
     @property
     def outer_transform(self):
         """
-        The outermost (last applied) transform.
+        The outermost (last applied) transform, \\(f\\).
         """
         if not hasattr(self, '_outer_transform'):
             raise AttributeError("outer_transform referenced before it was " +\

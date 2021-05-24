@@ -29,7 +29,7 @@ class LoggedTransform(Transform):
     @property
     def transform(self):
         """
-        The transform which this is the log of.
+        The transform which this is the log of, \\(f\\).
         """
         if not hasattr(self, '_transform'):
             raise AttributeError("transform referenced before it was set.")

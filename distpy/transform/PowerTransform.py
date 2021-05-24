@@ -30,7 +30,7 @@ class PowerTransform(Transform):
     @property
     def power(self):
         """
-        The power to raise inputs to.
+        The power to raise inputs to, \\(p\\).
         """
         if not hasattr(self, '_power'):
             raise AttributeError("power was referenced before it was set.")
@@ -57,7 +57,8 @@ class PowerTransform(Transform):
     @property
     def log_abs_power(self):
         """
-        The natural logarithm of the absolute value of `PowerTransform.power`.
+        The natural logarithm of the absolute value of `PowerTransform.power`,
+        \\(\\ln{|p|}\\).
         """
         if not hasattr(self, '_log_abs_power'):
             self._log_abs_power = np.log(np.abs(self.power))

@@ -33,7 +33,7 @@ class SumTransform(Transform):
     def transforms(self):
         """
         Length-2 list of `distpy.transform.Transform.Transform` objects being
-        added.
+        added, \\(f\\) and \\(g\\).
         """
         if not hasattr(self, '_transforms'):
             raise AttributeError("transforms referenced before it was set.")
