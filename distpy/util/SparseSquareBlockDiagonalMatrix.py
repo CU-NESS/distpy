@@ -1119,6 +1119,22 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
             return SparseSquareBlockDiagonalMatrix(\
                 [block.T for block in self.blocks])
     
+    @property
+    def diagonal(self):
+        """
+        The diagonal elements of this matrix in a 1D `numpy.ndarray`.
+        """
+        if not hasattr(self, '_diagonal'):
+            if self.efficient:
+                self._diagonal =\
+                    np.concatenate(np.diagonal(self.blocks, axis1=1, axis2=2))
+            else:
+                diagonal = []
+                for block in self.blocks:
+                    diagonal.append(np.diag(block))
+                self._diagonal = np.concatenate(diagonal)
+        return self._diagonal
+    
     def copy(self):
         """
         Performs a deep copy of this `SparseSquareBlockDiagonalMatrix`.
