@@ -1,20 +1,21 @@
 """
-File: distpy/distribution/DistributionSet.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing a container which can hold an arbitrary number of
+`distpy.distribution.Distribution.Distribution` objects, each of which can have
+any number of parameters which it describes (as long as the specific
+`distpy.distribution.Distribution.Distribution` supports that number of
+parameters). `distpy.distribution.Distribution.Distribution` objects can be
+added through `DistributionSet.add_distribution`. Once all the distributions
+are added, points can be drawn using the `DistributionSet.draw` method and the
+log value of the entire set of distributions can be evaluated at a point using
+the `DistributionSet.log_value` method. See documentation of individual methods
+for further details. This class represents a dictionary- or set-like container
+of `distpy.distribution.Distribution.Distribution` objects; see
+`distpy.distribution.DistributionList.DistributionList` for a list-like
+container of `distpy.distribution.Distribution.Distribution` objects.
 
-Description: A container which can hold an arbitrary number of distributions,
-             each of which can have any number of parameters which it describes
-             (as long as the specific distribution supports that number of
-             parameters). Distribution objects can be added through
-             DistributionSet.add_distribution(distribution, params) where
-             distribution is a Distribution and params is a list of the
-             parameters to which distribution applies. Once all the
-             distributions are added, points can be drawn using
-             DistributionSet.draw() and the log_value of the entire set of
-             distributions can be evaluated at a point using
-             DistributionSet.log_value(point). See documentation of individual
-             functions for further details.
+**File**: $DISTPY/distpy/distribution/DistributionSet.py  
+**Author**: Keith Tauscher  
+**Date**: 30 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -33,20 +34,46 @@ except:
 
 class DistributionSet(Savable, Loadable):
     """
-    An object which keeps track of many distributions which can be univariate
-    or multivariate. It provides methods like log_value, which calls log_value
-    on all of its constituent distributions, and draw, which draws from all of
-    its constituent distributions.
+    A container which can hold an arbitrary number of
+    `distpy.distribution.Distribution.Distribution` objects, each of which can
+    have any number of parameters which it describes (as long as the specific
+    `distpy.distribution.Distribution.Distribution` supports that number of
+    parameters). `distpy.distribution.Distribution.Distribution` objects can be
+    added through `DistributionSet.add_distribution`. Once all the
+    distributions are added, points can be drawn using the
+    `DistributionSet.draw` method and the log value of the entire set of
+    distributions can be evaluated at a point using the
+    `DistributionSet.log_value` method. See documentation of individual methods
+    for further details. This class represents a dictionary- or set-like
+    container of `distpy.distribution.Distribution.Distribution` objects; see
+    `distpy.distribution.DistributionList.DistributionList` for a list-like
+    container of `distpy.distribution.Distribution.Distribution` objects.
     """
     def __init__(self, distribution_tuples=[]):
         """
-        Creates a new DistributionSet with the given distributions inside.
+        Creates a new `DistributionSet` with the given distributions inside.
         
-        distribution_tuples: a list of lists/tuples of the form
-                             (distribution, params) where distribution is an
-                             instance of the Distribution class and params is a
-                             list of parameters (strings) which distribution
-                             describes
+        Parameters
+        ----------
+        distribution_tuples : sequence
+            a list of lists/tuples of the form `(distribution, params)` or
+            `(distribution, params, transforms)` where:
+            
+            - `distribution` is a
+            `distpy.distribution.Distribution.Distribution` object
+            - `params` is a list of the string names of the parameters which
+            `distribution` describes
+            - `transforms` is either a
+            `distpy.transform.TransformList.TransformList` or something that
+            can be cast to one (see the
+            `distpy.transform.TransformList.TransformList.cast` method). It
+            should describe the space in which the distribution applies. For
+            example, to draw a variable from a normal distribution in log10
+            space, `distribution` should be a
+            `distpy.distribution.GaussianDistribution.GaussianDistribution` and
+            `transforms` should be a
+            `distpy.transform.Log10Transform.Log10Transform`. The result will
+            contain only positive numbers.
         """
         self._data = []
         if type(distribution_tuples) in sequence_types:
@@ -69,16 +96,15 @@ class DistributionSet(Savable, Loadable):
     @property
     def empty(self):
         """
-        Finds whether this DistributionSet is empty.
-        
-        returns True if no distributions have been added, False otherwise
+        Boolean describing whether this `DistributionSet` is empty.
         """
         return (len(self._data) == 0)
 
     @property
     def params(self):
         """
-        Finds and returns the parameters which this DistributionSet describes.
+        The list of string names of the parameters which this `DistributionSet`
+        describes.
         """
         if not hasattr(self, '_params'):
             self._params = []
@@ -87,8 +113,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def discrete_params(self):
         """
-        Finds and returns the discrete parameters which this DistributionSet
-        describes.
+        The list of string names of the discrete parameters which this
+        `DistributionSet` describes.
         """
         if not hasattr(self, '_discrete_params'):
             self._discrete_params = []
@@ -97,8 +123,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def continuous_params(self):
         """
-        Finds and returns the continuous parameters which this DistributionSet
-        describes.
+        The list of string names of the continuous parameters which this
+        `DistributionSet` describes.
         """
         if not hasattr(self, '_continuous_params'):
             self._continuous_params = []
@@ -107,16 +133,15 @@ class DistributionSet(Savable, Loadable):
     @property
     def numparams(self):
         """
-        Property storing the number of parameters in this DistributionSet.
+        The total number of parameters described by in this `DistributionSet`.
         """
         return len(self.params)
     
     @property
     def mean(self):
         """
-        Property storing the approximate mean of this distribution. If the
-        transform has a large second derivative at the mean, then this
-        approximation is poor.
+        The approximate mean of this distribution. If the transform has a large
+        second derivative at the mean, then this approximation is poor.
         """
         if not hasattr(self, '_mean'):
             mean = {}
@@ -136,8 +161,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def variance(self):
         """
-        Property storing the variances of this distribution. Covariances are
-        not included because of the dictionary format of the return value.
+        The variances of this distribution in a dictionary indexed by parameter
+        name.
         """
         if not hasattr(self, '_variance'):
             variances = {}
@@ -162,24 +187,40 @@ class DistributionSet(Savable, Loadable):
     
     def __len__(self):
         """
-        Returns the number of parameters in a Distribution so that
-        len(distribution) can be used to get the number of parameters of a
-        Distribution object without explicitly referencing numparams.
+        Implemented so that `len(distribution_set)` can be used to get the
+        number of parameters of a `DistributionSet` object without explicitly
+        referencing `DistributionSet.numparams`.
+        
+        Returns
+        -------
+        length : int
+            the number of parameter described by this `DistributionSet`
         """
         return self.numparams
 
     def add_distribution(self, distribution, params, transforms=None):
         """
-        Adds a distribution and the parameters it describes to the
-        DistributionSet.
+        Adds a `distpy.distribution.Distribution.Distribution` and the
+        parameters it describes to the `DistributionSet`.
         
-        distribution: Distribution object describing the given parameters
-        params: list of parameters described by the given distribution
-                (can be a single string if the distribution is univariate)
-        transforms: TransformList object (or something castable to one, such as
-                    a sequence of strings which can be cast to Transform
-                    objects) which apply to the parameters (can be a single
-                    string if the distribution is univariate)
+        Parameters
+        ----------
+        distribution : `distpy.distribution.Distribution.Distribution`
+            the distribution to add
+        params : sequence or str
+            list of string names of parameters described `distribution` (can be
+            a single string if `distribution` is univariate)
+        transforms : `distpy.transform.TransformList.TransformList` or\
+        `distpy.transform.Transform.Transform` or sequence or str or None
+            a `distpy.transform.TransformList.TransformList` object (or
+            something castable to one, see
+            `distpy.transform.TransformList.TransformList.cast`) which apply to
+            the parameters (can be a single
+            `distpy.transform.Transform.Transform` or something castable to
+            one, see `distpy.transform.CastTransform.cast_to_transform`, if the
+            distribution is univariate). If `transforms` is None, then the
+            transforms are assumed to be
+            `distpy.transform.NullTransform.NullTransform`
         """
         if isinstance(distribution, Distribution):
             transforms = TransformList.cast(transforms,\
@@ -233,13 +274,19 @@ class DistributionSet(Savable, Loadable):
     
     def __add__(self, other):
         """
-        Adds this DistributionSet to another.
+        Adds this `DistributionSet` to another to create a combined set. For
+        this to be valid the two `DistributionSet` objects must describe
+        different parameters.
         
-        other: a DistributionSet object with parameters distinct from the
-               parameters of self
+        Parameters
+        ----------
+        other : `DistributionSet`
+            another `DistributionSet` with parameters distinct from this one
         
-        returns: DistributionSet object which is the combination of the given
-                 DistributionSet objects
+        Returns
+        -------
+        sum : `DistributionSet`
+            the combination of the two `DistributionSet` objects being added
         """
         if isinstance(other, DistributionSet):
             if set(self.params) & set(other.params):
@@ -249,15 +296,22 @@ class DistributionSet(Savable, Loadable):
                 return\
                     DistributionSet(distribution_tuples=self._data+other._data)
         else:
-            raise TypeError("Can only add DistributionSet objects to other " +\
-                "DistributionSet objects.")
+            return NotImplemented
     
     def __iadd__(self, other):
         """
-        Adds all distributions from other to this DistributionSet.
+        Adds all distributions from `other` to this `DistributionSet`.
         
-        other: DistributionSet object with parameters distinct from the
-               parameters of self
+        Parameters
+        ----------
+        other : `DistributionSet`
+            set of distributions to add into this one
+        
+        Returns
+        -------
+        enlarged : `DistributionSet`
+            this `DistributionSet` after the distributions from `other` have
+            been added in
         """
         if isinstance(other, DistributionSet):
             for distribution_tuple in other._data:
@@ -269,15 +323,22 @@ class DistributionSet(Savable, Loadable):
     
     def distribution_list(self, parameters):
         """
-        Creates a DistributionList out of this DistributionSet by ordering it
-        in the same way as the given parameters.
+        Creates a `distpy.distribution.DistributionList.DistributionList` out
+        of this `DistributionSet` by ordering it in the same way as the given
+        `parameters`.
         
-        parameters: the parameters whose distribution should be put into the
-                    list, including order. May oy may not contain all of this
-                    DistributionSet object's parameters
+        Parameters
+        ----------
+        parameters : sequence
+            a sequence of the parameters whose distribution should be put into
+            the list, including order. May oy may not contain all of this
+            `DistributionSet` object's parameters
         
-        returns: DistributionList object containing the distribution of the
-                 given parameters
+        Returns
+        -------
+        list: `distpy.distribution.DistributionList.DistributionList`
+            a `distpy.distribution.DistributionList.DistributionList`
+            containing the distributions of the given parameters
         """
         to_list = [parameter for parameter in parameters]
         distribution_order = []
@@ -317,7 +378,10 @@ class DistributionSet(Savable, Loadable):
         Modifies the names of the parameters in this distribution by applying
         the given function to each one.
         
-        function: function to apply to each parameter name
+        Parameters
+        ----------
+        function : callable
+            a function that takes old names in and outputs new names
         """
         self._params = list(map(function, self.params))
         self._discrete_params = list(map(function, self.discrete_params))
@@ -327,16 +391,24 @@ class DistributionSet(Savable, Loadable):
     
     def modify_transforms(self, **new_transforms):
         """
-        Finds a DistributionSet with the same distribution and parameters but
-        different transforms. Draws from this DistributionSet and the returned
-        DistributionSet will differ by the given transforms.
+        Creates a `DistributionSet` with the same distribution and parameters
+        but different transforms. Draws from this `DistributionSet` and the
+        returned `DistributionSet` will differ by the given transforms.
         
-        new_transforms: kwargs containing some or all parameters of this
-                        DistributionSet as keys and new Transforms (or things
-                        which can be cast to Transforms)
+        Parameters
+        ----------
+        new_transforms : dict
+            keyword arguments containing some or all parameters of this
+            `DistributionSet` as keys and new
+            `distpy.transform.Transform.Transform` objects (or things which can
+            be cast to them using
+            `distpy.transform.CastTransform.cast_to_transform`) as values
         
-        returns: new DistributionSet object with the same distribution and
-                 parameters but different transforms
+        Returns
+        -------
+        modified : `DistributionSet`
+            new `DistributionSet` object with the same distribution and
+            parameters but different transforms
         """
         new_data = []
         for (distribution, params, transforms) in self._data:
@@ -354,10 +426,25 @@ class DistributionSet(Savable, Loadable):
         """
         Draws a point from all distributions.
         
-        shape: shape of arrays which are values of return value
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            shape of arrays which are values of return value
+        random : `numpy.random.RandomState`
+            the random number generator to use (default: numpy.random)
         
-        returns a dictionary of random values indexed by parameter name
+        Returns
+        -------
+        drawn_points : dict
+            a dictionary whose keys are string parameter names and whose values
+            are random variates:
+            
+            - if `shape` is None, then each parameter's random variates are
+            floats
+            - if `shape` is an integer, then each parameter's random variates
+            are 1D arrays of length `shape`
+            - if `shape` is a tuple, then each parameter's random variates are
+            `len(shape)`-dimensional arrays of shape `shape`
         """
         point = {}
         for (distribution, params, transforms) in self._data:
@@ -374,13 +461,19 @@ class DistributionSet(Savable, Loadable):
 
     def log_value(self, point):
         """
-        Evaluates the log of the product of the values of the distributions
-        contained in this DistributionSet.
+        Evaluates the log of the product of the values of the
+        `distpy.distribution.Distribution.Distribution` objects contained in
+        this `DistributionSet`, which is the sum of their log values.
         
-        point: should be a dictionary of values indexed by the parameter names
+        Parameters
+        ----------
+        point : dict
+            a dictionary of parameters values indexed by their string names
         
-        returns: the total log_value coming from contributions from all
-                 distributions
+        Returns
+        -------
+        total_log_value : float
+            total log_value coming from contributions from all distributions
         """
         if isinstance(point, dict):
             result = 0.
@@ -405,17 +498,24 @@ class DistributionSet(Savable, Loadable):
     def find_distribution(self, parameter):
         """
         Finds the distribution associated with the given parameter. Also finds
-        the index of the parameter in that distribution and the transformation
-        applied to the parameter.
+        the index of the parameter in that distribution and the
+        `distpy.transform.Transform.Transform` applied to the parameter.
         
-        parameter string name of parameter
+        Parameters
+        ----------
+        parameter : str
+            string name of parameter to search for
         
-        returns a tuple of the form (distribution, index, transform) where
-                distribution is the Distribution object describing this
-                parameter, index is the integer number (starting at 0) of the
-                given parameter in the distribution, and transform is the
-                Transform object defining the space in which Distribution
-                inputs or outputs the parameter.
+        Returns
+        -------
+        distribution : `distpy.distribution.Distribution.Distribution`
+            the distribution that applies to the given parameter
+        index : int
+            the integer index describing which parameter of `distribution` is
+            the one that was searched for
+        transform : `distpy.transform.Transform.Transform`
+            the transformation that describes the space that the searched-for
+            parameter is drawn in
         """
         for (distribution, params, transforms) in self._data:
             for (iparam, param) in enumerate(params):
@@ -426,17 +526,44 @@ class DistributionSet(Savable, Loadable):
     
     def __getitem__(self, parameter):
         """
-        Returns the same thing as: self.find_distribution(parameter)
+        Finds the distribution associated with the given parameter. Also finds
+        the index of the parameter in that distribution and the
+        `distpy.transform.Transform.Transform` applied to the parameter. Alias
+        for `DistributionSet.find_distribution` that allows for square bracket
+        indexing notation.
+        
+        Parameters
+        ----------
+        parameter : str
+            string name of parameter to search for
+        
+        Returns
+        -------
+        distribution : `distpy.distribution.Distribution.Distribution`
+            the distribution that applies to the given parameter
+        index : int
+            the integer index describing which parameter of `distribution` is
+            the one that was searched for
+        transform : `distpy.transform.Transform.Transform`
+            the transformation that describes the space that the searched-for
+            parameter is drawn in
         """
         return self.find_distribution(parameter)
 
     def delete_distribution(self, parameter, throw_error=True):
         """
-        Deletes a distribution from this DistributionSet.
+        Deletes a distribution from this `DistributionSet`.
         
-        parameter: a parameter in the distribution
-        throw_error: if True (default), an error is thrown if the parameter
-                     is not found
+        Parameters
+        ----------
+        parameter : str
+            any parameter in the distribution to remove
+        throw_error : bool
+            - if True, then an error is thrown if `parameter` is not the name
+            of a parameter of this `DistributionSet`
+            - if False, no error is thrown and this method simply returns
+            without doing anything if `parameter` is not the name of a
+            parameter of this `DistributionSet`
         """
         for (idistribution, distribution_tuple) in enumerate(self._data):
             (distribution, params, transforms) = distribution_tuple
@@ -461,19 +588,33 @@ class DistributionSet(Savable, Loadable):
     
     def __delitem__(self, parameter):
         """
-        Deletes the distribution associated with the given parameter. For
-        documentation, see delete_distribution function.
+        Deletes a distribution from this `DistributionSet`. Alias for
+        `DistributionSet.delete_distribution` with `throw_error` set to True,
+        allowing for the `del` keyword to be used to remove distributions.
+        
+        Parameters
+        ----------
+        parameter : str
+            any parameter in the distribution to remove
         """
         self.delete_distribution(parameter, throw_error=True)
     
     def parameter_strings(self, parameter):
         """
-        Makes an informative string about this parameter's place in this
-        DistributionSet.
+        Makes an informative string about the given parameter's place in this
+        `DistributionSet`.
         
-        parameter string name of parameter
+        Parameters
+        ----------
+        parameter : str
+            name of parameter being queried
         
-        returns (param_string, transform_string) in tuple form
+        Returns
+        -------
+        param_string : str
+            string describing distribution of parameter
+        transform_string : str
+            string describing transformation of parameter
         """
         string = ""
         (distribution, index, transform) = self.find_distribution(parameter)
@@ -485,9 +626,9 @@ class DistributionSet(Savable, Loadable):
     @property
     def summary_string(self):
         """
-        Property which yields a string which summarizes the place of all
-        parameters in this DistributionSet, including the distributions they
-        belong to and the way they are transformed.
+        A string that summarizes the place of all parameters in this
+        `DistributionSet`, including the distributions they belong to and the
+        way they are transformed.
         """
         final_string = 'Parameter: distribution   transform'
         for parameter in self.params:
@@ -497,30 +638,56 @@ class DistributionSet(Savable, Loadable):
                 parameter, distribution_string, transform_string)
         return final_string
     
+    @staticmethod
+    def _distribution_tuples_equal(first, second):
+        """
+        Checks whether two distribution tuples are equal.
+        
+        Parameters
+        ----------
+        first : tuple
+            tuple of form `(distribution, parameters, transforms)` as
+            internally represented in a `DistributionSet`
+        second : tuple
+            tuple of form `(distribution, parameters, transforms)` as
+            internally represented in a `DistributionSet`
+        
+        Returns
+        -------
+        result : bool
+            True if and only if the distribution, parameters, and
+            transformations stored in `first` are the same as those stored in
+            `second`.
+        """
+        (first_distribution, first_params, first_transforms) = first
+        (second_distribution, second_params, second_transforms) = second
+        numparams = first_distribution.numparams
+        if second_distribution.numparams == numparams:
+            for iparam in range(numparams):
+                if first_params[iparam] != second_params[iparam]:
+                    return False
+                if first_transforms[iparam] != second_transforms[iparam]:
+                    return False
+            return (first_distribution == second_distribution)
+        else:
+            return False
+    
     def __eq__(self, other):
         """
-        Checks for equality of this DistributionSet with other. Returns True if
-        otherhas the same distribution_tuples (though they need not be
-        internally stored in the same order) and False otherwise.
+        Checks for equality of this `DistributionSet` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `DistributionSet` with the same
+            distribution tuples (though they need not be internally stored in
+            the same order).
         """
-        def distribution_tuples_equal(first, second):
-            #
-            # Checks whether two distribution_tuple's are equal. Returns True
-            # if the distribution, params, and transforms stored in first are
-            # the same as those stored in second and False otherwise.
-            #
-            fdistribution, fparams, ftfms = first
-            sdistribution, sparams, stfms = second
-            numparams = fdistribution.numparams
-            if sdistribution.numparams == numparams:
-                for iparam in range(numparams):
-                    if fparams[iparam] != sparams[iparam]:
-                        return False
-                    if ftfms[iparam] != stfms[iparam]:
-                        return False
-                return (fdistribution == sdistribution)
-            else:
-                return False
         if isinstance(other, DistributionSet):
             numtuples = len(self._data)
             if len(other._data) == numtuples:
@@ -528,8 +695,8 @@ class DistributionSet(Savable, Loadable):
                     match = False
                     distribution_tuple = self._data[idistribution_tuple]
                     for other_distribution_tuple in other._data:
-                        if distribution_tuples_equal(distribution_tuple,\
-                            other_distribution_tuple):
+                        if DistributionSet._distribution_tuples_equal(\
+                            distribution_tuple, other_distribution_tuple):
                             match = True
                             break
                     if not match:
@@ -542,14 +709,36 @@ class DistributionSet(Savable, Loadable):
     
     def __ne__(self, other):
         """
-        This function simply asserts that (a != b) == (not (a == b))
+        Checks for inequality of this `DistributionSet` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for inequality
+        
+        Returns
+        -------
+        result : bool
+            False if and only if `other` is a `DistributionSet` with the same
+            distribution tuples (though they need not be internally stored in
+            the same order).
         """
         return (not self.__eq__(other))
 
     def _numerical_adjective(self, num):
-        #
-        # Creates a numerical adjective, such as '1st', '2nd', '6th' and so on.
-        #
+        """
+        Creates a numerical adjective, such as '1st', '2nd', '6th' and so on.
+        
+        Parameters
+        ----------
+        num : int
+            an integer for which to make an adjective form
+        
+        Returns
+        -------
+        adjective : str
+            string adjective describing name
+        """
         if (type(num) in int_types) and (num >= 0):
             base_string = str(num)
             if num == 0:
@@ -567,10 +756,16 @@ class DistributionSet(Savable, Loadable):
                 "non-negative integers.")
 
     def _check_name(self, name):
-        #
-        # Checks the given name to see if it is already taken in the parameters
-        # of the distributions in this DistributionSet.
-        #
+        """
+        Checks the given name to see if it is already taken in the parameters
+        of the distributions in this `DistributionSet` and raises a
+        `ValueError` if it is.
+        
+        Parameters
+        ----------
+        name : str
+            string parameter name to check for
+        """
         if not isinstance(name, basestring):
             raise ValueError("A parameter provided to a DistributionSet " +\
                 "was not a string.")
@@ -586,8 +781,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def transform_set(self):
         """
-        Property storing the TransformSet object describing the transforms in
-        this DistributionSet.
+        A `distpy.transform.TransformSet.TransformSet` object describing the
+        transforms in this `DistributionSet` and the parameters they apply to.
         """
         transforms_dictionary = {}
         for (distribution, params, transforms) in self._data:
@@ -597,11 +792,15 @@ class DistributionSet(Savable, Loadable):
     
     def discrete_subset(self):
         """
-        Function which compiles a subset of the Distribution objects in this
-        DistributionSet: those that represent discrete variables.
+        Compiles the subset of the `Distribution` objects in this
+        `DistributionSet` that represent discrete variables.
         
-        returns: a DistributionSet object containing all Distribution objects
-                 in this DistributionSet which describe discrete variables
+        Returns
+        -------
+        subset : `DistributionSet`
+            a `DistributionSet` object containing all
+            `distpy.distribution.Distribution.Distribution` objects in this
+            `DistributionSet` which describe discrete variables
         """
         answer = DistributionSet()
         for (distribution, params, transforms) in self._data:
@@ -611,11 +810,15 @@ class DistributionSet(Savable, Loadable):
     
     def continuous_subset(self):
         """
-        Function which compiles a subset of the Distribution objects in this
-        DistributionSet: those that represent continuous variables.
+        Compiles the subset of the `Distribution` objects in this
+        `DistributionSet` that represent continuous variables.
         
-        returns: a DistributionSet object containing all Distribution objects
-                 in this DistributionSet which describe continuous variables
+        Returns
+        -------
+        subset : `DistributionSet`
+            a `DistributionSet` object containing all
+            `distpy.distribution.Distribution.Distribution` objects in this
+            `DistributionSet` which describe continuous variables
         """
         answer = DistributionSet()
         for (distribution, params, transforms) in self._data:
@@ -625,9 +828,15 @@ class DistributionSet(Savable, Loadable):
     
     def transformed_version(self):
         """
-        Function which returns a version of this DistributionSet where the
-        parameters exist in transformed space (instead of transforms being
-        carried through this object).
+        Compiles a version of this `DistributionSet` where the parameters exist
+        in transformed space (instead of transforms being carried through this
+        object).
+        
+        Returns
+        -------
+        transformless : `DistributionSet`
+            a `DistributionSet` with the same distributions and parameter names
+            but without transforms
         """
         answer = DistributionSet()
         for (distribution, params, transforms) in self._data:
@@ -636,13 +845,16 @@ class DistributionSet(Savable, Loadable):
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data about this DistributionSet.
-        Each distribution tuple is saved as a subgroup in the hdf5 file.
+        Fills the given hdf5 file group with data about this `DistributionSet`.
         
-        group: the hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution set and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            the hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution set and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         for (ituple, distribution_tuple) in enumerate(self._data):
             (distribution, params, transforms) = distribution_tuple
@@ -655,7 +867,7 @@ class DistributionSet(Savable, Loadable):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) of the parameters in a dictionary.
         """
         if not hasattr(self, '_minimum'):
             self._minimum = {}
@@ -674,7 +886,7 @@ class DistributionSet(Savable, Loadable):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) of the parameters in a dictionary.
         """
         if not hasattr(self, '_maximum'):
             self._maximum = {}
@@ -693,8 +905,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def bounds(self):
         """
-        Property storing the bounds (minimum and maximum) of each parameter in
-        a dictionary.
+        The minimum and maximum allowable value(s) of the parameters in a
+        dictionary.
         """
         if not hasattr(self, '_bounds'):
             self._bounds = {}
@@ -706,11 +918,17 @@ class DistributionSet(Savable, Loadable):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a DistributionSet object from the given group.
+        Loads a `DistributionSet` object from the given hdf5 file group.
         
-        group: the group which was included in self.fill_hdf5_group(group)
+        Parameters
+        ----------
+        group : h5py.Group
+            the group which a `DistributionSet` was once saved in
         
-        returns: DistributionSet object
+        Returns
+        -------
+        loaded : `DistributionSet`
+            the loaded `DistributionSet`
         """
         ituple = 0
         distribution_tuples = []
@@ -729,8 +947,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the distributions inside
+        this `DistributionSet` have been implemented.
         """
         answer = True
         for (distribution, params, transforms) in self._data:
@@ -739,15 +957,20 @@ class DistributionSet(Savable, Loadable):
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative(s) of log_value(point) with respect to the
-        parameter(s).
+        Computes the derivatives of the log value with respect to the
+        parameters.
         
-        point: dictionary describing point by using parameter names as keys and
-               variable values as values.
+        Parameters
+        ----------
+        point : dict
+            a dictionary of parameters values indexed by their string names
         
-        returns: a 1D numpy.ndarray (of length numparams)of derivative values
-                 corresponding to the parameters (in an order given by the
-                 params property)
+        Returns
+        -------
+        gradient : `numpy.ndarray`
+            1D array of length `DistributionSet.numparams` of derivative values
+            corresponding to the parameters (in the order given by
+            `DistributionSet.params`)
         """
         if isinstance(point, dict):
             result = np.zeros((self.numparams,))
@@ -777,8 +1000,8 @@ class DistributionSet(Savable, Loadable):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the distributions inside
+        this `DistributionSet` have been implemented.
         """
         answer = True
         for (distribution, params, transforms) in self._data:
@@ -787,15 +1010,20 @@ class DistributionSet(Savable, Loadable):
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative(s) of log_value(point) with respect to
-        the parameter(s).
+        Computes the second derivatives of the log value with respect to the
+        parameters.
         
-        point: dictionary describing point by using parameter names as keys and
-               variable values as values.
+        Parameters
+        ----------
+        point : dict
+            a dictionary of parameters values indexed by their string names
         
-        returns: a 2D numpy.ndarray (of shape (numparams,)*2) of derivative
-                 values corresponding to the parameters (in an order given by
-                 the params property)
+        Returns
+        -------
+        gradient : `numpy.ndarray`
+            square 2D array of length `DistributionSet.numparams` of second
+            derivative values corresponding to the parameters (in the order
+            given by `DistributionSet.params`)
         """
         if isinstance(point, dict):
             result = np.zeros((self.numparams,) * 2)
@@ -825,7 +1053,12 @@ class DistributionSet(Savable, Loadable):
     
     def copy(self):
         """
-        Returns a deep copy of this DistributionSet.
+        Finds a deep copy of this `DistributionSet`.
+        
+        Returns
+        -------
+        copied : `DistributionSet`
+            deep copy of this `DistributionSet`
         """
         copied = DistributionSet()
         for (distribution, params, transforms) in self._data:
@@ -848,37 +1081,57 @@ class DistributionSet(Savable, Loadable):
         in_transformed_space=True, reference_value=None, bins=None,\
         matplotlib_function='fill_between', show_intervals=False,\
         norm_by_max=True, xlabel='', ylabel='', title='', fontsize=28,\
-        ax=None, show=False, contour_confidence_levels=0.95, **kwargs):
+        ax=None, show=False, **kwargs):
         """
-        Plots a 1D histogram of the given sample.
+        Plots a histogram of drawn values of the given parameter.
         
-        xsample: the sample to use for the x coordinates
-        ysample: the sample to use for the y coordinates
-        reference_value: points to plot a dashed reference line for axes
-        bins: bins to pass to numpy.histogram2d, default: None
-        matplotlib_function: function to use in plotting. One of ['imshow',
-                             'contour', 'contourf']. default: 'imshow'
-        show_intervals: if True, 95% confidence intervals are plotted
-        norm_by_max: if True, normalization is such that maximum of histogram
-                              values is 1. Default: True
-        xlabel: the string to use in labeling x axis
-        ylabel: the string to use in labeling y axis
-        title: title with which to top plot
-        fontsize: the size of the tick label font (and other fonts)
-        ax: if None, new Figure and Axes are created
-            otherwise, this Axes object is plotted on
-        show: if True, matplotlib.pyplot.show is called before this function
-                       returns
-        contour_confidence_levels: the confidence level of the contour in the
-                                   bivariate histograms. Only used if
-                                   matplotlib_function is 'contour' or
-                                   'contourf'. Can be single number or sequence
-                                   of numbers
-        kwargs: keyword arguments to pass on to matplotlib.Axes.fill_between
-                (any but 'origin', 'extent', or 'aspect') or
-                matplotlib.Axes.contour or matplotlib.Axes.contourf (any)
+        Parameters
+        ----------
+        ndraw : int
+            the number of points to draw from the distribution
+        parameter : str
+            the string name of the parameter to plot
+        in_transformed_space : bool
+            boolean determining whether the points drawn from inner
+            distribution are plotted directly (True) or are untransformed
+            (False)
+        reference_value : real number or None
+            if given, a point at which to plot a dashed reference line
+        bins : int, sequence, or None
+            bins to pass to `numpy.histogram` function
+        matplotlib_function : str
+            either 'fill_between', 'bar', or 'plot'
+        show_intervals : bool
+            if True, confidence intervals are plotted
+        norm_by_max : bool
+            if True, normalization is such that maximum of histogram values is
+            1.
+        xlabel : str
+            the string to use in labeling x axis
+        ylabel : str
+            the string to use in labeling y axis
+        title : str
+            title string with which to top plot
+        fontsize : int, str, or None
+            integer size in points or one of ['xx-small', 'x-small', 'small',
+            'medium', 'large', 'x-large', 'xx-large'] representing size of
+            labels
+        ax : matplotlib.Axes or None
+            - if None, new Figure and Axes are created  
+            - otherwise, this Axes object is plotted on
+        show : bool
+            if True, `matplotlib.pyplot.show` is called before this function
+            returns
+        kwargs : dict
+            keyword arguments to pass on to `matplotlib.Axes.plot` or
+            `matplotlib.Axes.fill_between`
         
-        returns: None if show is True, otherwise Axes instance with plot
+        Returns
+        -------
+        axes : `matplotlib.Axes` or None
+            - if `show` is True, `axes` is None
+            - if `show` is False, `axes` is the `matplotlib.Axes` instance with
+            plot
         """
         sample = self.draw(ndraw)
         if in_transformed_space:
@@ -900,33 +1153,66 @@ class DistributionSet(Savable, Loadable):
         """
         Plots a 2D histogram of the given joint sample.
         
-        xsample: the sample to use for the x coordinates
-        ysample: the sample to use for the y coordinates
-        reference_value_mean: points to plot a dashed reference line for axes
-        reference_value_covariance: if not None, used (along with
-                                    reference_value_mean) to plot reference
-                                    ellipse
-        bins: bins to pass to numpy.histogram2d, default: None
-        matplotlib_function: function to use in plotting. One of ['imshow',
-                             'contour', 'contourf']. default: 'imshow'
-        xlabel: the string to use in labeling x axis
-        ylabel: the string to use in labeling y axis
-        title: title with which to top plot
-        fontsize: the size of the tick label font (and other fonts)
-        ax: if None, new Figure and Axes are created
-            otherwise, this Axes object is plotted on
-        show: if True, matplotlib.pyplot.show is called before this function
-                       returns
-        contour_confidence_levels: the confidence level of the contour in the
-                                   bivariate histograms. Only used if
-                                   matplotlib_function is 'contour' or
-                                   'contourf'. Can be single number or sequence
-                                   of numbers
-        kwargs: keyword arguments to pass on to matplotlib.Axes.imshow (any but
-                'origin', 'extent', or 'aspect') or matplotlib.Axes.contour or
-                matplotlib.Axes.contourf (any)
+        Parameters
+        ----------
+        ndraw : int
+            the number of points to draw from the distribution
+        parameter1 : str
+            the string name of the x-parameter to plot
+        parameter2 : str
+            the string name of the y-parameter to plot
+        in_transformed_space : bool
+            boolean determining whether the points drawn from inner
+            distribution are plotted directly (True) or are untransformed
+            (False)
+        reference_value_mean : sequence or None
+            - if None, no reference line is plotted  
+            - otherwise, sequence of two elements representing the reference
+            value for x- and y-samples. Each element can be either None (if no
+            reference line should be plotted) or a value at which to plot a
+            reference line.
+        reference_value_covariance: numpy.ndarray or None
+            - if `numpy.ndarray`, represents the covariance matrix used to
+            generate a reference ellipse around the reference mean.  
+            - if None or if one or more of `reference_value_mean` is None, no
+            ellipse is plotted
+        bins : int, sequence, or None
+            bins to pass to `numpy.histogram2d`
+        matplotlib_function : str
+            function to use in plotting. One of ['imshow', 'contour',
+            'contourf'].
+        xlabel : str
+            the string to use in labeling x axis
+        ylabel : str
+            the string to use in labeling y axis
+        title : str
+            title string with which to top plot
+        fontsize : int, str, or None
+            integer size in points or one of ['xx-small', 'x-small', 'small',
+            'medium', 'large', 'x-large', 'xx-large'] representing size of
+            labels
+        ax : matplotlib.Axes or None
+            - if None, new Figure and Axes are created  
+            - otherwise, this Axes object is plotted on
+        show : bool
+            if True, `matplotlib.pyplot.show` is called before this function
+            returns
+        contour_confidence_levels : number or sequence of numbers
+            confidence level as a number between 0 and 1 or a 1D array of such
+            numbers. Only used if `matplotlib_function` is `'contour'` or
+            `'contourf'` or if `reference_value_mean` and
+            `reference_value_covariance` are both not None
+        kwargs : dict
+            keyword arguments to pass on to `matplotlib.Axes.imshow` (any but
+            'origin', 'extent', or 'aspect') or `matplotlib.Axes.contour` or
+            `matplotlib.Axes.contourf` (any)
         
-        returns: None if show is True, otherwise Axes instance with plot
+        Returns
+        -------
+        axes : `matplotlib.Axes` or None
+            - if `show` is True, `axes` is None
+            - if `show` is False, `axes` is the `matplotlib.Axes` instance with
+            plot
         """
         samples = self.draw(ndraw)
         parameters = [parameter1, parameter2]
@@ -982,45 +1268,91 @@ class DistributionSet(Savable, Loadable):
         """
         Makes a triangle plot out of ndraw samples from this distribution
         
-        ndraw: integer number of samples to draw to plot in the triangle plot
-        parameters: sequence of string parameter names to include in the plot
-        in_transformed_space: if True (default), parameters are plotted in
-                                                 transformed space
-        figsize: the size of the figure on which to put the triangle plot
-        show: if True, matplotlib.pyplot.show is called before this function
-                       returns
-        kwargs_1D: keyword arguments to pass on to univariate_histogram
-                   function
-        kwargs_2D: keyword arguments to pass on to bivariate_histogram function
-        fontsize: the size of the label fonts
-        nbins: the number of bins for each sample
-        plot_type: 'contourf', 'contour', or 'histogram'
-        plot_limits: if not None, a dictionary whose keys are parameter names
-                                  and whose values are 2-tuples of the form
-                                  (low, high) representing the desired axis
-                                  limits for each variable in untransformed
-                                  space
-                     if None (default), bins are used to decide plot limits
-        reference_value_mean: reference values to place on plots, if there are
-                              any
-        reference_value_covariance: if not None, used (along with
-                                    reference_value_mean) to plot reference
-                                    ellipses in each bivariate histogram
-        contour_confidence_levels: the confidence level of the contour in the
-                                   bivariate histograms. Only used if plot_type
-                                   is 'contour' or 'contourf'. Can be single
-                                   number or sequence of numbers
-        tick_label_format_string: format string that can be called using
-                                  tick_label_format_string.format(x=loc) where
-                                  loc is the location of the tick in data
-                                  coordinates
-        num_ticks: integer number of major ticks per panel
-        minor_ticks_per_major_tick: integer number of minor ticks per minor
-                                    tick
-        xlabel_rotation: rotation of x-label in degrees, default: 0
-        xlabelpad: pad size for xlabel, default: None
-        ylabel_rotation: rotation of y-label in degrees, default: 90
-        ylabelpad: pad size for ylabel, default: None
+        Parameters
+        ----------
+        ndraw : int
+            the number of points to draw from the distribution
+        parameters : sequence
+            sequence of parameter names to include in the triangle plot
+        in_transformed_space : bool
+            boolean determining whether the points drawn from inner
+            distribution are plotted directly (True) or are untransformed
+            (False)
+        figsize : tuple
+            tuple of form (width, height) representing the size of the figure
+            on which to put the triangle plot
+        fig : `matplotlib.Figure` or None
+            - if provided, `fig` will be plotted on
+            - otherwise, a new `matplotlib.Figure` is created
+        show : bool
+            if True, `matplotlib.pyplot.show` is called before this function
+            returns
+        kwargs_1D : dict
+            keyword arguments to pass on to
+            `distpy.util.TrianglePlot.univariate_histogram` function
+        kwargs_2D : dict
+            keyword arguments to pass on to
+            `distpy.util.TrianglePlot.bivariate_histogram` function
+        fontsize : int, str, or None
+            integer size in points or one of ['xx-small', 'x-small', 'small',
+            'medium', 'large', 'x-large', 'xx-large'] representing size of
+            labels
+        nbins : int
+            the number of bins to use for each sample
+        plot_type : str or sequence
+            determines the matplotlib functions to use for univariate and
+            bivariate histograms
+        
+            - if `plot_type=='contourf'`: 'bar' and 'contourf' are used
+            - if `plot_type=='contour'`: 'plot' and 'contour' are used
+            - if `plot_type=='histogram'`: 'bar' and 'imshow' are used
+            - otherwise: plot_type should be a length-2 sequence of the form
+            (matplotlib_function_1D, matplotlib_function_2D)
+        plot_limits : sequence or None
+            - if None, bins are used to decide plot limits  
+            - otherwise, a sequence of 2-tuples of the form (low, high)
+            representing the desired axis limits for each variable
+        reference_value_mean : sequence or None
+            sequence of reference values to place on plots. Each element of the
+            sequence (representing each random variable) can be either a number
+            at which to plot a reference line or None if no line should be
+            plotted. Alternatively, if `reference_value_mean` is set to None,
+            no reference lines are plotted for any variable
+        reference_value_covariance : numpy.ndarray or None
+            covariance with which to create reference ellipses around
+            `reference_value_mean`. Should be an NxN array where N is the
+            number of random variables. If any of `reference_value_mean` are
+            None or `reference_value_covariance` is None, then no ellipses are
+            plotted
+        contour_confidence_levels : number or sequence of numbers
+            confidence level as a number between 0 and 1 or a 1D array of such
+            numbers. Only used if `matplotlib_function` is `'contour'` or
+            `'contourf'` or if `reference_value_mean` and
+            `reference_value_covariance` are both not None
+        parameter_renamer : callable
+            a function that modifies the parameter names to their label strings
+        tick_label_format_string : str
+            format string that can be called using
+            `tick_label_format_string.format(x=loc)` where `loc` is the
+            location of the tick in data coordinates
+        num_ticks : int
+            number of major ticks in each panel
+        minor_ticks_per_major_tick : int
+            number of minor ticks per major tick in each panel
+        xlabel_rotation : number
+            rotation of x-label in degrees
+        xlabelpad : number or None
+            pad size for xlabel or None if none should be used
+        ylabel_rotation : number
+            rotation of y-label in degrees
+        ylabelpad : number or None
+            pad size for ylabel or None if none should be used
+        
+        Returns
+        -------
+        figure : matplotlib.Figure or None
+            - if `show` is True, None is returned  
+            - otherwise, the matplotlib.Figure instance plotted on is returned
         """
         samples = self.draw(ndraw)
         if type(parameters) is type(None):
