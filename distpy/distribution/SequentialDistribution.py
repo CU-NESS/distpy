@@ -1,10 +1,13 @@
 """
-File: distpy/distribution/SequentialDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution whose drawn values are
+sorted draws from a univariate distribution. Its PDF is represented by:
+$$f(x_1,x_2,\\ldots,x_N) = \\begin{cases} N!\\ \\prod_{k=1}^Ng(x_k) &\
+x_1\\le x_2 \\le \\ldots \\le x_N \\\\ 0 & \\text{otherwise} \\end{cases},$$
+where \\(g\\) is the PDF (or PMF) of any univariate distribution.
 
-Description: File containing distribution which has a 1D form but manifests in
-             the form of a sorted tuple.
+**File**: $DISTPY/distpy/distribution/SequentialDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -14,17 +17,26 @@ from .Distribution import Distribution
 
 class SequentialDistribution(Distribution):
     """
-    Class representing a distribution on parameters which must be in a specific
-    order.
+    Class representing a distribution whose drawn values are sorted draws from
+    a univariate distribution. Its PDF is represented by:
+    $$f(x_1,x_2,\\ldots,x_N) = \\begin{cases} N!\\ \\prod_{k=1}^Ng(x_k) &\
+    x_1\\le x_2 \\le \\ldots \\le x_N \\\\ 0 & \\text{otherwise}\
+    \\end{cases},$$ where \\(g\\) is the PDF (or PMF) of any univariate
+    distribution.
     """
     def __init__(self, shared_distribution, numparams=2, metadata=None):
         """
-        Initializes a new SequentialDistribution.
+        Initializes a new `SequentialDistribution` with the given parameter
+        values.
         
-        shared_distribution: the distribution from which values will be drawn
-                             before they are sorted (must be univariate)
-        numparams: number of parameters which this SequentialDistribution
-                 describes
+        Parameters
+        ----------
+        shared_distribution : `distpy.distribution.Distribution.Distribution`
+            distribution, with PDF \\(g\\), shared by the points before sorting
+        numparams : int
+            integer number of parameters this distribution describes
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.shared_distribution = shared_distribution
         self.numparams = numparams
@@ -33,8 +45,7 @@ class SequentialDistribution(Distribution):
     @property
     def shared_distribution(self):
         """
-        Property storing the distribution from which to draw values before
-        sorting.
+        The distribution from which to draw values before sorting.
         """
         if not hasattr(self, '_shared_distribution'):
             raise AttributeError("shared_distribution was referenced " +\
@@ -44,9 +55,12 @@ class SequentialDistribution(Distribution):
     @shared_distribution.setter
     def shared_distribution(self, value):
         """
-        Setter for the distribution from which to draw values before sorting.
+        Setter for `SequentialDistribution.shared_distribution`.
         
-        value: univariate Distribution object
+        Parameters
+        ----------
+        value : `distpy.distribution.Distribution.Distribution`
+            univariate distribution
         """
         if isinstance(value, Distribution):
             if value.numparams == 1:
@@ -63,8 +77,7 @@ class SequentialDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Finds and returns the number of parameters which are described by this
-        SequentialDistribution.
+        The number of parameters of this `SequentialDistribution`.
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams was referenced before it was set.")
@@ -73,7 +86,7 @@ class SequentialDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of the `SequentialDistribution` class is not implemented.
         """
         if not hasattr(self, '_mean'):
             raise AttributeError("mean is not implemented for the " +\
@@ -83,7 +96,7 @@ class SequentialDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of the `SequentialDistribution` class is not implemented.
         """
         if not hasattr(self, '_variance'):
             raise AttributeError("variance is not implemented for the " +\
@@ -93,9 +106,12 @@ class SequentialDistribution(Distribution):
     @numparams.setter
     def numparams(self, value):
         """
-        Setter for the number of parameters described by this distribution.
+        Setter for `SequentialDistribution.numparams`.
         
-        value: must be a positive integer greater than 1.
+        Parameters
+        ----------
+        value : int
+            a positive integer greater than 1.
         """
         if (type(value) in int_types):
             if int(value) >= 1:
@@ -109,18 +125,28 @@ class SequentialDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws values from shared_distribution and sorts them.
+        Draws point(s) from this `SequentialDistribution`. Below, `p` is
+        `SequentialDistribution.numparams`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length
+            `p` is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(p,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns numpy.ndarray of values (sorted by design)
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -140,9 +166,21 @@ class SequentialDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Evaluates and returns the log_value at the given point. Point must be a
-        numpy.ndarray (or other list-type) and if they are sorted, log_value
-        returns -inf.
+        Computes the logarithm of the value of this `SequentialDistribution` at
+        the given point.
+        
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if (type(point) in numerical_types) and (self.numparams == 1):
             result = self.shared_distribution.log_value(point)
@@ -166,16 +204,27 @@ class SequentialDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns a string representation of this
-        SequentialDistribution.
+        Finds and returns a string version of this `SequentialDistribution` of
+        the form `"Sequential(shared)"`, where `"shared"` is the string
+        representation of `SequentialDistribution.shared_distribution`.
         """
         return "Sequential({!s})".format(self.shared_distribution.to_string())
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a SequentialDistribution with the same number of parameters
-        and the same shared distribution and False otherwise.
+        Checks for equality of this `SequentialDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `SequentialDistribution` with the
+            same `SequentialDistribution.shared_distribution` and
+            `SequentialDistribution.numparams`
         """
         if isinstance(other, SequentialDistribution):
             numparams_equal = (self.numparams == other.numparams)
@@ -190,35 +239,38 @@ class SequentialDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return [self.shared_distribution.minimum] * self.numparams
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return [self.shared_distribution.maximum] * self.numparams
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return self.shared_distribution.is_discrete
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. That
-        data includes the class name, the number of parameters, and the shared
-        distribution.
+        Fills the given hdf5 file group with data about this
+        `SequentialDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'SequentialDistribution'
         group.attrs['numparams'] = self.numparams
@@ -231,19 +283,26 @@ class SequentialDistribution(Distribution):
     def load_from_hdf5_group(group, shared_distribution_class, *args,\
         **kwargs):
         """
-        Loads a SequentialDistribution from the given hdf5 file group.
+        Loads a `SequentialDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
-        shared_distribution_class: the Distribution subclass which should be
-                                   loaded from this Distribution
-        args: positional arguments to pass on to load_from_hdf5_group method of
-              shared_distribution_class
-        kwargs: keyword arguments to pass on to load_from_hdf5_group method of
-                shared_distribution_class
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
+        shared_distribution_class : class
+            the class of the distribution shared by the variables
+        args : sequence
+            positional arguments to pass to `load_from_hdf5_group` method of
+            `shared_distribution_class`
+        kwargs : dict
+            keyword arguments to pass to `load_from_hdf5_group` method of
+            `shared_distribution_class`
         
-        returns: a SequentialDistribution object created from the information
-                 in the given group
+        Returns
+        -------
+        distribution : `SequentialDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'SequentialDistribution'
@@ -260,19 +319,32 @@ class SequentialDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `SequentialDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return self.shared_distribution.gradient_computable
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `SequentialDistribution` at the given point.
         
-        point: vector of values at which to evaluate derivatives
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a 1D
+            `numpy.ndarray` of length \\(p\\)
         """
         if self.numparams == 1:
             return self.shared_distribution.gradient_of_log_value(point)
@@ -288,19 +360,32 @@ class SequentialDistribution(Distribution):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `SequentialDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return self.shared_distribution.hessian_computable
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `SequentialDistribution` at the given point.
         
-        point: vector of values at which to evaluate second derivatives
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\) as a 2D
+            `numpy.ndarray` that is \\(p\\times p\\)
         """
         if self.numparams == 1:
             return self.shared_distribution.hessian_of_log_value(point)
@@ -315,8 +400,12 @@ class SequentialDistribution(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `SequentialDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return SequentialDistribution(self.shared_distribution.copy(),\
             self.numparams)

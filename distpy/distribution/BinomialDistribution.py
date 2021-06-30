@@ -1,9 +1,11 @@
 """
-File: distpy/distribution/BinomialDistribution.py
-Author: Keith Tauscher
-Date: 15 Oct 2019
+Module containing class representing a binomial distribution. Its PMF is
+represented by:
+$$f(x) = \\begin{pmatrix} n \\\\ x \\end{pmatrix} p^x(1-p)^{n-x}$$
 
-Description: File containing class representing a binomial distribution.
+**File**: $DISTPY/distpy/distribution/BinomialDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -13,18 +15,23 @@ from .Distribution import Distribution
 
 class BinomialDistribution(Distribution):
     """
-    Distribution with support on the non-negative integers up to a maximum
-    numbers. It has only two parameters, probability of sucess and number of
-    trials. When probability of success is 1/2, this is the distribution of the
-    number of heads flipped in the number of trials given.
+    Class representing a binomial distribution. Its PMF is represented by:
+    $$f(x) = \\begin{pmatrix} n \\\\ x \\end{pmatrix} p^x(1-p)^{n-x}$$
     """
     def __init__(self, probability_of_success, number_of_trials,\
         metadata=None):
         """
-        Initializes new BinomialDistribution with given scale.
+        Initializes a new `BinomialDistribution` with the given parameter
+        values.
         
-        probability_of_success: real number in (0, 1)
-        number_of_trials: maximum integer in the support of this distribution
+        Parameters
+        ----------
+        probability_of_success : float
+            real number, \\(p\\), in (0, 1)
+        number_of_trials : int
+            positive integer, \\(n\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.probability_of_success = probability_of_success
         self.number_of_trials = number_of_trials
@@ -33,8 +40,8 @@ class BinomialDistribution(Distribution):
     @property
     def number_of_trials(self):
         """
-        Property storing the integer number of trials from which to draw
-        numbers of successes.
+        The integer number of trials, \\(n\\), from which to draw numbers of
+        successes.
         """
         if not hasattr(self, '_number_of_trials'):
             raise AttributeError("number_of_trials was referenced before " +\
@@ -44,10 +51,12 @@ class BinomialDistribution(Distribution):
     @number_of_trials.setter
     def number_of_trials(self, value):
         """
-        Setter for the number of trials from which to draw numbers of
-        successes.
+        Setter for `BinomialDistribution.number_of_trials`
         
-        value: positive integer
+        Parameters
+        ----------
+        value : int
+            positive integer
         """
         if type(value) in int_types:
             if value > 0:
@@ -62,7 +71,7 @@ class BinomialDistribution(Distribution):
     @property
     def probability_of_success(self):
         """
-        The probability of a success on a given trial.
+        The probability of a success on a given trial, \\(p\\).
         """
         if not hasattr(self, '_probability_of_success'):
             raise AttributeError("probability_of_success was referenced " +\
@@ -72,9 +81,12 @@ class BinomialDistribution(Distribution):
     @probability_of_success.setter
     def probability_of_success(self, value):
         """
-        Setter for the probability of success on a single trial.
+        Setter for `BinomialDistribution.probability_of_success`.
         
-        value: real number between 0 and 1 (exclusive)
+        Parameters
+        ----------
+        value : float
+            real number between 0 and 1 (exclusive)
         """
         if type(value) in numerical_types:
             if (value > 0.) and (value < 1.):
@@ -89,14 +101,14 @@ class BinomialDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Binomial distribution pdf is univariate so numparams always returns 1.
+        The number of parameters of this `BinomialDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `BinomialDistribution`, \\(np\\).
         """
         if not hasattr(self, '_mean'):
             self._mean = self.number_of_trials * self.probability_of_success
@@ -105,7 +117,7 @@ class BinomialDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `BinomialDistribution`, \\(np(1-p)\\).
         """
         if not hasattr(self, '_variance'):
             self._variance = self.number_of_trials *\
@@ -114,26 +126,45 @@ class BinomialDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `BinomialDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         return random.binomial(self.number_of_trials,\
             self.probability_of_success, size=shape)
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is point.
+        Computes the logarithm of the value of this `BinomialDistribution` at
+        the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : int
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if type(point) in int_types:
             if (point >= 0) and (point <= self.number_of_trials):
@@ -150,16 +181,27 @@ class BinomialDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns a string version of this BinomialDistribution.
+        Finds and returns a string version of this `BernoulliDistribution` of
+        the form `"Bernoulli(p,n)"`.
         """
         return "Binomial({0:.2g},{1:d})".format(self.probability_of_success,\
             self.number_of_trials)
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a BinomialDistribution with the same probability_of_success
-        and number_of_trials.
+        Checks for equality of this `BinomialDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `BinomialDistribution` with the
+            same `BinomialDistribution.probability_of_success` and
+            `BinomialDistribution.number_of_trials`
         """
         if isinstance(other, BinomialDistribution):
             p_close = np.isclose(self.probability_of_success,\
@@ -173,41 +215,45 @@ class BinomialDistribution(Distribution):
     @property
     def can_give_confidence_intervals(self):
         """
-        In distpy, discrete distributions do not support confidence intervals.
+        Discrete distributions do not support confidence intervals.
         """
         return False
     
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return 0
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return self.number_of_trials
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return True
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data about this distribution. The
-        only thing to save is the common_ratio.
+        Fills the given hdf5 file group with data about this
+        `BinomialDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'BinomialDistribution'
         group.attrs['number_of_trials'] = self.number_of_trials
@@ -218,13 +264,18 @@ class BinomialDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a BinomialDistribution from the given hdf5 file group.
+        Loads a `BinomialDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a BinomialDistribution object created from the information in
-                 the given group
+        Returns
+        -------
+        distribution : `BinomialDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'BinomialDistribution'
@@ -240,25 +291,31 @@ class BinomialDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since this is a discrete distribution, it returns
-        False.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `BinomialDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return False 
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since this is a discrete distribution, it returns
-        False.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `BinomialDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `BinomialDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return BinomialDistribution(self.probability_of_success,\
             self.number_of_trials)

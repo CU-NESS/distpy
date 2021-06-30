@@ -1,10 +1,10 @@
 """
-File: distpy/distribution/UniformTriangulationDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution that is uniform over the
+convex hull of an arbitrary set of points.
 
-Description: File containing a class representing a uniform distribution over a
-             set of simplices (usually a Delaunay triangulation).
+**File**: $DISTPY/distpy/distribution/UniformTriangulationDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.linalg as la
@@ -15,19 +15,25 @@ from .Distribution import Distribution
 
 class UniformTriangulationDistribution(Distribution):
     """
-    Class representing a uniform distribution over the convex hull of given
-    points.
+    Class representing a distribution that is uniform over the convex hull of
+    an arbitrary set of points.
     """
     def __init__(self, triangulation=None, points=None, metadata=None):
         """
-        Creates a new UniformTriangulationDistribution with the given
-        triangulation.
+        Initializes a new `UniformTriangulationDistribution` with the given
+        parameter values.
         
-        triangulation: an object which implements points like the
-                       scipy.spatial.Delaunay class. if None, points can be
-                       given instead.
-        points: only used if triangulation is None, points with which to
-                compute triangulation
+        Parameters
+        ----------
+        triangulation : `scipy.spatial.Delaunay` or None
+            triangulation to use if it already exists. Can only be None if
+            `points` is not None
+        points : `numpy.ndarray` or None
+            array of shape \\((N_{\\text{points}},N_{\\text{dim}})\\)
+            containing the points whose convex hull determines the support of
+            this distribution. Can only be None if `triangulation` is not None
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.triangulation = (triangulation, points)
         self.metadata = metadata
@@ -35,7 +41,7 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def triangulation(self):
         """
-        Property storing the triangulation at the heart of this distribution.
+        The triangulation at the heart of this distribution.
         """
         if not hasattr(self, '_triangulation'):
             raise AttributeError("triangulation was referenced before it " +\
@@ -45,10 +51,13 @@ class UniformTriangulationDistribution(Distribution):
     @triangulation.setter
     def triangulation(self, value):
         """
-        Setter for the triangulation at the heart of this distribution.
+        Setter for `UniformTriangulationDistribution.triangulation`.
         
-        value: tuple of form (triangulation, points) where one and only one of
-               these may be None.
+        Parameters
+        ----------
+        value : tuple
+            tuple of form `(triangulation, points)` where one and only one of
+            these may be None.
         """
         if type(value[0]) is type(None):
             if type(value[1]) is type(None):
@@ -62,8 +71,7 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Property storing the number of parameters associated with the given
-        triangulation.
+        The number of parameters of this `UniformTriangulationDistribution`.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = self.triangulation.points.shape[1]
@@ -72,7 +80,8 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of the `UniformTriangulationDistribution` class is not
+        implemented.
         """
         if not hasattr(self, '_mean'):
             raise AttributeError("mean is not implemented for the " +\
@@ -82,7 +91,8 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of the `UniformTriangulationDistribution` class is not
+        implemented.
         """
         if not hasattr(self, '_variance'):
             raise AttributeError("variance is not implemented for the " +\
@@ -92,8 +102,8 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def nsimplices(self):
         """
-        Property storing the number of simplices in the triangulation at the
-        heart of this distribution.
+        The number of simplices in the triangulation at the heart of this
+        distribution.
         """
         if not hasattr(self, '_nsimplices'):
             self._nsimplices = len(self.triangulation.simplices)
@@ -102,7 +112,7 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def numparams_factorial(self):
         """
-        Property storing the factorial of the number of parameters.
+        The factorial of the number of parameters.
         """
         if not hasattr(self, '_numparams_factorial'):
             self._numparams_factorial = np.prod(np.arange(self.numparams) + 1)
@@ -111,8 +121,8 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def simplex_volumes(self):
         """
-        Property storing the volumes of the simplices in the Triangulation at
-        the heart of this Distribution.
+        The volumes of the simplices in the Triangulation at the heart of this
+        `UniformTriangulationDistribution`.
         """
         if not hasattr(self, '_simplex_volumes'):
             parallelotope_volumes = np.ndarray((self.nsimplices,))
@@ -128,8 +138,7 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def total_volume(self):
         """
-        Property storing the volume of the convex hull of the simplices in the
-        triangulation.
+        The volume of the convex hull of the simplices in the triangulation.
         """
         if not hasattr(self, '_total_volume'):
             self.discrete_cdf
@@ -156,6 +165,17 @@ class UniformTriangulationDistribution(Distribution):
         NOTE: This algorithm is O(N log(N)) time. O(N) can be achieved by
               sampling from an exponential distribution and summing and
               normalizing.
+        
+        Parameters
+        ----------
+        random : numpy.random.RandomState
+            the random number generator to use
+        
+        Returns
+        -------
+        coefficients : numpy.ndarray
+            array of `UniformTriangulationDistribution.numparams`+1 numbers
+            which are all in \\([0,1]\\) and add up to 1.
         """
         temp_space = random.uniform(size=self.numparams)
         return np.diff(np.sort(np.concatenate([[0], temp_space, [1]])))
@@ -165,9 +185,17 @@ class UniformTriangulationDistribution(Distribution):
         Draws a point uniformly from the simplex associated with the given
         index.
         
-        isimplex: index associated with the simplex to sample
+        Parameters
+        ----------
+        isimplex : int
+            index associated with the simplex to sample
+        random : numpy.random.RandomState
+            the random number generator to use
         
-        returns: a single point from the given simplex
+        Returns
+        -------
+        point : numpy.ndarray
+            a single point from the given simplex
         """
         vertices =\
             self.triangulation.points[self.triangulation.simplices[isimplex],:]
@@ -175,15 +203,28 @@ class UniformTriangulationDistribution(Distribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `UniformTriangulationDistribution`. Below, `p`
+        is `UniformTriangulationDistribution.numparams`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length
+            `p` is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(p,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if type(shape) is type(None):
             shape = 1
@@ -206,9 +247,8 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def constant_log_value(self):
         """
-        Property storing the log of the value of this distribution inside the
-        convex hull of the given points. If it is outside the convex hull, then
-        it returns instead -np.inf as the log value.
+        The log of the value of this distribution inside the convex hull of the
+        given points.
         """
         if not hasattr(self, '_constant_log_value'):
             self._constant_log_value = -np.log(self.total_volume)
@@ -216,10 +256,21 @@ class UniformTriangulationDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is value.
+        Computes the logarithm of the value of this
+        `UniformTriangulationDistribution` at the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if self.triangulation.find_simplex(point) == -1:
             return -np.inf
@@ -228,15 +279,27 @@ class UniformTriangulationDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns a string representation of this distribution.
+        Finds and returns a string version of this
+        `UniformTriangulationDistribution` of the form
+        `"UniformTriangulationDistribution"`.
         """
         return "UniformTriangulationDistribution"
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a UniformDistribution with the same high and low (down to 1e-9
-        level) and False otherwise.
+        Checks for equality of this `UniformTriangulationDistribution` with
+        `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `UniformTriangulationDistribution`
+            with the same points and simplices
         """
         if isinstance(other, UniformTriangulationDistribution):
             tol_kwargs = {'rtol': 1e-6, 'atol': 1e-6}
@@ -252,7 +315,7 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         # TODO make this actual minimum coordinates of convex hull
         return [None] * self.numparams
@@ -260,28 +323,32 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
-        # TODO make this actual maximum coordinates of conves hull
+        # TODO make this actual maximum coordinates of convex hull
         return [None] * self.numparams
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. All
-        that needs to be saved is the class name and high and low values.
+        Fills the given hdf5 file group with data about this
+        `UniformTriangulationDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'UniformTriangulationDistribution'
         create_hdf5_dataset(group, 'points', data=self.triangulation.points)
@@ -291,14 +358,19 @@ class UniformTriangulationDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a UniformTriangulationDistribution from the given hdf5 file
+        Loads a `UniformTriangulationDistribution` from the given hdf5 file
         group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a UniformTriangulationDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `UniformTriangulationDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'UniformTriangulationDistribution'
@@ -313,46 +385,75 @@ class UniformTriangulationDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `UniformTriangulationDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value
+        of this `UniformTriangulationDistribution` at the given point.
         
-        point: numpy.ndarray point at which to evaluate the derivative
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: returns numpy.ndarray of same shape as point representing
-                 derivative of log value
+        Returns
+        -------
+        value : `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a 1D
+            `numpy.ndarray` of length \\(p\\)
         """
         return np.zeros(self.numparams)
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `UniformTriangulationDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `UniformTriangulationDistribution` at the given point.
         
-        point: numpy.ndarray point at which to evaluate the hessian
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\) as a 2D
+            `numpy.ndarray` that is \\(p\\times p\\)
         """
         return np.zeros((self.numparams,) * 2)
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `UniformTriangulationDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return UniformTriangulationDistribution(\
             points=self.triangulation.points.copy())

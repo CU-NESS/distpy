@@ -1,12 +1,10 @@
 """
-File: distpy/distribution/InfiniteUniformDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing an improper distribution that is equally
+likely to be anywhere. It is improper because it cannot be normalized.
 
-Description: File containing class representing an improper uniform
-             "distribution". This Distribution cannot be drawn from as there is
-             zero probability of its variate appearing in any given finite
-             interval.
+**File**: $DISTPY/distpy/distribution/InfiniteUniformDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 from ..util import int_types, bool_types, numerical_types, sequence_types
@@ -14,32 +12,33 @@ from .Distribution import Distribution
 
 class InfiniteUniformDistribution(Distribution):
     """
-    A class representing a uniform distribution over all possible inputs (this
-    is not a "proper" prior; it cannot be drawn from).
+    Class representing an improper distribution that is equally likely to be
+    anywhere. It is improper because it cannot be normalized.
     """
     def __init__(self, ndim=1, minima=None, maxima=None,\
         is_discrete=False, metadata=None):
         """
-        Initializes a new InfiniteUniformDistribution
+        Initializes a new `InfiniteUniformDistribution` with the given
+        parameter values.
         
-        ndim: the dimension of this distribution, default 1
-        minima: if None, no lower bound is used for any parameters
-                if a number, that is the number used as a lower bound for all
-                             parameters
-                otherwise (only if numparams > 1), must be a sequence of length
-                                                   numparams containing None's
-                                                   and/or numbers containing
-                                                   lower bounds
-        maxima: if None, no upper bound is used for any parameters
-                if a number, that is the number used as a upper bound for all
-                             parameters
-                otherwise (only if numparams > 1), must be a sequence of length
-                                                   numparams containing None's
-                                                   and/or numbers containing
-                                                   upper bounds
-        is_discrete: True if the variable underlying this distribution is
-                     discrete. False otherwise (default False)
-        metadata: data to store alongside this distribution
+        Parameters
+        ----------
+        ndim : int
+            positive integer number of dimensions this improper distribution
+            applies to
+        minima : None or sequence
+            the minimum possible value of each parameter (`minima` and `maxima`
+            cannot be such that a variable has both, because then the
+            distribution would not be improper and could be handled correctly)
+        maxima : None or sequence
+            the maximum possible value of each parameter (`minima` and `maxima`
+            cannot be such that a variable has both, because then the
+            distribution would not be improper and could be handled correctly)
+        is_discrete : bool
+            bool determining whether or not this distribution is considered
+            discrete
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.numparams = ndim
         self.minima = minima
@@ -50,7 +49,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def minima(self):
         """
-        Property storing the minimum variable value(s) in an array.
+        The minimum variable value(s) in an array.
         """
         if not hasattr(self, '_minima'):
             raise AttributeError("minima was referenced before it was set.")
@@ -59,15 +58,15 @@ class InfiniteUniformDistribution(Distribution):
     @minima.setter
     def minima(self, value):
         """
-        Setter for the minimum value(s) of this distribution.
+        Setter for `InfiniteUniformDistribution.minima`.
         
-        value: if None, no lower bound is used for any parameters
-               if a number, that is the number used as a lower bound for all
-                            parameters
-               otherwise (only if numparams > 1), must be a sequence of length
-                                                  numparams containing None's
-                                                  and/or numbers containing
-                                                  lower bounds
+        value : float or sequence or None
+            - if None, no lower bound is used for any parameters
+            - if a number, that is the number used as a lower bound for all
+            parameters
+            - otherwise (only if numparams > 1), must be a sequence of length
+            `InfiniteUniformDistribution.numparams` containing None's and/or
+            numbers containing lower bounds
         """
         if self.numparams == 1:
             if type(value) is type(None):
@@ -96,7 +95,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def maxima(self):
         """
-        Property storing the maximum variable value(s) in an array.
+        The maximum variable value(s) in an array.
         """
         if not hasattr(self, '_maxima'):
             raise AttributeError("maxima was referenced before it was set.")
@@ -105,15 +104,15 @@ class InfiniteUniformDistribution(Distribution):
     @maxima.setter
     def maxima(self, value):
         """
-        Setter for the maximum value(s) of this distribution.
+        Setter for `InfiniteUniformDistribution.maxima`.
         
-        value: if None, no upper bound is used for any parameters
-               if a number, that is the number used as a upper bound for all
-                            parameters
-               otherwise (only if numparams > 1), must be a sequence of length
-                                                  numparams containing None's
-                                                  and/or numbers containing
-                                                  upper bounds
+        value : float or sequence or None
+            - if None, no lower bound is used for any parameters
+            - if a number, that is the number used as a upper bound for all
+            parameters
+            - otherwise (only if numparams > 1), must be a sequence of length
+            `InfiniteUniformDistribution.numparams` containing None's and/or
+            numbers containing upper bounds
         """
         if self.numparams == 1:
             if type(value) is type(None):
@@ -149,7 +148,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def all_left_infinite(self):
         """
-        Property storing whether all parameters of this distribution have no
+        Boolean describing whether all parameters of this distribution have no
         lower bound.
         """
         if not hasattr(self, '_all_left_infinite'):
@@ -159,7 +158,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def all_right_infinite(self):
         """
-        Property storing whether all parameters of this distribution have no
+        Boolean describing whether all parameters of this distribution have no
         upper bound.
         """
         if not hasattr(self, '_all_right_infinite'):
@@ -169,8 +168,8 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def all_doubly_infinite(self):
         """
-        Property storing whether this distribution is doubly infinite in all of
-        its parameters. In this case, no comparison is done when this
+        Boolean describing whether this distribution is doubly infinite in all
+        of its parameters. In this case, no comparison is done when this
         distribution is called.
         """
         if not hasattr(self, '_all_doubly_infinite'):
@@ -180,8 +179,9 @@ class InfiniteUniformDistribution(Distribution):
     
     def draw(self, shape=None, random=None):
         """
-        Draws a point from the distribution. Since this Distribution cannot be
-        drawn from, this throws a NotImplementedError.
+        Draws a point from the distribution. Since
+        `InfiniteUniformDistribution` cannot be drawn from, this throws a
+        NotImplementedError.
         """
         raise NotImplementedError("InfiniteUniformDistribution objects " +\
             "cannot be drawn from because there is zero probability of its " +\
@@ -189,13 +189,20 @@ class InfiniteUniformDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
+        Computes the logarithm of the value of this
+        `InfiniteUniformDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        value : float
+            0 if `point` is valid, -np.inf otherwise
         """
         if ((self.all_left_infinite or np.all(point > self.minima)) and\
             (self.all_right_infinite or np.all(point < self.maxima))):
@@ -206,53 +213,87 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `InfiniteUniformDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative(s) of log_value(point) with respect to the
-        parameter(s).
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `InfiniteUniformDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        derivative of log value
-                 else, returns 1D numpy.ndarray containing the N derivatives of
-                       the log value with respect to each individual parameter
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 1D
+            `numpy.ndarray` of length \\(p\\) is returned
         """
-        return np.zeros(self.numparams)
+        if self.numparams == 1:
+            return 0.
+        else:
+            return np.zeros(self.numparams)
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `InfiniteUniformDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative(s) of log_value(point) with respect to
-        the parameter(s).
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `InfiniteUniformDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        second derivative of log value
-                 else, returns 2D square numpy.ndarray with dimension length
-                       equal to the number of parameters representing the N^2
-                       different second derivatives of the log value
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 2D
+            `numpy.ndarray` that is \\(p\\times p\\) is returned
         """
-        return np.zeros((self.numparams, self.numparams))
+        if self.numparams:
+            return 0.
+        else:
+            return np.zeros((self.numparams, self.numparams))
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution.
+        The number of parameters of this `InfiniteUniformDistribution`.
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams referenced before it was set.")
@@ -261,7 +302,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        There is no mean of `InfiniteUniformDistribution`.
         """
         if not hasattr(self, '_mean'):
             raise AttributeError("mean is not defined for the " +\
@@ -271,7 +312,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        There is no variance of `InfiniteUniformDistribution`.
         """
         if not hasattr(self, '_variance'):
             raise NotImplementedError("variance is not defined for the " +\
@@ -281,9 +322,12 @@ class InfiniteUniformDistribution(Distribution):
     @numparams.setter
     def numparams(self, value):
         """
-        Setter for the dimension of this Distribution.
+        Setter for `InfiniteUniformDistribution.numparams`.
         
-        value: a positive integer
+        Parameters
+        ----------
+        value : int
+            a positive integer
         """
         if type(value) in int_types:
             if value > 0:
@@ -296,19 +340,27 @@ class InfiniteUniformDistribution(Distribution):
     
     def to_string(self):
         """
-        Returns a string representation of this distribution. It must be
-        implemented by all subclasses.
+        Finds and returns a string version of this
+        `InfiniteUniformDistribution` of the form `"InfiniteUniform"`.
         """
         return 'InfiniteUniform'
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Checks for equality of this `InfiniteUniformDistribution` with `other`.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `InfiniteUniformDistribution` with
+            the same `InfiniteUniformDistribution.is_discrete`,
+            `InfiniteUniformDistribution.minima`, and
+            `InfiniteUniformDistribution.maxima`
         """
         if not isinstance(other, InfiniteUniformDistribution):
             return False
@@ -323,8 +375,8 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         if not hasattr(self, '_is_discrete'):
             raise AttributeError("is_discrete referenced before it was set.")
@@ -333,11 +385,12 @@ class InfiniteUniformDistribution(Distribution):
     @is_discrete.setter
     def is_discrete(self, value):
         """
-        Setter for whether this distribution is discrete or continuous (the
-        form itself does not determine this since this distribution cannot be
-        drawn from).
+        Setter for `InfiniteUniformDistribution.is_discrete`
         
-        value: must be a bool (True for discrete, False for continuous)
+        Parameters
+        ----------
+        value : bool
+            True or False
         """
         if type(value) in bool_types:
             self._is_discrete = value
@@ -346,13 +399,17 @@ class InfiniteUniformDistribution(Distribution):
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        Fills the given hdf5 file group with data about this
+        `InfiniteUniformDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'InfiniteUniformDistribution'
         group.attrs['is_discrete'] = self.is_discrete
@@ -365,13 +422,18 @@ class InfiniteUniformDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads an InfiniteUniformDistribution from the given hdf5 file group.
+        Loads a `InfiniteUniformDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: an InfiniteUniformDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `InfiniteUniformDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'InfiniteUniformDistribution'
@@ -398,7 +460,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         if self.numparams == 1:
             return (self.minima if np.isfinite(self.minima) else None)
@@ -409,7 +471,7 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         if self.numparams == 1:
             return (self.maxima if np.isfinite(self.maxima) else None)
@@ -420,15 +482,18 @@ class InfiniteUniformDistribution(Distribution):
     @property
     def can_give_confidence_intervals(self):
         """
-        Confidence intervals for most distributions can be generated as long as
-        this distribution describes only one dimension.
+        Improper distributions do not support confidence intervals.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `InfiniteUniformDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return InfiniteUniformDistribution(self.numparams,\
             minima=self.minima, maxima=self.maxima,\

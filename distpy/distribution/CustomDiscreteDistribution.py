@@ -1,10 +1,12 @@
 """
-File: distpy/distribution/CustomDiscreteDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a custom discrete distribution. Its PMF is
+represented by: $$f(x)=\\begin{cases} p_1 & x=x_1 \\\\ p_2 & x=x_2 \\\\\
+\\vdots & \\vdots \\\\ p_N & x=x_N\\end{cases},$$ where
+\\(\\sum_{k=1}^Np_k=1\\).
 
-Description: File containing a class representing a custom n-dimensional
-             discrete distribution with finite support.
+**File**: $DISTPY/distpy/distribution/CustomDiscreteDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -14,19 +16,27 @@ from .Distribution import Distribution
 
 class CustomDiscreteDistribution(Distribution):
     """
-    Class representing a custom n-dimensional discrete distribution with finite
-    support.
+    Class representing a custom discrete distribution. Its PMF is represented
+    by: $$f(x)=\\begin{cases} p_1 & x=x_1 \\\\ p_2 & x=x_2 \\\\ \\vdots &\
+    \\vdots \\\\ p_N & x=x_N\\end{cases},$$ where \\(\\sum_{k=1}^Np_k=1\\).
     """
     def __init__(self, variable_values, probability_mass_function,\
         metadata=None):
         """
-        variable_values: must be a sequence of 1D numpy.ndarrays representing
-                         the possible values of each given parameter
-        probability_mass_function: the probabilities of each combination of
-                                   possible values in a ND numpy.ndarray with
-                                   shape given by the addition of the shapes of
-                                   the arrays in variable_values
-        metadata: data to store alongside this distribution
+        Initializes a new `CustomDiscreteDistribution` with the given parameter
+        values.
+        
+        Parameters
+        ----------
+        variable_values : sequence
+            sequence of 1D arrays of length \\(N_1,N_2,\\ldots,N_n\\) that
+            define the grids in an arbitrary number of variables, \\(n\\)
+        probability_mass_function : `numpy.ndarray`
+            \\(n\\)-dimensional array of shape \\((N_1,N_2,\\ldots,N_n)\\)
+            containing (possibly unnormalized) probability masses of each grid
+            point
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.variable_values = variable_values
         self.probability_mass_function = probability_mass_function
@@ -35,8 +45,8 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def variable_values(self):
         """
-        Property storing a sequence of 1D numpy.ndarrays each containing the
-        possible values of each of this distribution's variables.
+        A sequence of 1D `numpy.ndarray` objects each containing the possible
+        values of each of this distribution's variables.
         """
         if not hasattr(self, '_variable_values'):
             raise AttributeError("variable_values referenced before it was " +\
@@ -46,13 +56,16 @@ class CustomDiscreteDistribution(Distribution):
     @variable_values.setter
     def variable_values(self, value):
         """
-        Sets the variable values allowed by this distribution.
+        Setter for `CustomDiscreteDistribution.variable_values`.
         
-        value: if this distribution is 1D, then value can be either a single 1D
-               numpy.ndarray or a list containing a single 1D numpy.ndarray. if
-               this distribution is nD, then value must be a length-n sequence
-               of 1D numpy.ndarrays giving the possible values of the ith
-               variable described by this distribution
+        Parameters
+        ----------
+        value : numpy.ndarray
+            - if this distribution is 1D, `value` can be either a single 1D
+            numpy.ndarray or a list containing a single 1D numpy.ndarray.
+            - if this distribution is \\(n\\) dimensional, then `value` must be
+            a length-\\(n\\) sequence of 1D numpy.ndarrays giving the possible
+            values of the variables described by this distribution
         """
         if isinstance(value, np.ndarray) and (value.ndim == 1):
             value = [value]
@@ -73,9 +86,9 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def shape(self):
         """
-        Property storing the shape of the grid used for this
-        CustomDiscreteDistribution. It should be the shape of the
-        probability_mass_function array.
+        The shape of the grid used for this `CustomDiscreteDistribution` as a
+        tuple. It should be the shape of the
+        `CustomDiscreteDistribution.probability_mass_function` array.
         """
         if not hasattr(self, '_shape'):
             self._shape =\
@@ -85,9 +98,9 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def probability_mass_function(self):
         """
-        Property storing a n-dimensional numpy.ndarray of shape given by the
-        sum of the shapes of the variable_values storing the probabilities of
-        each possible combination of variables.
+        An \\(n\\)-dimensional numpy.ndarray of shape given by the sum of the
+        shapes of the variable_values storing the probabilities of each
+        possible combination of variables.
         """
         if not hasattr(self, '_probability_mass_function'):
             raise AttributeError("probability_mass_function was referenced " +\
@@ -97,10 +110,14 @@ class CustomDiscreteDistribution(Distribution):
     @probability_mass_function.setter
     def probability_mass_function(self, value):
         """
-        Setter for the probability mass function defining this distribution.
+        Setter for `CustomDiscreteDistribution.probability_mass_function`.
         
-        value: a numpy.ndarray of shape given by sum of shapes of
-               variable_values
+        Parameters
+        ----------
+        value : numpy.ndarray
+            an array whose shape is given by `CustomDiscreteDistribution.shape`
+            containing non-negative numbers representing unnormalized
+            probabilities
         """
         if isinstance(value, np.ndarray):
             if value.shape == self.shape:
@@ -120,7 +137,7 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `CustomDiscreteDistribution`.
         """
         if not hasattr(self, '_mean'):
             mean = np.ndarray((self.numparams,))
@@ -139,7 +156,7 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The (co)variance of this `CustomDiscreteDistribution`.
         """
         if not hasattr(self, '_variance'):
             if self.numparams == 1:
@@ -169,11 +186,11 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def flattened_cumulative_mass_function(self):
         """
-        Property storing the flattened, normalized, cumulative mass function
-        corresponding this distribution's probability mass function. This
-        property is set in the setter for the probability_mass_function
-        property. This array is importantly used in the process of drawing
-        random values from this distribution.
+        The flattened, normalized, cumulative mass function
+        corresponding to
+        `CustomDiscreteDistribution.probability_mass_function`. This array is
+        importantly used in the process of drawing random values from this
+        distribution.
         """
         if not hasattr(self, '_flattened_cumulative_mass_function'):
             raise AttributeError("flattened_cumulative_mass_function " +\
@@ -182,19 +199,35 @@ class CustomDiscreteDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws a point from the distribution. Must be implemented by any base
-        class.
+        Draws point(s) from this `CustomDiscreteDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -217,13 +250,22 @@ class CustomDiscreteDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point.
+        Computes the logarithm of the value of this
+        `CustomDiscreteDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if self.numparams == 1:
             point = [point]
@@ -239,24 +281,27 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `CustomDiscreteDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return False
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `CustomDiscreteDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return False
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution.
+        The number of parameters of this `CustomDiscreteDistribution`.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = len(self.variable_values)
@@ -264,17 +309,25 @@ class CustomDiscreteDistribution(Distribution):
     
     def to_string(self):
         """
-        Returns a string representation of this distribution.
+        Finds and returns a string version of this `CustomDiscreteDistribution`
+        of the form `"d-dim custom discrete"`.
         """
         return "{}-dim custom discrete".format(self.numparams)
     
     def __eq__(self, other):
         """
-        Tests for equality between this CustomDiscreteDistribution and other.
+        Checks for equality of this `CustomDiscreteDistribution` with `other`.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `CustomDiscreteDistribution` with
+            the same custom probabilities
         """
         if isinstance(other, CustomDiscreteDistribution):
             if self.numparams == other.numparams:
@@ -293,7 +346,7 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         if not hasattr(self, '_minimum'):
             self._minimum = np.array([np.min(varvals)\
@@ -303,7 +356,7 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         if not hasattr(self, '_maximum'):
             self._maximum = np.array([np.max(varvals)\
@@ -313,30 +366,35 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return True
     
     def fill_hdf5_group(self, group, save_metadata=True, pmf_link=None,\
         **axis_links):
         """
-        Fills the given hdf5 file group with information about this
-        CustomDiscreteDistribution.
+        Fills the given hdf5 file group with data about this
+        `CustomDiscreteDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
-        pmf_link: if None, probability_mass_function is saved directly in the
-                           probability_mass_function group
-                  otherwise, pmf_link should be a link to a extant location
-                             where the probability_mass_function is already
-                             stored
-        axis_links: dictionary (default empty) whose keys are strings of the
-                    form 'variable{0:d}'.format(variable_number) and whose
-                    values are either None or links to existing locations where
-                    the axis values are already saved
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
+        pmf_link : str or None
+            - if None, probability_mass_function is saved directly in the
+            `"probability_mass_function"` group
+            - otherwise, `pmf_link` should be a link to a extant location
+            where the probability mass function is already stored
+        axis_links : dict
+            dictionary (default empty) whose keys are strings of the form
+            `'variable{0:d}'.format(variable_number)` and whose values are
+            either None or links to existing locations where the axis values
+            are already saved
         """
         group.attrs['class'] = 'CustomDiscreteDistribution'
         create_hdf5_dataset(group, 'probability_mass_function',\
@@ -355,13 +413,18 @@ class CustomDiscreteDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a CustomDiscreteDistribution from the given hdf5 file group.
+        Loads a `CustomDiscreteDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this CustomDiscreteDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a CustomDiscrete Distribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `CustomDiscreteDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'CustomDiscreteDistribution'
@@ -384,14 +447,18 @@ class CustomDiscreteDistribution(Distribution):
     @property
     def can_give_confidence_intervals(self):
         """
-        This distribution cannot yield confidence intervals.
+        Discrete distributions do not support confidence intervals.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `CustomDiscreteDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return CustomDiscreteDistribution(self.variable_values.copy(),\
             self.probability_mass_function.copy())

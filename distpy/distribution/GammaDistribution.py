@@ -1,12 +1,12 @@
 """
-File: distpy/distribution/GammaDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a Gamma distribution. Its PDF is
+represented by: $$f(x) = \\frac{1}{\\Gamma(k/p)}\\ \\frac{p}{\\theta}\\ \
+\\left(\\frac{x}{\\theta}\\right)^{k-1}\\ e^{-(x/\\theta)^p},$$ where
+\\(\\Gamma(x)\\) is the Gamma function.
 
-Description: File containing class representing a generalized Gamma
-             distribution. The pdf has the form
-             [(p/a)/Gamma(d/p)]*[(x/a)^(d-1)]*exp[-(x/a)^p] where d is shape,
-             a is scale, and p is power.
+**File**: $DISTPY/distpy/distribution/GammaDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -17,18 +17,25 @@ from .Distribution import Distribution
 
 class GammaDistribution(Distribution):
     """
-    A class representing a generalized gamma distribution. This is useful for
-    variables which are naturally non-negative.
+    Class representing a Gamma distribution. Its PDF is represented by:
+    $$f(x) = \\frac{1}{\\Gamma(k/p)}\\ \\frac{p}{\\theta}\\ \
+    \\left(\\frac{x}{\\theta}\\right)^{k-1} \\ e^{-(x/\\theta)^p},$$ where
+    \\(\\Gamma(x)\\) is the Gamma function.
     """
     def __init__(self, shape, scale=1, power=1, metadata=None):
         """
-        Initializes a new gamma distribution with the given parameters.
+        Initializes a new `GammaDistribution` with the given parameter values.
         
-        shape the exponent of x in the gamma pdf (must be greater than 0).
-        scale amount to scale x by (x is divided by scale where it appears)
-              (must be greater than 0).
-        power power of point/scale in the exponent in the pdf
-        metadata data to store with this distribution, should be hdf5-able
+        Parameters
+        ----------
+        shape : float
+            positive real number, \\(k\\)
+        scale : float
+            positive real number, \\(\\theta\\)
+        power : float
+            positive real number, \\(p\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.shape = shape
         self.scale = scale
@@ -38,15 +45,23 @@ class GammaDistribution(Distribution):
     @staticmethod
     def create_from_mean_and_variance(mean, variance, metadata=None):
         """
-        Creates a new GammaDistribution from the mean and variance (assuming
+        Creates a new `GammaDistribution` from the mean and variance (assuming
         power=1) instead of through the conventional shape and scale
         parameters.
         
-        mean: positive number equal to mean of desired distribution
-        variance: positive number equal to variance of desired distribution
-        metadata: data to store with this distribution, should be hdf5-able
+        Parameters
+        ----------
+        mean : float
+            positive number equal to mean of desired distribution
+        variance : float
+            positive number equal to variance of desired distribution
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         
-        returns: new GammaDistribution object encoding the desired distribution
+        Returns
+        -------
+        distribution : `GammaDistribution`
+            new GammaDistribution object encoding the desired distribution
         """
         shape = ((mean ** 2) / variance)
         scale = (variance / mean)
@@ -56,9 +71,9 @@ class GammaDistribution(Distribution):
     @property
     def shape(self):
         """
-        Property storing the shape parameter of the gamma distribution. This is
-        the power of x in the product in the pdf (not the power of x in the
-        exponent of the pdf)
+        The shape parameter, \\(k\\), of this `GammaDistribution`. This is
+        the power of \\(x\\) in the product in the pdf (not the power of
+        \\(x\\) in the exponent of the pdf).
         """
         if not hasattr(self, '_shape'):
             raise AttributeError("shape was referenced before it was set.")
@@ -67,7 +82,7 @@ class GammaDistribution(Distribution):
     @property
     def shape_minus_one(self):
         """
-        Property storing the shape parameter minus 1.
+        \\(k-1\\)
         """
         if not hasattr(self, '_shape_minus_one'):
             self._shape_minus_one = self.shape - 1
@@ -76,9 +91,12 @@ class GammaDistribution(Distribution):
     @shape.setter
     def shape(self, value):
         """
-        Setter for the shape parameter of the GammaDistribution.
+        Setter for `GammaDistribution.shape`.
         
-        value: a positive number
+        Parameters
+        ----------
+        value : float
+            a positive number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -93,8 +111,8 @@ class GammaDistribution(Distribution):
     @property
     def scale(self):
         """
-        Property storing the scale parameter of the gamma distribution. This is
-        what x is divided by when it appears in the pdf.
+        The scale parameter, \\(\\theta\\) of the gamma distribution. This is
+        what \\(x\\) is divided by when it appears in the pdf.
         """
         if not hasattr(self, '_scale'):
             raise AttributeError("scale was referenced before it was set.")
@@ -103,9 +121,12 @@ class GammaDistribution(Distribution):
     @scale.setter
     def scale(self, value):
         """
-        Setter for the scale parameter of the GammaDistribution.
+        Setter for `GammaDistribution.scale`.
         
-        value: a positive number
+        Parameters
+        ----------
+        value : float
+            a positive number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -120,8 +141,8 @@ class GammaDistribution(Distribution):
     @property
     def power(self):
         """
-        Property storing the power parameter of the gamma distribution. This is
-        the power of x in the exponent in the pdf
+        The power parameter, \\(p\\), of the `GammaDistribution`. This is the
+        power of x in the exponent in the pdf.
         """
         if not hasattr(self, '_power'):
             raise AttributeError("power was referenced before it was set.")
@@ -130,9 +151,12 @@ class GammaDistribution(Distribution):
     @power.setter
     def power(self, value):
         """
-        Setter for the power parameter of the GammaDistribution.
+        Setter for `GammaDistribution.power`.
         
-        value: a positive number
+        Parameters
+        ----------
+        value : float
+            a positive number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -147,14 +171,15 @@ class GammaDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Gamma distribution pdf is univariate, so numparams always returns 1.
+        The number of parameters of this `GammaDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `GammaDistribution`,
+        \\(\\theta\\frac{\\Gamma[(k+1)/p]}{\\Gamma[k/p]}\\).
         """
         if not hasattr(self, '_mean'):
             self._mean = self.scale *\
@@ -165,7 +190,9 @@ class GammaDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `GammaDistribution`,
+        \\(\\theta^2 \\left\\{ \\frac{\\Gamma[(k+2)/p]}{\\Gamma[k/p]} -\
+        \\left(\\frac{\\Gamma[(k+1)/p]}{\\Gamma[k/p]}\\right)^2 \\right\\}\\).
         """
         if not hasattr(self, '_variance'):
             first_term = np.exp(gammaln((self.shape + 2) / self.power) -\
@@ -177,23 +204,33 @@ class GammaDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `GammaDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         return self.inverse_cdf(random.uniform(size=shape))
     
     @property
     def log_value_constant(self):
         """
-        Property storing the constant in the log pdf of this distribution.
+        The constant in the log pdf of this distribution, given by
+        \\(\\ln{p}-k\\ln{\\theta}-\\ln{\\Gamma(k/p)}\\).
         """
         if not hasattr(self, '_log_value_constant'):
             self._log_value_constant = np.log(self.power) -\
@@ -203,10 +240,20 @@ class GammaDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is point.
+        Computes the logarithm of the value of this `GammaDistribution` at the
+        given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         return self.log_value_constant +\
             (self.shape_minus_one * np.log(point)) -\
@@ -214,16 +261,27 @@ class GammaDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns the string representation of this GammaDistribution.
+        Finds and returns a string version of this `GammaDistribution` of
+        the form `"Gamma(k,theta,p)"`.
         """
         return "Gamma({0:.2g}, {1:.2g}, {2:.2g})".format(self.shape,\
             self.scale, self.power)
     
     def __eq__(self, other):
         """
-        Checks for equality between other and this object. Returns True if
-        if other is a GammaDistribution with nearly the same shape, scale, and
-        power (up to dynamic range of 10^9) and False otherwise.
+        Checks for equality of this `GammaDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `GammaDistribution` with the same
+            `GammaDistribution.shape`, `GammaDistribution.scale`, and
+            `GammaDistribution.power`
         """
         if isinstance(other, GammaDistribution):
             tol_kwargs = {'rtol': 1e-9, 'atol': 0}
@@ -237,9 +295,18 @@ class GammaDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of the cumulative distribution function.
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `GammaDistribution`.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         return self.scale *\
             np.power(gammaincinv(self.shape / self.power, cdf), 1 / self.power)
@@ -247,34 +314,38 @@ class GammaDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return 0
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return None
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. Only
-        things to save are shape, scale, and class name.
+        Fills the given hdf5 file group with data about this
+        `GammaDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GammaDistribution'
         group.attrs['shape'] = self.shape
@@ -286,13 +357,18 @@ class GammaDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GammaDistribution from the given hdf5 file group.
+        Loads a `GammaDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a GammaDistribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `GammaDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'GammaDistribution'
@@ -309,19 +385,29 @@ class GammaDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `GammaDistribution.gradient_of_log_value` method can be called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `GammaDistribution` at the given point.
         
-        point: single number at which to evaluate the derivative
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : float
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a float
         """
         return ((self.shape_minus_one / point) -\
             ((self.power / self.scale) *\
@@ -330,19 +416,30 @@ class GammaDistribution(Distribution):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `GammaDistribution.hessian_of_log_value` method can be called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `GammaDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : float
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\boldsymbol{\\nabla}^T\
+            \\ln{\\big(f(x)\\big)}\\) as a float
         """
         return ((-1) * self.shape_minus_one) / np.power(point, 2) -\
             (((self.power * (self.power - 1)) / (self.scale ** 2)) *\
@@ -350,8 +447,12 @@ class GammaDistribution(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `GammaDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return GammaDistribution(self.shape, self.scale, self.power)
 

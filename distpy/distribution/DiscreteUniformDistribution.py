@@ -1,10 +1,11 @@
 """
-File: distpy/distribution/DiscreteUniformDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a discrete uniform distribution. Its PMF
+is represented by: $$f(x) = \\begin{cases} \\frac{1}{b-a+1} &\
+x\\in\\{a,a+1,\\ldots,b\\} \\\\ 0 & \\text{otherwise} \\end{cases}$$
 
-Description: File containing a class representing a discrete uniform
-             distribution.
+**File**: $DISTPY/distpy/distribution/DiscreteUniformDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -14,17 +15,31 @@ from .Distribution import Distribution
 
 class DiscreteUniformDistribution(Distribution):
     """
-    Class representing a discrete uniform distribution. Uniform distributions
-    are the least informative possible distributions (on a given support) and
-    are thus ideal when ignorance abound.
+    Class representing a discrete uniform distribution. Its PMF is represented
+    by: $$f(x) = \\begin{cases} \\frac{1}{b-a+1} &\
+    x\\in\\{a,a+1,\\ldots,b\\} \\\\ 0 & \\text{otherwise} \\end{cases}$$
     """
     def __init__(self, low, high=0, metadata=None):
         """
-        Creates a new DiscreteUniformDistribution with the given range.
+        Initializes a new `DiscreteUniformDistribution` with the given
+        parameter values.
         
-        low: lower limit of pdf (defaults to 0)
-        high: upper limit of pdf (if not given, left endpoint is zero and right
-              endpoint is low)
+        Parameters
+        ----------
+        low : int
+            - if `high` is given, this is the lowest possible integer drawn by
+            this `DiscreteUniformDistribution`
+            - if `high` is not given, this is the highest possible integer
+            drawn by this `DiscreteUniformDistribution` (with the lowest
+            possible value being 0)
+        high : int or None
+            - if given, `high` is the highest possible integer drawn by this
+            `UniformDiscreteUniformDistribution`
+            - if not given, `low` is the highest possible integer drawn by this
+            `DiscreteUniformDistribution` (with the lowest possible value being
+            0)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.bounds = (low, high)
         self.metadata = metadata
@@ -32,7 +47,8 @@ class DiscreteUniformDistribution(Distribution):
     @property
     def bounds(self):
         """
-        Property storing a tuple of lowest and highest returnable values.
+        Tuple of the form `(min, max)` containing lowest and highest returnable
+        values.
         """
         if not hasattr(self, '_bounds'):
             raise AttributeError("bounds was referenced before it was set.")
@@ -41,9 +57,13 @@ class DiscreteUniformDistribution(Distribution):
     @bounds.setter
     def bounds(self, value):
         """
-        Setter for the lowest and highest values returned by this distribution.
+        Setter for `DiscreteUniformDistribution.bounds`.
         
-        value: tuple of integers (minimum, maximum)
+        Parameters
+        ----------
+        value : tuple
+            tuple of form `(min, max)`, where both `min` and `max` are integers
+            and `max>=min`
         """
         if type(value) in sequence_types:
             if len(value) == 2:
@@ -65,22 +85,23 @@ class DiscreteUniformDistribution(Distribution):
     @property
     def low(self):
         """
-        Property storing the lowest returnable value of this distribution.
+        The lowest returnable value of this `DiscreteUniformDistribution`.
         """
         return self.bounds[0]
     
     @property
     def high(self):
         """
-        Property storing the highest returnable value of this distribution.
+        The highest returnable value of this `DiscreteUniformDistribution`.
         """
         return self.bounds[1]
     
     @property
     def log_probability(self):
         """
-        Property storing the logarithm of the probability mass when called
-        between low and high.
+        The logarithm of the probability mass when called between
+        `DiscreteUniformDistribution.low` and
+        `DiscreteUniformDistribution.high`, given by \\(-\\ln{(b-a+1)}\\).
         """
         if not hasattr(self, '_log_probability'):
             self._log_probability = ((-1) * np.log(self.high - self.low + 1))
@@ -89,15 +110,14 @@ class DiscreteUniformDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Only univariate uniform distributions are included here so numparams
-        always returns 1.
+        The number of parameters of this `DiscreteUniformDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `DiscreteUniformDistribution`, \\(\\frac{a+b}{2}\\).
         """
         if not hasattr(self, '_mean'):
             self._mean = (self.low + self.high) / 2
@@ -106,7 +126,8 @@ class DiscreteUniformDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `DiscreteUniformDistribution`,
+        \\(\\frac{(b-a+1)^2-1}{12}\\).
         """
         if not hasattr(self, '_variance'):
             self._variance = (((self.high - self.low + 1) ** 2) - 1) / 12
@@ -114,25 +135,44 @@ class DiscreteUniformDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `DiscreteUniformDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         return random.randint(self.low, high=self.high+1, size=shape)
     
     def log_value(self, point):
         """
-       Evaluates and returns the log of the value of this distribution when
-        the variable is value.
+        Computes the logarithm of the value of this
+        `DiscreteUniformDistribution` at the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : int
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if (abs(point - int(round(point))) < 1e-9) and (point >= self.low) and\
             (point <= self.high):
@@ -141,15 +181,26 @@ class DiscreteUniformDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns a string representation of this distribution.
+        Finds and returns a string version of this
+        `DiscreteUniformDistribution` of the form `"DiscreteUniform(a,b)"`.
         """
         return "DiscreteUniform({0:.2g}, {1:.2g})".format(self.low, self.high)
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a DiscreteUniformDistribution with the same high and low and
-        False otherwise.
+        Checks for equality of this `DiscreteUniformDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `DiscreteUniformDistribution` with
+            the same `DiscreteUniformDistribution.low` and
+            `DiscreteUniformDistribution.high`
         """
         if isinstance(other, DiscreteUniformDistribution):
             low_equal = (self.low == other.low)
@@ -162,34 +213,38 @@ class DiscreteUniformDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return self.low
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return self.high
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return True
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. All
-        that needs to be saved is the class name and high and low values.
+        Fills the given hdf5 file group with data about this
+        `DiscreteUniformDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DiscreteUniformDistribution'
         group.attrs['low'] = self.low
@@ -200,13 +255,18 @@ class DiscreteUniformDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a UniformDistribution from the given hdf5 file group.
+        Loads a `DiscreteUniformDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: UniformDistribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `DiscreteUniformDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'DiscreteUniformDistribution'
@@ -222,25 +282,31 @@ class DiscreteUniformDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since this distribution is discrete, it returns
-        False.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `DiscreteUniformDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return False
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since this distribution is discrete, it returns
-        False.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `DiscreteUniformDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `DiscreteUniformDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return DiscreteUniformDistribution(self.low, self.high)
 

@@ -1,11 +1,14 @@
 """
-File: distpy/distribution/GaussianDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a Gaussian distribution. Its PDF is
+represented by: $$f(\\boldsymbol{x})=|2\\pi\\boldsymbol{\\Sigma}|^{-1/2}\\ \
+\\exp{\\left[-\\frac{1}{2}(\\boldsymbol{x}-\\boldsymbol{\\mu})^T\
+\\boldsymbol{\\Sigma}^{-1}(\\boldsymbol{x}-\\boldsymbol{\\mu})\\right]}$$
 
-Description: File containing class representing Gaussian distribution
-             (univariate or multivariate).
+**File**: $DISTPY/distpy/distribution/GaussianDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
+
 from __future__ import division
 import numpy as np
 import numpy.random as rand
@@ -20,19 +23,31 @@ natural_log_two_pi = np.log(2 * np.pi)
 
 class GaussianDistribution(Distribution):
     """
-    A multivariate (or univariate) Gaussian distribution. The classic. Useful
-    when some knowledge of the parameters exists and those parameters can be
-    any real number.
+    Class representing a Gaussian distribution. Its PDF is represented by:
+    $$f(\\boldsymbol{x})=|2\\pi\\boldsymbol{\\Sigma}|^{-1/2}\\ \
+    \\exp{\\left[-\\frac{1}{2}(\\boldsymbol{x}-\\boldsymbol{\\mu})^T\
+    \\boldsymbol{\\Sigma}^{-1}(\\boldsymbol{x}-\\boldsymbol{\\mu})\\right]}$$
     """
     def __init__(self, mean, covariance, metadata=None):
         """
-        Initializes either a univariate or a multivariate GaussianDistribution.
+        Initializes a new `GaussianDistribution` with the given parameter
+        values.
         
-        mean the mean must be either a number (if univariate)
-                                  or a 1D array (if multivariate)
-        covariance the covariance must be either a number (if univariate)
-                   or a 2D array (if multivariate) final covariance used is
-                   average of this 2D array and its transpose
+        Parameters
+        ----------
+        mean : float or `numpy.ndarray`
+            - if this is a univariate Gaussian, `mean` is a real number giving
+            peak of distribution
+            - if this is a multivariate Gaussian, `mean` is a 1D array of real
+            numbers giving peak of distribution
+        covariance : float or `numpy.ndarray`
+            - if this is a univariate Gaussian, `covariance` is a real,
+            positive number giving size of distribution
+            - if this is a multivariate Gaussian, `covariance` is a square 2D
+            array giving covariance matrix of the distribution. Each dimension
+            should have the same length as `mean`
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.internal_mean = mean
         self.covariance = covariance
@@ -41,12 +56,30 @@ class GaussianDistribution(Distribution):
     @staticmethod
     def combine(*distributions):
         """
-        Combines many GaussianDistribution objects into one by concatenating
+        Combines many `GaussianDistribution` objects into one by concatenating
         their means and covariance matrices.
         
-        *distributions: a sequence of GaussianDistribution objects to combine
+        Parameters
+        ----------
+        distributions : sequence
+            a sequence of `GaussianDistribution` objects to combine
         
-        returns: a single GaussianDistribution object 
+        Returns
+        -------
+        combined : `GaussianDistribution`
+            if the distributions in `distributions` have means
+            \\(\\boldsymbol{\\mu}_1,\\boldsymbol{\\mu}_2,\\ldots,\
+            \\boldsymbol{\\mu}_N\\) and covariances
+            \\(\\boldsymbol{\\Sigma}_1,\\boldsymbol{\\Sigma}_2,\\ldots,\
+            \\boldsymbol{\\Sigma}_N\\), then `combined` has mean
+            \\(\\begin{bmatrix} \\boldsymbol{\\mu}_1 \\\\\
+            \\boldsymbol{\\mu}_2 \\\\ \\vdots \\\\ \\boldsymbol{\\mu}_N\
+            \\end{bmatrix}\\) and covariance \\(\\begin{bmatrix}\
+            \\boldsymbol{\\Sigma}_1 & \\boldsymbol{0} & \\cdots &\
+            \\boldsymbol{0} \\\\ \\boldsymbol{0} & \\boldsymbol{\\Sigma}_2 &\
+            \\cdots & \\boldsymbol{0} \\\\ \\vdots & \\vdots & \\ddots &\
+            \\vdots \\\\ \\boldsymbol{0} & \\boldsymbol{0} & \\cdots &\
+            \\boldsymbol{\\Sigma}_N \\end{bmatrix}\\)
         """
         if all([isinstance(distribution, GaussianDistribution)\
             for distribution in distributions]):
@@ -63,7 +96,7 @@ class GaussianDistribution(Distribution):
     @property
     def internal_mean(self):
         """
-        Property storing the mean of this GaussianDistribution in matrix form.
+        The mean of this `GaussianDistribution` in `numpy.matrix` form.
         """
         if not hasattr(self, '_internal_mean'):
             raise AttributeError("internal_mean was referenced before it " +\
@@ -73,10 +106,14 @@ class GaussianDistribution(Distribution):
     @internal_mean.setter
     def internal_mean(self, value):
         """
-        Setter for the mean of this distribution
+        Setter for `GaussianDistribution.internal_mean`.
         
-        value: either a single number (if univariate) or a 1D numpy.ndarray of
-               length numparams
+        Parameters
+        ----------
+        value : float or `numpy.ndarray`
+            - if this distribution is univariate, `value` is a single number
+            - otherwise, `value` is a 1D numpy.ndarray of length
+            `GaussianDistribution.numparams`
         """
         if type(value) in numerical_types:
             value = [value]
@@ -97,7 +134,8 @@ class GaussianDistribution(Distribution):
     @property
     def covariance(self):
         """
-        Property storing the covariance matrix of this Gaussian.
+        The covariance matrix of this `GaussianDistribution` in `numpy.matrix`
+        form.
         """
         if not hasattr(self, '_covariance'):
             raise AttributeError("covariance was referenced before it was " +\
@@ -107,13 +145,16 @@ class GaussianDistribution(Distribution):
     @covariance.setter
     def covariance(self, value):
         """
-        Setter for the covariance matrix of this Gaussian.
+        Setter for the `GaussianDistribution.covariance`.
         
-        value: if mean has length 1, then this can be a single number
-                                     representing the variance
-               otherwise, this should be a square positive definite matrix of
-                          rank numparams or a 1D array of variances (in which
-                          case the variates are assumed independent)
+        Parameters
+        ----------
+        value : float or numpy.ndarray
+            - if this distribution is univariate, then `value` can be a single
+            number representing the variance
+            - otherwise, this should be a square positive definite matrix of
+            rank numparams or a 1D array of variances (in which case the
+            variates are assumed independent)
         """
         if type(value) in numerical_types:
             if self.numparams == 1:
@@ -144,7 +185,9 @@ class GaussianDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `GaussianDistribution`, \\(\\boldsymbol{\\mu}\\),
+        which is an array if this distribution is multivariate and a scalar if
+        it is univariate.
         """
         if not hasattr(self, '_mean'):
             if self.numparams == 1:
@@ -156,7 +199,8 @@ class GaussianDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The (co)variance of this `GaussianDistribution`,
+        \\(\\boldsymbol{\\Sigma}\\).
         """
         if not hasattr(self, '_variance'):
             if self.numparams == 1:
@@ -168,8 +212,8 @@ class GaussianDistribution(Distribution):
     @property
     def log_determinant_covariance(self):
         """
-        Property storing the natural logarithm of the determinant of the
-        covariance matrix.
+        The natural logarithm of the determinant of the covariance matrix,
+        given by \\(\\ln{|\\boldsymbol{\\Sigma}|}\\).
         """
         if not hasattr(self, '_log_determinant_covariance'):
             self._log_determinant_covariance = npla.slogdet(self.covariance)[1]
@@ -178,7 +222,8 @@ class GaussianDistribution(Distribution):
     @property
     def inverse_covariance(self):
         """
-        Property storing the inverse of the covariance.
+        The inverse of the covariance matrix, given by
+        \\(\\boldsymbol{\\Sigma}^{-1}\\).
         """
         if not hasattr(self, '_inverse_covariance'):
             if self.covariance_diagonal:
@@ -191,9 +236,7 @@ class GaussianDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Finds and returns the number of parameters which this
-        GaussianDistribution describes (same as dimension of mean and
-        covariance).
+        The number of parameters of this `GaussianDistribution`.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = len(self.internal_mean.A[0])
@@ -204,21 +247,22 @@ class GaussianDistribution(Distribution):
         Adds the Gaussian random variate described by this distribution
         to the given object.
         
-        other: if other is a constant, the returned Gaussian is the same as
-                                       this one with other added to the mean
-                                       and the same covariance
-               if other is a 1D numpy.ndarray, it must be of the same length
-                                               as the dimension of this
-                                               GaussianDistribution. In this
-                                               case, the returned
-                                               GaussianDistribution is the
-                                               distribution of the sum of this
-                                               Gaussian variate with other
-               if other is a GaussianDistribution, it must have the same number
-                                                   of parameters as this one
+        Parameters
+        ----------
+        other : float or numpy.ndarray or `GaussianDistribution`
+            - if other is a constant, the returned Gaussian is the same as this
+            one with other added to the mean and the same covariance
+            - if other is a 1D `numpy.ndarray`, it must be of the same length
+            as the dimension of this `GaussianDistribution`. In this case, the
+            returned `GaussianDistribution` is the distribution of the sum of
+            this Gaussian variate with other
+            - if other is a `GaussianDistribution`, it must have the same
+            number of parameters as this one
         
-        returns: GaussianDistribution representing the addition of this
-                 Gaussian variate with other
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the sum of this Gaussian variate and `other`
         """
         if isinstance(other, GaussianDistribution):
             if self.numparams == other.numparams:
@@ -247,26 +291,84 @@ class GaussianDistribution(Distribution):
     
     def __radd__(self, other):
         """
-        Returns the same thing as __add__ (this makes addition commutative).
+        Adds the Gaussian random variate described by this distribution
+        to the given object.
+        
+        Parameters
+        ----------
+        other : float or numpy.ndarray or `GaussianDistribution`
+            - if other is a constant, the returned Gaussian is the same as this
+            one with other added to the mean and the same covariance
+            - if other is a 1D `numpy.ndarray`, it must be of the same length
+            as the dimension of this `GaussianDistribution`. In this case, the
+            returned `GaussianDistribution` is the distribution of the sum of
+            this Gaussian variate with other
+            - if other is a `GaussianDistribution`, it must have the same
+            number of parameters as this one
+        
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the sum of this Gaussian variate and `other`
         """
         return self.__add__(other)
     
     def __sub__(self, other):
         """
-        Returns the same thing as __add__ with an argument of (-other)
+        Subtracts the given object from the Gaussian random variate described
+        by this distribution.
+        
+        Parameters
+        ----------
+        other : float or numpy.ndarray or `GaussianDistribution`
+            - if other is a constant, the returned Gaussian is the same as this
+            one with other subtracted from the mean and the same covariance
+            - if other is a 1D `numpy.ndarray`, it must be of the same length
+            as the dimension of this `GaussianDistribution`. In this case, the
+            returned `GaussianDistribution` is the distribution of the
+            difference of this Gaussian variate with `other`
+            - if other is a `GaussianDistribution`, it must have the same
+            number of parameters as this one
+        
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the difference of this Gaussian variate and `other`
         """
         return self.__add__(-other)
     
     def __rsub__(self, other):
         """
-        Returns the negative of the returned value of __sub__ (this makes
-        subtraction doable from either side).
+        Subtracts the Gaussian random variate described by this distribution
+        from `other`.
+        
+        Parameters
+        ----------
+        other : float or numpy.ndarray or `GaussianDistribution`
+            - if other is a constant, the returned Gaussian is the same as this
+            one with mean replaces with other-mean and the same covariance
+            - if other is a 1D `numpy.ndarray`, it must be of the same length
+            as the dimension of this `GaussianDistribution`. In this case, the
+            returned `GaussianDistribution` is the distribution of the
+            difference of this Gaussian variate with `other`
+            - if other is a `GaussianDistribution`, it must have the same
+            number of parameters as this one
+        
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the difference of this Gaussian variate and `other`
         """
         return self.__sub__(other).__neg__()
     
     def __neg__(self):
         """
-        Returns a new GaussianDistribution with a mean multiplied by -1.
+        Finds the distribution of the negated gaussian variate.
+        
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution with the same covariance but a negated mean
         """
         return GaussianDistribution(-self.internal_mean.A[0],\
             self.covariance.A)
@@ -276,10 +378,16 @@ class GaussianDistribution(Distribution):
         Multiplies the Gaussian random variate described by this distribution
         by the given constant.
         
-        other: a constant number
+        Parameters
+        ----------
+        other : float
+            any real number
         
-        returns: GaussianDistribution representing the product of the random
-                 variable with this distribution and the constant other
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the product of the random variable with this
+            distribution and the constant `other`
         """
         new_mean = self.internal_mean.A[0] * other
         new_covariance = self.covariance.A * (other ** 2)
@@ -287,22 +395,45 @@ class GaussianDistribution(Distribution):
     
     def __rmul__(self, other):
         """
-        Returns the same thing as __mul__ (this makes multiplication
-        commutative).
+        Multiplies the Gaussian random variate described by this distribution
+        by the given constant.
+        
+        Parameters
+        ----------
+        other : float
+            any real number
+        
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the product of the random variable with this
+            distribution and the constant `other`
         """
         return self.__mul__(other)
     
     def __div__(self, other):
         """
-        Returns the same thing as __mul__ with an argument of (1/other).
+        Divides the Gaussian random variate described by this distribution
+        by the given constant.
+        
+        Parameters
+        ----------
+        other : float
+            any real number
+        
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of the quotient of the random variable with this
+            distribution and the constant `other`
         """
         return self.__mul__(1 / other)
     
     @property
     def covariance_diagonal(self):
         """
-        Property storing a boolean describing whether the covariance matrix is
-        exactly diagonal or not.
+        A boolean describing whether the covariance matrix is exactly diagonal
+        or not.
         """
         if not hasattr(self, '_covariance_diagonal'):
             self._covariance_diagonal = np.all(\
@@ -311,10 +442,11 @@ class GaussianDistribution(Distribution):
     
     def _make_square_root_and_inverse_square_root_covariance(self):
         """
-        Finds the square root and inverse square root of the
-        covariance matrix and stores them in internal properties, allowing
-        square_root_covariance and inverse_square_root_covariance properties to
-        be referenced.
+        Computes the square root and inverse square root of the covariance
+        matrix and stores them in internal properties, allowing
+        `GaussianDistribution.square_root_covariance` and
+        `GaussianDistribution.inverse_square_root_covariance` properties to be
+        referenced.
         """
         if self.covariance_diagonal:
             self._square_root_covariance =\
@@ -338,7 +470,8 @@ class GaussianDistribution(Distribution):
     @property
     def square_root_covariance(self):
         """
-        Property storing the square root of the covariance matrix.
+        The square root of the covariance matrix, given by
+        \\(\\boldsymbol{\\Sigma}^{1/2}\\).
         """
         if not hasattr(self, '_square_root_covariance'):
             self._make_square_root_and_inverse_square_root_covariance()
@@ -347,8 +480,8 @@ class GaussianDistribution(Distribution):
     @property
     def inverse_square_root_covariance(self):
         """
-        Property storing the inverse of the square root of the covariance
-        matrix.
+        The inverse of the square root of the covariance matrix, given by
+        \\(\\boldsymbol{\\Sigma}^{-1/2}\\).
         """
         if not hasattr(self, '_inverse_square_root_covariance'):
             self._make_square_root_and_inverse_square_root_covariance()
@@ -359,13 +492,21 @@ class GaussianDistribution(Distribution):
         Weights the given array by the inverse square root of the covariance
         matrix of this distribution.
         
-        array: the array to weight, can be any number of dimensions as long as
-               the specified one has length self.numparams
-        axis: index of the axis corresponding to the parameters
+        Parameters
+        ----------
+        array : numpy.ndarray
+            the array to weight, can be any number of dimensions as long as the
+            specified one has length `GaussianDistribution.numparams`
+        axis : int
+           index of the axis corresponding to the parameters
         
-        returns: numpy.ndarray of same shape as array corresponding to
-                 C^{-1/2} A where A is array shaped so that the matrix
-                 multiplication makes sense.
+        Returns
+        -------
+        weighted : numpy.ndarray
+            `numpy.ndarray` of same shape as `array` corresponding to
+            \\(\\boldsymbol{\\Sigma}^{-1/2}\\boldsymbol{A}\\), where
+            \\(\\boldsymbol{A}\\) is `array` shaped so that the matrix
+            multiplication makes sense.
         """
         axis = axis % array.ndim
         if self.covariance_diagonal:
@@ -398,24 +539,23 @@ class GaussianDistribution(Distribution):
         Finds and returns the distribution of the matrix product of other with
         the random variable this distribution describes.
         
-        other: if other is a 1D numpy.ndarray, it must be of the same length
-                                               as the dimension of this
-                                               GaussianDistribution. In this
-                                               case, the returned
-                                               GaussianDistribution is the
-                                               distribution of the dot product
-                                               of this Gaussian variate with
-                                               other
-               if other is a 2D numpy.ndarray, it must have shape
-                                               (newparams, self.numparams)
-                                               where newparams<=self.numparams
-                                               The returned
-                                               GaussianDistribution is the
-                                               distribution of other (matrix)
-                                               multiplied with this Gaussian
-                                               variate
+        Parameters
+        ----------
+        other : numpy.ndarray
+            - if other is a 1D numpy.ndarray, it must be of the same length as
+            the dimension of this `GaussianDistribution`. In this case, the
+            returned `GaussianDistribution` is the distribution of the dot
+            product of this Gaussian variate with `other`
+            - if other is a 2D numpy.ndarray, it must have shape
+            `(newparams, self.numparams)` where `newparams<=self.numparams`.
+            The returned `GaussianDistribution` is the distribution of `other`
+            (matrix) multiplied with this Gaussian variate
         
-        returns: GaussianDistribution object
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution of matrix multiplication of `other` and the random
+            variate this distribution represents
         """
         if type(other) in [list, tuple, np.ndarray]:
             other = np.array(other)
@@ -457,14 +597,21 @@ class GaussianDistribution(Distribution):
     def kullback_leibler_divergence(first, second):
         """
         Computes the Kullback-Leibler divergence between two distributions
-        represented by GaussianDistribution objects.
+        represented by `GaussianDistribution` objects.
         
-        first, second: Can be GaussianDistribution objects or 2D numpy.ndarrays
-                       representing covariance matrices (if only covariance
-                       matrices are given, then the term corresponding to the
-                       mean difference is omitted)
+        Parameters
+        ----------
+        first : numpy.ndarray or `GaussianDistribution`
+            distribution (or just covariance matrix) to find divergence from
+        second : numpy.ndarray or `GaussianDistribution`
+            distribution (or just covariance matrix) to find divergence to
         
-        returns: the Kullback-Leibler divergence from first to second
+        Returns
+        -------
+        divergence : float
+            the Kullback-Leibler divergence from `first` to `second`. If
+            `first` and `second` are covariance matrices, then the term
+            corresponding to the mean difference is omitted.
         """
         if isinstance(first, GaussianDistribution) and\
             isinstance(second, GaussianDistribution):
@@ -507,18 +654,35 @@ class GaussianDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws a point from this distribution using numpy.random.
+        Draws point(s) from this `GaussianDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns a numpy.ndarray containing the values from this draw
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if (self.numparams == 1):
             loc = self.internal_mean.A[0,0]
@@ -550,9 +714,11 @@ class GaussianDistribution(Distribution):
     @property
     def log_value_constant_part(self):
         """
-        Property storing the constant part of the log value, i.e. the part of
-        the sum that has no dependence on the point at which the distribution
-        is being evaluated.
+        The constant part of the log value, i.e. the part of the sum that has
+        no dependence on the point at which the distribution is being
+        evaluated. It is given by
+        \\(-\\frac{1}{2}\\ln{|\\boldsymbol{\\Sigma}|}-\
+        \\frac{N}{2}\\ln{2\\pi}\\).
         """
         if not hasattr(self, '_log_value_constant_part'):
             self._log_value_constant_part = (self.log_determinant_covariance +\
@@ -561,11 +727,22 @@ class GaussianDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Evaluates the log of the value of this distribution at the given point.
+        Computes the logarithm of the value of this `GaussianDistribution` at
+        the given point.
         
-        point single number if univariate, numpy.ndarray if multivariate
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: the log of the value of this distribution at the given point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if type(point) in numerical_types:
             minus_mean = np.matrix([point]) - self.internal_mean
@@ -586,8 +763,8 @@ class GaussianDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns the string representation of this
-        GaussianDistribution.
+        Finds and returns a string version of this `GaussianDistribution` of
+        the form `"Normal(mean=mu, variance=sigma2)"` or `"d-dim Normal"`.
         """
         if self.numparams == 1:
             return "Normal(mean={0:.3g},variance={1:.3g})".format(\
@@ -600,10 +777,16 @@ class GaussianDistribution(Distribution):
         Marginalizes this Gaussian over all of the parameters not described by
         given key.
         
-        key: key representing index (indices) to keep. It can be a slice, list,
-             numpy.ndarray, or integer.
+        Parameters
+        ----------
+        key : int or numpy.ndarray or slice
+            key representing index (indices) to keep
         
-        returns: marginalized GaussianDistribution
+        Returns
+        -------
+        marginalized : `GaussianDistribution`
+            distribution of the desired parameters marginalized over other
+            parameters
         """
         new_mean = self.internal_mean.A[0][key]
         new_covariance = self.covariance.A[:,key][key]
@@ -614,23 +797,36 @@ class GaussianDistribution(Distribution):
         Marginalizes this Gaussian over all of the parameters not described by
         given key.
         
-        key: key representing index (indices) to keep. It can be a slice, list,
-             numpy.ndarray, or integer.
+        Parameters
+        ----------
+        key : int or numpy.ndarray or slice
+            key representing index (indices) to keep
         
-        returns: marginalized GaussianDistribution
+        Returns
+        -------
+        marginalized : `GaussianDistribution`
+            distribution of the desired parameters marginalized over other
+            parameters
         """
         return self.marginalize(key)
     
     def conditionalize(self, known_indices, values):
         """
-        Marginalizes this Gaussian over all of the parameters not described by
-        given key.
+        Conditionalized this Gaussian over all of the parameters not described
+        by given `known_indices`.
         
-        known_indices: key representing index (indices) to keep. It can be a
-                       slice, list, numpy.ndarray, or integer.
-        values: values of variables corresponding to known_indices
+        Parameters
+        ----------
+        known_indices : int or numpy.ndarray or slice
+            key representing index (indices) to keep
+        values : numpy.ndarray
+            values of variables corresponding to `known_indices`
         
-        returns: conditionalized GaussianDistribution
+        Returns
+        -------
+        conditionalized : `GaussianDistribution`
+            distribution when the parameters corresponding to `known_indices`
+            are fixed to `values`
         """
         if isinstance(known_indices, slice):
             known_indices = np.arange(*known_indices.indices(self.numparams))
@@ -654,9 +850,18 @@ class GaussianDistribution(Distribution):
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a GaussianDistribution with the same mean (down to 10^-9
-        level) and variance (down to 10^-12 dynamic range) and False otherwise.
+        Checks for equality of this `GaussianDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `GaussianDistribution` with the
+            same mean and variance
         """
         if isinstance(other, GaussianDistribution):
             if self.numparams == other.numparams:
@@ -673,10 +878,19 @@ class GaussianDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of the cumulative distribution function. Only expected to make
-        sense if numparams == 1
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `GaussianDistribution`. Only valid when
+        `GaussianDistribution.numparams` is 1.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         return (self.internal_mean.A[0,0] +\
             (np.sqrt(2 * self.covariance.A[0,0]) * erfinv((2 * cdf) - 1)))
@@ -684,39 +898,43 @@ class GaussianDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return None if (self.numparams == 1) else ([None] * self.numparams)
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return None if (self.numparams == 1) else ([None] * self.numparams)
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, mean_link=None, covariance_link=None,\
         save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        fact that this is a GaussianDistribution is saved along with the mean
-        and covariance.
+        Fills the given hdf5 file group with data about this
+        `GaussianDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        mean_link: link to mean already existing in file (if it exists)
-        covariance_link: link to covariance already existing in file (if it
-                         exists)
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        mean_link : str or h5py.Dataset or None
+            link to mean vector in hdf5 file, if it exists
+        covariance_link : str or h5py.Dataset or None
+            link to mean vector in hdf5 file, if it exists
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GaussianDistribution'
         create_hdf5_dataset(group, 'mean', data=self.internal_mean.A[0],\
@@ -729,13 +947,18 @@ class GaussianDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GaussianDistribution from the given hdf5 file group.
+        Loads a `GaussianDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a GaussianDistribution object created from the information in
-                 the given group
+        Returns
+        -------
+        distribution : `GaussianDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'GaussianDistribution'
@@ -750,21 +973,37 @@ class GaussianDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `GaussianDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivatives of log_value(point) with respect to the
-        parameters.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `GaussianDistribution` at the given point.
         
-        point: either single value (if this Gaussian is 1D) or 1D vector (if
-               this Gaussian is ND) at which to evaluate the derivatives
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if this Gaussian is 1D, returns single value of derivative
-                 else, returns 1D vector of values of derivatives
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 1D
+            `numpy.ndarray` of length \\(p\\) is returned
         """
         if type(point) in numerical_types:
             mean_minus = self.internal_mean - np.matrix([point])
@@ -785,19 +1024,37 @@ class GaussianDistribution(Distribution):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `GaussianDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivatives of log_value(point) with respect to the
-        parameters.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `GaussianDistribution` at the given point.
         
-        point: vector at which to evaluate the derivatives
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: 2D square matrix of second derivatives of log value
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 2D
+            `numpy.ndarray` that is \\(p\\times p\\) is returned
         """
         if self.numparams == 1:
             return -self.inverse_covariance.A[0,0]
@@ -806,9 +1063,12 @@ class GaussianDistribution(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `GaussianDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return GaussianDistribution(self.internal_mean.A[0].copy(),\
             self.covariance.A.copy())
-

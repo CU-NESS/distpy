@@ -1,11 +1,11 @@
 """
-File: distpy/distribution/LoadDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing functions which can load any
+`distpy.distribution.Distribution.Distribution` (and it determines which needs
+to be loaded!) from an hdf5 file group or file in which it was saved.
 
-Description: File containing functions which can load any Distribution (and it
-             determines which needs to be loaded!) from an hdf5 file group or
-             file in which it was saved.
+**File**: $DISTPY/distpy/distribution/LoadDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 30 May 2021
 """
 from ..util import get_hdf5_value
 from .WindowedDistribution import WindowedDistribution
@@ -53,11 +53,18 @@ else:
 
 def load_distribution_from_hdf5_group(group, *args):
     """
-    Loads a distribution from the given hdf5 group.
+    Loads a distribution of unknown type from the given hdf5 group.
     
-    group: the hdf5 file group from which to load the distribution
+    Parameters
+    ----------
+    group : h5py.Group
+        the hdf5 file group from which to load the distribution
     
-    returns: Distribution object of the correct type
+    Returns
+    -------
+    distribution : `distpy.distribution.Distribution.Distribution`
+        loaded `distpy.distribution.Distribution.Distribution` of the correct
+        type
     """
     try:
         class_name = group.attrs['class']
@@ -108,17 +115,22 @@ def load_distribution_from_hdf5_group(group, *args):
 
 def load_distribution_from_hdf5_file(file_name):
     """
-    Loads Distribution object of any subclass from an hdf5 file at the given
-    file name.
+    Loads a distribution of unknown type from the given hdf5 file.
     
-    file_name: location of hdf5 file containing distribution
+    Parameters
+    ----------
+    file_name : str
+        the hdf5 file from which to load the distribution
     
-    returns: Distribution object contained in the hdf5 file
+    Returns
+    -------
+    distribution : `distpy.distribution.Distribution.Distribution`
+        loaded `distpy.distribution.Distribution.Distribution` of the correct
+        type
     """
     if have_h5py:
-        hdf5_file = h5py.File(file_name, 'r')
-        distribution = load_distribution_from_hdf5_group(hdf5_file)
-        hdf5_file.close()
+        with h5py.File(file_name, 'r') as hdf5_file:
+            distribution = load_distribution_from_hdf5_group(hdf5_file)
         return distribution
     else:
         raise no_h5py_error

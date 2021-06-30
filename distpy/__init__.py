@@ -47,31 +47,37 @@ from distpy.jumping import JumpingDistribution, GaussianJumpingDistribution,\
     load_jumping_distribution_from_hdf5_group,\
     load_jumping_distribution_from_hdf5_file, MetropolisHastingsSampler
 
-class_names = ['distpy.util.Expression.Expression', 'distpy.util.' +\
-    'SparseSquareBlockDiagonalMatrix.SparseSquareBlockDiagonalMatrix',\
-    'distpy.transform.Transform.Transform',\
-    'distpy.transform.TransformSet.TransformSet',\
-    'distpy.transform.TransformList.TransformList',\
-    'distpy.transform.AffineTransform.AffineTransform',\
-    'distpy.transform.ArcsinTransform.ArcsinTransform',\
-    'distpy.transform.ArsinhTransform.ArsinhTransform',\
-    'distpy.transform.BoxCoxTransform.BoxCoxTransform',\
-    'distpy.transform.CompositeTransform.CompositeTransform',\
-    'distpy.transform.Exp10Transform.Exp10Transform',\
-    'distpy.transform.ExponentialTransform.ExponentialTransform',\
-    'distpy.transform.ExponentiatedTransform.ExponentiatedTransform',\
-    'distpy.transform.LogTransform.LogTransform',\
-    'distpy.transform.Log10Transform.Log10Transform',\
-    'distpy.transform.LoggedTransform.LoggedTransform',\
-    'distpy.transform.LogisticTransform.LogisticTransform',\
-    'distpy.transform.NullTransform.NullTransform',\
-    'distpy.transform.PowerTransform.PowerTransform',\
-    'distpy.transform.ProductTransform.ProductTransform',\
-    'distpy.transform.ReciprocalTransform.ReciprocalTransform',\
-    'distpy.transform.SineTransform.SineTransform',\
-    'distpy.transform.SumTransform.SumTransform',\
-    'distpy.distribution.SparseGaussianDistribution.' +\
-    'SparseGaussianDistribution']
+util_class_names = ['Expression', 'SparseSquareBlockDiagonalMatrix']
+util_class_names =\
+    ['distpy.util.{0!s}.{0!s}'.format(name) for name in util_class_names]
+
+transform_class_names = ['', 'Affine', 'Arcsin', 'Arsinh', 'BoxCox',\
+    'Composite', 'Exp10', 'Exponential', 'Exponentiated', 'Log', 'Log10',\
+    'Logged', 'Logistic', 'Null', 'Power', 'Product', 'Reciprocal', 'Sine',\
+    'Sum']
+transform_class_names = ['TransformSet', 'TransformList'] +\
+    ['{!s}Transform'.format(name) for name in transform_class_names]
+transform_class_names = ['distpy.transform.{0!s}.{0!s}'.format(name)\
+    for name in transform_class_names]
+
+distribution_class_names = ['', 'Bernoulli', 'Beta', 'Binomial', 'ChiSquared',\
+    'CustomDiscrete', 'Deterministic', 'Direction', 'DiscreteUniform',\
+    'DoubleSidedExponential', 'EllipticalUniform', 'Exponential', 'Gamma',\
+    'GaussianDirection', 'Gaussian', 'GeneralizedPareto', 'Geometric',\
+    'Gridded', 'InfiniteUniform', 'KroneckerDelta', 'LinearDirection',\
+    'Linked', 'Parallelepiped', 'Poisson', 'Sech', 'SechSquared',\
+    'Sequential', 'SparseGaussian', 'TruncatedGaussian', 'UniformCondition',\
+    'UniformDirection', 'Uniform', 'UniformTriangulation', 'Weibull',\
+    'Windowed']
+distribution_class_names = ['DistributionList', 'DistributionSet',\
+    'DistributionSum', 'DistributionHarmonizer'] +\
+    ['{!s}Distribution'.format(name) for name in distribution_class_names]
+distribution_class_names = ['distpy.distribution.{0!s}.{0!s}'.format(name)\
+    for name in distribution_class_names]
+
+class_names =\
+    util_class_names + transform_class_names + distribution_class_names
+
 # init not included in magic_names because __init__ is automatically documented
 # hash not included because it appears automatically
 magic_names = ['new', 'del', 'repr', 'str', 'bytes', 'format', 'lt', 'le',\

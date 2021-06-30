@@ -1,10 +1,10 @@
 """
-File: distpy/distribution/DoubleSidedExponentialDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a double-sided exponential distribution.
+Its PDF is represented by: $$f(x) = \\frac{e^{-|x-\\mu|/\\theta}}{2\\theta}$$
 
-Description: File containing class representing double sided exponential
-             distribution.
+**File**: $DISTPY/distpy/distribution/ABCDEFDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -14,16 +14,22 @@ from .Distribution import Distribution
 
 class DoubleSidedExponentialDistribution(Distribution):
     """
-    Distribution with a double-sided exponential distribution. Double sided
-    exponential distributions are "peak"ier than Gaussians.
+    Class representing a double-sided exponential distribution. Its PDF is
+    represented by: $$f(x) = \\frac{e^{-|x-\\mu|/\\theta}}{2\\theta}$$
     """
     def __init__(self, mean, variance, metadata=None):
         """
-        Initializes a new DoubleSidedExponentialDistribution with the given
-        parameters.
+        Initializes a new `DoubleSidedExponentialDistribution` with the given
+        parameter values.
         
-        mean: mean, mode and median of the distribution
-        variance: variance of distribution
+        Parameters
+        ----------
+        mean : float
+            real number, \\(\\mu\\)
+        variance : float
+            positive number, equal to \\(2\\theta^2\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.mean = mean
         self.variance = variance
@@ -32,7 +38,7 @@ class DoubleSidedExponentialDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the center of this distribution.
+        The mean of this `DoubleSidedExponentialDistribution`, \\(\\mu\\).
         """
         if not hasattr(self, '_mean'):
             raise AttributeError("mean was referenced before it was set.")
@@ -41,7 +47,12 @@ class DoubleSidedExponentialDistribution(Distribution):
     @mean.setter
     def mean(self, value):
         """
-        Setter for the mean of this distribution.
+        Setter for `DoubleSidedExponentialDistribution.mean`.
+        
+        Parameters
+        ----------
+        value : float
+            any real number.
         """
         if type(value) in numerical_types:
             self._mean = (value * 1.)
@@ -53,7 +64,8 @@ class DoubleSidedExponentialDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the variance of this distribution.
+        The variance of this `DoubleSidedExponentialDistribution`,
+        \\(2\\theta^2\\).
         """
         if not hasattr(self, '_variance'):
             raise AttributeError("variance was referenced before it was set.")
@@ -62,7 +74,12 @@ class DoubleSidedExponentialDistribution(Distribution):
     @variance.setter
     def variance(self, value):
         """
-        Setter for the variance of this distribution.
+        Setter for `DoubleSidedExponentialDistribution.variance`.
+        
+        Parameters
+        ----------
+        value : float
+            any positive number.
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -78,7 +95,8 @@ class DoubleSidedExponentialDistribution(Distribution):
     @property
     def const_lp_term(self):
         """
-        Property storing the constant part of the log probability density.
+        The constant part of the log probability density, given by
+        \\(-\\ln{(2\\theta)}\\).
         """
         if not hasattr(self, '_const_lp_term'):
             self._const_lp_term = (np.log(2) + np.log(self.variance)) / (-2)
@@ -87,15 +105,15 @@ class DoubleSidedExponentialDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Exponential pdf is univariate so numparams always returns 1.
+        The number of parameters of this `DoubleSidedExponentialDistribution`,
+        1.
         """
         return 1
     
     @property
     def root_half_variance(self):
         """
-        Property storing the square root of half the variance. This is the same
-        as 1/sqrt(2) times the standard deviation.
+        The square root of half the variance, \\(\\theta\\).
         """
         if not hasattr(self, '_root_half_variance'):
             self._root_half_variance = np.sqrt(self.variance / 2.)
@@ -103,26 +121,45 @@ class DoubleSidedExponentialDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `DoubleSidedExponentialDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         return rand.laplace(loc=self.mean, scale=self.root_half_variance,\
             size=shape)
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is value.
+        Computes the logarithm of the value of this
+        `DoubleSidedExponentialDistribution` at the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         return self.const_lp_term -\
             (np.abs(point - self.mean) / self.root_half_variance)
@@ -130,15 +167,27 @@ class DoubleSidedExponentialDistribution(Distribution):
     def to_string(self):
         """
         Finds and returns a string version of this
-        DoubleSidedExponentialDistribution.
+        `DoubleSidedExponentialDistribution` of the form `"DSExp(mean, var)"`.
         """
         return "DSExp({0:.2g}, {1:.2g})".format(self.mean, self.variance)
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is an DoubleSidedExponentialDistribution with the same mean and
-        sigma and False otherwise.
+        Checks for equality of this `DoubleSidedExponentialDistribution` with
+        `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a
+            `DoubleSidedExponentialDistribution` with the same
+            `DoubleSidedExponentialDistribution.mean` and
+            `DoubleSidedExponentialDistribution.variance`
         """
         if isinstance(other, DoubleSidedExponentialDistribution):
             tol_kwargs = {'rtol': 1e-6, 'atol': 1e-9}
@@ -152,9 +201,18 @@ class DoubleSidedExponentialDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of the cumulative distribution function.
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `DoubleSidedExponentialDistribution`.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         twice_distances_from_mean_cdf = np.abs((2 * cdf) - 1)
         distances_from_mean = ((-self.root_half_variance) *\
@@ -172,34 +230,38 @@ class DoubleSidedExponentialDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return None
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return None
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data about this distribution. The
-        only things to save are the class name, mean, and variance.
+        Fills the given hdf5 file group with data about this
+        `DoubleSidedExponentialDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DoubleSidedExponentialDistribution'
         group.attrs['mean'] = self.mean
@@ -210,14 +272,19 @@ class DoubleSidedExponentialDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a DoubleSidedExponentialDistribution from the given hdf5 file
+        Loads a `DoubleSidedExponentialDistribution` from the given hdf5 file
         group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a ExponentialDistribution object created from the information
-                 in the given group
+        Returns
+        -------
+        distribution : `DoubleSidedExponentialDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'DoubleSidedExponentialDistribution'
@@ -233,45 +300,72 @@ class DoubleSidedExponentialDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `DoubleSidedExponentialDistribution.gradient_of_log_value` method can
+        be called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `DoubleSidedExponentialDistribution` at the given point.
         
-        point: single number at which to evaluate the deravitve
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : float
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a float
         """
         return np.sign(self.mean - point) / self.root_half_variance
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `DoubleSidedExponentialDistribution.hessian_of_log_value` method can
+        be called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `DoubleSidedExponentialDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : float
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\boldsymbol{\\nabla}^T\
+            \\ln{\\big(f(x)\\big)}\\) as a float
         """
         return 0
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `DoubleSidedExponentialDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return DoubleSidedExponentialDistribution(self.mean, self.variance)
 

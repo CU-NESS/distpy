@@ -1,10 +1,11 @@
 """
-File: distpy/distribution/KroneckerDeltaDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a delta distribution. Its PDF is
+represented by: $$f(x) = \\delta(x-\\mu),$$ where \\(\\delta(x)\\) is the Dirac
+delta function.
 
-Description: File containing class representing distribution which always takes
-             the same value.
+**File**: $DISTPY/distpy/distribution/KroneckerDeltaDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 from ..util import int_types, numerical_types, sequence_types, bool_types
@@ -12,16 +13,23 @@ from .Distribution import Distribution
 
 class KroneckerDeltaDistribution(Distribution):
     """
-    Distribution which always returns the same discrete value.
+    Class representing a delta distribution. Its PDF is represented by:
+    $$f(x) = \\delta(x-\\mu),$$ where \\(\\delta(x)\\) is the Dirac delta
+    function.
     """
     def __init__(self, value, is_discrete=True, metadata=None):
         """
-        Initializes a KroneckerDeltaDistribution class
+        Initializes a new `KroneckerDeltaDistribution` with the given parameter
+        values.
         
-        value: value which is always returned by this distribution
-        is_discrete: True if the variable underlying this distribution is
-                     discrete. False otherwise (default True)
-        metadata: data to store alongside this distribution
+        Parameters
+        ----------
+        value : float or `numpy.ndarray`
+            the value, \\(\\mu\\), that is always returned
+        is_discrete : bool
+            bool determining whether this distribution is considered discrete
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.value = value
         self.is_discrete = is_discrete
@@ -30,8 +38,7 @@ class KroneckerDeltaDistribution(Distribution):
     @property
     def value(self):
         """
-        Property storing the value which is always returned by this
-        distribution.
+        The value which is always returned by this distribution.
         """
         if not hasattr(self, '_value'):
             raise AttributeError("value referenced before it was set.")
@@ -40,9 +47,12 @@ class KroneckerDeltaDistribution(Distribution):
     @value.setter
     def value(self, value):
         """
-        Setter for the value which is always returned by this distribution
+        Setter for `KroneckerDeltaDistribution.value`
         
-        value: value which is always returned by this distribution
+        Parameters
+        ----------
+        value : int or float or numpy.ndarray
+            value which is always returned by this distribution
         """
         if type(value) in numerical_types:
             self._value = value
@@ -63,7 +73,7 @@ class KroneckerDeltaDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `KroneckerDeltaDistribution`, \\(\\mu\\).
         """
         if not hasattr(self, '_mean'):
             self._mean = self.value
@@ -72,7 +82,7 @@ class KroneckerDeltaDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `KroneckerDeltaDistribution`, \\(0\\).
         """
         if not hasattr(self, '_variance'):
             if self.numparams == 1:
@@ -83,21 +93,36 @@ class KroneckerDeltaDistribution(Distribution):
     
     def draw(self, shape=None, random=None):
         """
-        Draws a point from the distribution. Must be implemented by any base
-        class.
+        Draws point(s) from this `KroneckerDeltaDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
-        
         if type(shape) is type(None):
             return self.value
         else:
@@ -111,13 +136,21 @@ class KroneckerDeltaDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
+        Computes the logarithm of the value of this
+        `KroneckerDeltaDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        value : float
+            0 if `point` is `KroneckerDeltaDistribution.value`, -np.inf
+            otherwise
         """
         if np.all(point == self.value):
             return 0.
@@ -127,53 +160,81 @@ class KroneckerDeltaDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `KroneckerDeltaDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative(s) of log_value(point) with respect to the
-        parameter(s).
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `KroneckerDeltaDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        derivative of log value
-                 else, returns 1D numpy.ndarray containing the N derivatives of
-                       the log value with respect to each individual parameter
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 1D
+            `numpy.ndarray` of length \\(p\\) is returned
         """
         return (point * 0)
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `KroneckerDeltaDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative(s) of log_value(point) with respect to
-        the parameter(s).
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `KroneckerDeltaDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        second derivative of log value
-                 else, returns 2D square numpy.ndarray with dimension length
-                       equal to the number of parameters representing the N^2
-                       different second derivatives of the log value
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 2D
+            `numpy.ndarray` that is \\(p\\times p\\) is returned
         """
         return (point * 0)
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The number of parameters of this `KroneckerDeltaDistribution`.
         """
         if not hasattr(self, '_numparams'):
             if type(self.value) in numerical_types:
@@ -184,19 +245,25 @@ class KroneckerDeltaDistribution(Distribution):
     
     def to_string(self):
         """
-        Returns a string representation of this distribution. It must be
-        implemented by all subclasses.
+        Finds and returns a string version of this `KroneckerDeltaDistribution`
+        of the form `"KroneckerDeltaDistribution(mu)"`.
         """
         return 'KroneckerDeltaDistribution({!s})'.format(self.value)
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Checks for equality of this `KroneckerDeltaDistribution` with `other`.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `KroneckerDeltaDistribution` with
+            the same `KroneckerDeltaDistribution.value`
         """
         if isinstance(other, KroneckerDeltaDistribution):
             value_equal = np.all(self.value == other.value)
@@ -206,37 +273,38 @@ class KroneckerDeltaDistribution(Distribution):
             return False
     
     @property
-    def is_discrete(self):
-        """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
-        """
-        if not hasattr(self, '_is_discrete'):
-            raise AttributeError("is_discrete referenced before it was set.")
-        return self._is_discrete
-    
-    @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return self.value
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return self.value
+    
+    @property
+    def is_discrete(self):
+        """
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
+        """
+        if not hasattr(self, '_is_discrete'):
+            raise AttributeError("is_discrete referenced before it was set.")
+        return self._is_discrete
     
     @is_discrete.setter
     def is_discrete(self, value):
         """
-        Setter for whether this distribution is discrete or continuous (the
-        form itself does not determine this since this distribution cannot be
-        drawn from).
+        Setter for `KroneckerDeltaDistribution.is_discrete`.
         
-        value: must be a bool (True for discrete, False for continuous)
+        Parameters
+        ----------
+        value : bool
+            True or False
         """
         if type(value) in bool_types:
             self._is_discrete = value
@@ -245,13 +313,17 @@ class KroneckerDeltaDistribution(Distribution):
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        Fills the given hdf5 file group with data about this
+        `KroneckerDeltaDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'KroneckerDeltaDistribution'
         group.attrs['value'] = self.value
@@ -261,13 +333,18 @@ class KroneckerDeltaDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a KroneckerDeltaDistribution from the given hdf5 file group.
+        Loads a `KroneckerDeltaDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a KroneckerDeltaDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `KroneckerDeltaDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'KroneckerDeltaDistribution'
@@ -281,10 +358,8 @@ class KroneckerDeltaDistribution(Distribution):
     @property
     def confidence_interval(self):
         """
-        All confidence intervals of the KroneckerDelta distribution are
-        infinitely small and centered on the value of the distribution.
-        
-        returns: (value, value) where value is the peak of this distribution
+        Confidence interval as a 2-tuple of the form (value, value). It is
+        returned by all confidence interval functions.
         """
         return (self.value, self.value)
     
@@ -292,22 +367,34 @@ class KroneckerDeltaDistribution(Distribution):
         """
         Finds confidence interval furthest to the left.
         
-        probability_level: the probability with which a random variable with
-                           this distribution will exist in returned interval
+        Parameters
+        ----------
+        probability_level : float
+            the probability with which a random variable with this distribution
+            will exist in returned interval
         
-        returns: (low, high) interval
+        Returns
+        -------
+        interval : tuple
+            interval in a 2-tuple of form (low, high)
         """
         return self.confidence_interval
     
     def central_confidence_interval(self, probability_level):
         """
-        Finds confidence interval which has same probability of lying above or
-        below interval.
+        Finds confidence interval with equal amounts of probability on each
+        side.
         
-        probability_level: the probability with which a random variable with
-                           this distribution will exist in returned interval
+        Parameters
+        ----------
+        probability_level : float
+            the probability with which a random variable with this distribution
+            will exist in returned interval
         
-        returns: (low, high) interval
+        Returns
+        -------
+        interval : tuple
+            interval in a 2-tuple of form (low, high)
         """
         return self.confidence_interval
     
@@ -315,17 +402,27 @@ class KroneckerDeltaDistribution(Distribution):
         """
         Finds confidence interval furthest to the right.
         
-        probability_level: the probability with which a random variable with
-                           this distribution will exist in returned interval
+        Parameters
+        ----------
+        probability_level : float
+            the probability with which a random variable with this distribution
+            will exist in returned interval
         
-        returns: (low, high) interval
+        Returns
+        -------
+        interval : tuple
+            interval in a 2-tuple of form (low, high)
         """
         return self.confidence_interval
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `KroneckerDeltaDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return KroneckerDeltaDistribution(self.value,\
             is_discrete=self.is_discrete)

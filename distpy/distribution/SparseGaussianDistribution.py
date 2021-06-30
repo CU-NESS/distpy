@@ -790,13 +790,14 @@ class SparseGaussianDistribution(Distribution):
         
         Parameters
         ----------
-        group: h5py.Group
-            hdf5 file group from which to load a distribution
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
         Returns
         -------
-        loaded : `SparseGaussianDistribution`
-            distribution loaded from the given hdf5 file group
+        distribution : `SparseGaussianDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'SparseGaussianDistribution'
@@ -868,13 +869,12 @@ class SparseGaussianDistribution(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this `SparseGaussianDistribution`. This function
-        ignores metadata.
+        Copies this distribution.
         
         Returns
         -------
         copied : `SparseGaussianDistribution`
-            a deep copy of this distribution, excluding metadata
+            a deep copy of this distribution, ignoring metadata.
         """
         return SparseGaussianDistribution(self.mean.copy(),\
             self.covariance.copy())

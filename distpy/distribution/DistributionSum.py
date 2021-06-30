@@ -1,10 +1,13 @@
 """
-File: distpy/distribution/DistributionSum.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution that is a weighted sum of
+other distributions. Its PDF is represented by: $$f(\\boldsymbol{x}) =\
+\\frac{\\sum_{k=1}^Nw_kg_k(\\boldsymbol{x})}{\\sum_{k=1}^Nw_k},$$ where the
+\\(w_k>0\\) and the \\(g_k\\) are PDFs (or PMFs) that define random variates of
+the same dimension.
 
-Description: File containing class which represents a weighted sum of
-             distributions.
+**File**: $DISTPY/distpy/distribution/DistributionSum.py  
+**Author**: Keith Tauscher  
+**Date**: 1 Jun 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -14,15 +17,24 @@ from .Distribution import Distribution
 
 class DistributionSum(Distribution):
     """
-    Class which represents a weighted sum of distributions.
+    Class representing a distribution that is a weighted sum of other
+    distributions. Its PDF is represented by: $$f(\\boldsymbol{x}) =\
+    \\frac{\\sum_{k=1}^Nw_kg_k(\\boldsymbol{x})}{\\sum_{k=1}^Nw_k},$$ where the
+    \\(w_k>0\\) and the \\(g_k\\) are PDFs (or PMFs) that define random
+    variates of the same dimension.
     """
     def __init__(self, distributions, weights, metadata=None):
         """
-        Creates a new DistributionSum object out of the given distributions.
+        Creates a new `DistributionSum` object out of the given distributions.
         
-        distributions: sequence of Distribution objects with the same numparams
-        weights: sequence of numbers with which to combine (need not be
-                 normalized but they must all be positive)
+        Parameters
+        ----------
+        distributions : sequence
+            sequence of `distpy.distribution.Distribution.Distribution` objects
+            with the same numparams and PDFs given by \\(g_k\\)
+        weights : sequence
+            sequence of numbers, \\(w_k\\), with which to combine (need not be
+            normalized but they must all be positive)
         """
         self.distributions = distributions
         self.weights = weights
@@ -31,8 +43,8 @@ class DistributionSum(Distribution):
     @property
     def distributions(self):
         """
-        Property storing a list of Distribution objects which make up this
-        DistributionSum.
+        A list of `distpy.distribution.Distribution.Distribution` objects which
+        make up this `DistributionSum`. The PDFs are given by \\(g_k\\).
         """
         if not hasattr(self, '_distributions'):
             raise AttributeError("distributions was referenced before it " +\
@@ -42,9 +54,12 @@ class DistributionSum(Distribution):
     @distributions.setter
     def distributions(self, value):
         """
-        Setter for the Distribution objects making up this DistributionSum.
+        Setter for `DistributionSum.distributions`.
         
-        value: sequence of Distributions making up this DistributionSum
+        Parameters
+        ----------
+        value : sequence
+            sequence of `distpy.distribution.Distribution.Distribution` objects
         """
         if type(value) in sequence_types:
             if all([isinstance(element, Distribution) for element in value]):
@@ -69,8 +84,8 @@ class DistributionSum(Distribution):
     @property
     def num_distributions(self):
         """
-        Property storing the number of Distribution objects which make up this
-        DistributionSum object.
+        The number of `distpy.distribution.Distribution.Distribution` objects
+        which make up this `DistributionSum` object.
         """
         if not hasattr(self, '_num_distributions'):
             self._num_distributions = len(self.distributions)
@@ -79,7 +94,8 @@ class DistributionSum(Distribution):
     @property
     def weights(self):
         """
-        Property storing the weights with which to combine the distributions.
+        The weights, \\(w_k\\), with which to combine the underlying
+        `distpy.distribution.Distribution.Distribution` objects.
         """
         if not hasattr(self, '_weights'):
             raise AttributeError("weights was referenced before it was set.")
@@ -88,9 +104,12 @@ class DistributionSum(Distribution):
     @weights.setter
     def weights(self, value):
         """
-        Setter for the weights with which to combine the distributions.
+        Setter for `DistributionSum.weights`.
         
-        value: sequence of numbers
+        Parameters
+        ----------
+        value : sequence
+            sequence of positive numbers
         """
         if type(value) in sequence_types:
             if len(value) == self.num_distributions:
@@ -109,17 +128,79 @@ class DistributionSum(Distribution):
     @property
     def total_weight(self):
         """
-        Property storing the sum of all of the weights given to this
-        distribution.
+        The sum of all elements of `DistributionSum.weights`
         """
         if not hasattr(self, '_total_weight'):
             self._total_weight = np.sum(self.weights)
         return self._total_weight
     
     @property
+    def minimum(self):
+        """
+        The minimum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_minimum'):
+            if self.numparams == 1:
+                self._minimum = np.inf
+                for distribution in self.distributions:
+                    if type(distribution.minimum) is type(None):
+                        self._minimum = None
+                        break
+                    else:
+                        self._minimum =\
+                            min(self._minimum, distribution.minimum)
+            else:
+                self._minimum = [np.inf] * self.numparams
+                for distribution in self.distributions:
+                    this_minimum = distribution.minimum
+                    for iparam in range(self.numparams):
+                        if type(self._minimum[iparam]) is type(None):
+                            break
+                        elif type(this_minimum[iparam]) is type(None):
+                            self._minimum[iparam] = None
+                            break
+                        else:
+                            self._minimum[iparam] = min(self._minimum[iparam],\
+                                this_minimum[iparam])
+        return self._minimum
+    
+    @property
+    def maximum(self):
+        """
+        The maximum allowable value(s) in this distribution.
+        """
+        if not hasattr(self, '_maximum'):
+            if self.numparams == 1:
+                self._minimum = -np.inf
+                for distribution in self.distributions:
+                    if type(distribution.maximum) is type(None):
+                        self._maximum = None
+                        break
+                    else:
+                        self._maximum =\
+                            max(self._maximum, distribution.maximum)
+            else:
+                self._maximum = [-np.inf] * self.numparams
+                for distribution in self.distributions:
+                    this_maximum = distribution.maximum
+                    for iparam in range(self.numparams):
+                        if type(self._maximum[iparam]) is type(None):
+                            break
+                        elif type(this_maximum[iparam]) is type(None):
+                            self._maximum[iparam] = None
+                            break
+                        else:
+                            self._maximum[iparam] = max(self._maximum[iparam],\
+                                this_maximum[iparam])
+        return self._maximum
+
+    @property
     def mean(self):
         """
-        Property storing the mean of the distribution.
+        The mean of the distribution,
+        \\(\\frac{\\sum_{k=1}^Nw_k\\mu_k}{\\sum_{k=1}^Nw_k}\\), where
+        \\(\\mu_k\\) is the mean of the \\(k^{\\text{th}}\\) element of
+        `DistributionSum.distributions`.
         """
         if not hasattr(self, '_mean'):
             self._mean = np.sum([(weight * distribution.mean)\
@@ -130,7 +211,12 @@ class DistributionSum(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of the distribution.
+        The (co)variance of the distribution,
+        \\(\\frac{\\sum_{k=1}^Nw_k(\\mu_k\\mu_k^T+\\Sigma)}{\\sum_{k=1}^Nw_k}-\
+        \\mu\\mu^T\\), where \\(\\mu_k\\) and \\(\\Sigma\\) are the mean and
+        (co)variance of the \\(k^{\\text{th}}\\) element of
+        `DistributionSum.distributions` and \\(\\mu\\) is
+        `DistributionSum.mean`.
         """
         if not hasattr(self, '_variance'):
             if self.numparams == 1:
@@ -158,9 +244,9 @@ class DistributionSum(Distribution):
     @property
     def discrete_cdf_values(self):
         """
-        Property storing the upper bound of CDF values allocated to each model.
-        The sequence is monotonically increasing and its last element is equal
-        to 1.
+        The upper bound of CDF values allocated to each component of
+        `DistributionSum.distributions`. The sequence is monotonically
+        increasing and its last element is equal to 1.
         """
         if not hasattr(self, '_discrete_cdf_values'):
             self._discrete_cdf_values =\
@@ -169,19 +255,35 @@ class DistributionSum(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws a point from the distribution. Must be implemented by any base
-        class.
+        Draws point(s) from this `DistributionSum`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if type(shape) is type(None):
             uniform = random.uniform()
@@ -213,13 +315,22 @@ class DistributionSum(Distribution):
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
+        Computes the logarithm of the value of this `DistributionSum` at the
+        given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         values = np.exp([distribution.log_value(point)\
             for distribution in self.distributions])
@@ -228,24 +339,25 @@ class DistributionSum(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `DistributionSum.gradient_of_log_value` method can be called safely.
         """
         return False
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `DistributionSum.hessian_of_log_value` method can be called safely.
         """
         return False
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution.
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams was referenced before " +\
@@ -254,19 +366,30 @@ class DistributionSum(Distribution):
     
     def to_string(self):
         """
-        Returns a string representation of this distribution. It must be
-        implemented by all subclasses.
+        Finds a string representation of this distribution.
+
+        Returns
+        -------
+        representation : str
+            a string representation of this distribution of the form
+            `"Sum of N dists"`
         """
         return "Sum of {:d} dists".format(self.num_distributions)
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Checks for equality of this `DistributionSum` with `other`.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `DistributionSum` with the
+            same `DistributionSum.distributions` and `DistributionSum.weights`
         """
         if isinstance(other, DistributionSum):
             if self.num_distributions == other.num_distributions:
@@ -284,8 +407,8 @@ class DistributionSum(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         if not hasattr(self, '_is_discrete'):
             raise AttributeError("is_discrete was referenced before " +\
@@ -294,13 +417,17 @@ class DistributionSum(Distribution):
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        Fills the given hdf5 file group with data about this
+        `DistributionSum` so that it can be loaded later.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DistributionSum'
         group.attrs['num_distributions'] = self.num_distributions
@@ -315,18 +442,18 @@ class DistributionSum(Distribution):
     @staticmethod
     def load_from_hdf5_group(group, *distribution_classes):
         """
-        Loads a Distribution from the given hdf5 file group. All Distribution
-        subclasses must implement this method if things are to be saved in hdf5
-        files.
+        Loads a `DistributionSum` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
-        distribution_classes: sequence (of length num_distributions) of class
-                              objects which can be used to load the
-                              sub-distributions
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a Distribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `DistributionSum`
+            distribution created from the information in the given group
         """
         try:
             assert(group.attrs['class'] == 'DistributionSum')
@@ -348,8 +475,8 @@ class DistributionSum(Distribution):
     @property
     def can_give_confidence_intervals(self):
         """
-        Confidence intervals for most distributions can be generated as long as
-        this distribution describes only one dimension.
+        This distribution cannot give confidence intervals because its
+        cumulative distribution function cannot be inverted in general.
         """
         return False
 

@@ -1,9 +1,15 @@
 """
-File: distpy/distribution/GeometricDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a geometric distribution. Its PMF is
+represented by: $$f(x)=\\begin{cases}\
+\\frac{1-p}{1-p^{x_{\\text{max}}-x_{\\text{min}}+1}}\\ p^{x-x_{\\text{min}}} &\
+x \\in \\{x_{\\text{min}},x_{\\text{min}}+1,\\ldots,x_{\\text{max}}\\} \\\\\
+0 & \\text{otherwise} \\end{cases},$$ where \\(x_{\\text{min}}\\) is an integer
+and \\(x_{\\text{max}}\\) can be either an integer greater than or equal to
+\\(x_{\\text{min}}\\) or \\(\\infty\\).
 
-Description: File containing class representing a geometric distribution.
+**File**: $DISTPY/distpy/distribution/GeometricDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -12,14 +18,31 @@ from .Distribution import Distribution
 
 class GeometricDistribution(Distribution):
     """
-    Distribution with support on the non-negative integers. It has only one
-    parameter, the common ratio between successive probabilities.
+    Class representing a geometric distribution. Its PMF is represented by:
+    $$f(x)=\\begin{cases}\
+    \\frac{1-p}{1-p^{x_{\\text{max}}-x_{\\text{min}}+1}}\\ \
+    p^{x-x_{\\text{min}}} & x \\in \\{x_{\\text{min}},x_{\\text{min}}+1,\
+    \\ldots,x_{\\text{max}}\\} \\\\ 0 & \\text{otherwise} \\end{cases},$$
+    where \\(x_{\\text{min}}\\) is an integer and \\(x_{\\text{max}}\\) can be
+    either an integer greater than or equal to \\(x_{\\text{min}}\\) or
+    \\(\\infty\\).
     """
     def __init__(self, common_ratio, minimum=0, maximum=None, metadata=None):
         """
-        Initializes new GeometricDistribution with given scale.
+        Initializes a new `GeometricDistribution` with the given parameter
+        values.
         
-        common_ratio: ratio between successive probabilities
+        Parameters
+        ----------
+        common_ratio : float
+            real number, \\(p\\), in (0, 1)
+        minimum : int
+            minimum value that could be returned by this distribution
+        maximum : int
+            maximum value that could be returned by this distribution. if None,
+            there is no maximum value
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.common_ratio = common_ratio
         self.minimum = minimum
@@ -29,8 +52,8 @@ class GeometricDistribution(Distribution):
     @property
     def common_ratio(self):
         """
-        Property storing the common ration between the probability mass
-        function of successive integers. Always between 0 and 1 (exclusive)
+        The common ration between the probability mass function of successive
+        integers.
         """
         if not hasattr(self, '_common_ratio'):
             raise AttributeError("common_ration was referenced before it " +\
@@ -40,10 +63,12 @@ class GeometricDistribution(Distribution):
     @common_ratio.setter
     def common_ratio(self, value):
         """
-        Setter for the common ratio between the probability mass function of
-        successive integers.
+        Setter for `GeometricDistribution.common_ratio`.
         
-        value: must be a number between 0 and 1 (exclusive)
+        Parameters
+        ----------
+        value : float
+            a number between 0 and 1 (exclusive)
         """
         if type(value) in numerical_types:
             if (value > 0.) and (value < 1.):
@@ -58,8 +83,7 @@ class GeometricDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the lowest integer allowable to be returned by this
-        distribution.
+        The minimum allowable value in this distribution.
         """
         if not hasattr(self, '_minimum'):
             raise AttributeError("minimum referenced before it was set.")
@@ -68,9 +92,12 @@ class GeometricDistribution(Distribution):
     @minimum.setter
     def minimum(self, value):
         """
-        Setter for the minimum allowable value returned by this distribution.
+        Setter for `GeometricDistribution.minimum`
         
-        value: an integer
+        Parameters
+        ----------
+        value : int
+            minimum value that can be returned by this `GeometricDistribution`
         """
         if type(value) in int_types:
             self._minimum = value
@@ -80,8 +107,7 @@ class GeometricDistribution(Distribution):
     @property
     def maximum(self):
         """
-        Property storing either the upper limit of this distribution. Can be
-        None or an integer greater than minimum.
+        The maximum allowable value in this distribution.
         """
         if not hasattr(self, '_maximum'):
             raise AttributeError("maximum was referenced before it was set.")
@@ -90,11 +116,15 @@ class GeometricDistribution(Distribution):
     @maximum.setter
     def maximum(self, value):
         """
-        Setter for the maximum allowable value returned by this distribution.
+        Setter for `GeometricDistribution.maximum`
         
-        value: if None, there is no maximum and drawn values can be arbitrarily
-                        large
-               otherwise, maximum should be an integer greater than minimum
+        Parameters
+        ----------
+        value : int or None
+            - if None, there is no maximum and drawn values can be arbitrarily
+            large
+            - otherwise, `value` should be an integer greater than
+            `GeometricDistribution.minimum`
         """
         if type(value) is type(None):
             self._maximum = None
@@ -109,8 +139,8 @@ class GeometricDistribution(Distribution):
     @property
     def range(self):
         """
-        Property storing the one greater than the distance between minimum and
-        maximum.
+        One greater than the distance between `GeometricDistribution.minimum`
+        and `GeometricDistribution.maximum`.
         """
         if not hasattr(self, '_range'):
             if type(self.maximum) is type(None):
@@ -122,8 +152,10 @@ class GeometricDistribution(Distribution):
     @property
     def constant_in_log_value(self):
         """
-        Property storing the portion of the log value which does not depend on
-        the point at which the value is computed.
+        The portion of the log value which does not depend on the point at
+        which the value is computed, given by \\(\\ln{(1-p)} - \\begin{cases}\
+        \\ln{(1-p^r)} & r<\\infty \\\\ 0 & \\text{otherwise} \\end{cases}\\),
+        where \\(r\\) is the range of values.
         """
         if not hasattr(self, '_constant_in_log_value'):
             self._constant_in_log_value = np.log(1 - self.common_ratio)
@@ -135,14 +167,14 @@ class GeometricDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Geometric distribution pdf is univariate so numparams always returns 1.
+        The number of parameters of this `GeometricDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `GeometricDistribution`.
         """
         if not hasattr(self, '_mean'):
             mean = self.minimum + (self.common_ratio / (1 - self.common_ratio))
@@ -156,7 +188,7 @@ class GeometricDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `GeometricDistribution`.
         """
         if not hasattr(self, '_variance'):
             roomr = self.common_ratio / (1 - self.common_ratio)
@@ -175,8 +207,8 @@ class GeometricDistribution(Distribution):
     @property
     def log_common_ratio(self):
         """
-        Property storing the natural logarithm of the common ratio of
-        successive probabilities.
+        The natural logarithm of the common ratio of successive probabilities,
+        given by \\(\\ln{p}\\).
         """
         if not hasattr(self, '_log_common_ratio'):
             self._log_common_ratio = np.log(self.common_ratio)
@@ -184,16 +216,25 @@ class GeometricDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `GeometricDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         uniforms = random.uniform(size=shape)
         if type(self.maximum) is type(None):
@@ -206,10 +247,20 @@ class GeometricDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is point.
+        Computes the logarithm of the value of this `GeometricDistribution` at
+        the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : int
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if type(point) in int_types:
             if point >= self.minimum:
@@ -227,14 +278,27 @@ class GeometricDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns a string version of this GeometricDistribution.
+        Finds and returns a string version of this `GeometricDistribution` of
+        the form `"Geometric(r)"`.
         """
         return "Geometric({:.4g})".format(self.common_ratio)
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a GeometricDistribution with the same scale.
+        Checks for equality of this `GeometricDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `GeometricDistribution` with the
+            same `GeometricDistribution.minimum`,
+            `GeometricDistribution.maximum` and
+            `GeometricDistribution.common_ratio`
         """
         if isinstance(other, GeometricDistribution):
             ratios_close =\
@@ -249,27 +313,31 @@ class GeometricDistribution(Distribution):
     @property
     def can_give_confidence_intervals(self):
         """
-        In distpy, discrete distributions do not support confidence intervals.
+        Discrete distributions do not support confidence intervals.
         """
         return False
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return True
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data about this distribution. The
-        only thing to save is the common_ratio.
+        Fills the given hdf5 file group with data about this
+        `GeometricDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GeometricDistribution'
         group.attrs['common_ratio'] = self.common_ratio
@@ -282,13 +350,18 @@ class GeometricDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GeometricDistribution from the given hdf5 file group.
+        Loads a `GeometricDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a GeometricDistribution object created from the information in
-                 the given group
+        Returns
+        -------
+        distribution : `GeometricDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'GeometricDistribution'
@@ -308,25 +381,31 @@ class GeometricDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since this is a discrete distribution, it returns
-        False.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `GeometricDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return False 
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since this is a discrete distribution, it returns
-        False.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `GeometricDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `GeometricDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return GeometricDistribution(self.common_ratio, self.minimum,\
             self.maximum)

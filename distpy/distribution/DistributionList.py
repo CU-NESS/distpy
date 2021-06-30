@@ -1,21 +1,25 @@
 """
-File: distpy/distribution/DistributionList.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing a container which can hold an arbitrary number of
+`distpy.distribution.Distribution.Distribution` objects, each of which can have
+any number of parameters which it describes (as long as the specific
+`distpy.distribution.Distribution.Distribution` supports that number of
+parameters). `distpy.distribution.Distribution.Distribution` objects can be
+added through `DistributionList.add_distribution`. Once all the distributions
+are added, points can be drawn using the `DistributionList.draw` method and the
+log value of the entire set of distributions can be evaluated at a point using
+the `DistributionList.log_value` method. See documentation of individual
+methods for further details. This class represents a list-like container of
+`distpy.distribution.Distribution.Distribution` objects; see
+`distpy.distribution.DistributionSet.DistributionSet` for a dictionary- or set-
+like container of `distpy.distribution.Distribution.Distribution` objects.
+Unlike the `distpy.distribution.DistributionSet.DistributionSet` class,
+`DistributionList` is a subclass of
+`distpy.distribution.Distribution.Distribution` and implements all of its
+methods and properties.
 
-Description: A container which can hold an arbitrary number of distributions,
-             each of which can have any number of parameters which it describes
-             (as long as the specific distribution supports that number of
-             parameters). Distribution objects can be added through
-             DistributionList.add_distribution(distribution, transforms) where
-             distribution is a Distribution and transforms is a TransformList
-             (or something which can be cast into one) describing how
-             parameters are transformed. Once all the distributions are added,
-             points can be drawn using DistributionList.draw() and the
-             log_value of the entire list of distributions can be evaluated at
-             a point using DistributionList.log_value(point) just like any
-             other Distribution object. See documentation of individual
-             functions for further details.
+**File**: $DISTPY/distpy/distribution/DistributionList.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -33,15 +37,28 @@ class DistributionList(Distribution):
     """
     def __init__(self, distribution_tuples=[]):
         """
-        Creates a new DistributionList with the given distributions inside.
+        Creates a new `DistributionList` with the given distributions inside.
         
-        distribution_tuples: a list of lists/tuples of the form
-                             (distribution, transforms) where distribution is
-                             an instance of the Distribution class and
-                             transforms is a TransformList (or something which
-                             can be cast into one) which apply to the
-                             parameters of distribution
-       """
+        Parameters
+        ----------
+        distribution_tuples : sequence
+            a list of lists/tuples of the form `(distribution,)` or
+            `(distribution, transforms)` where:
+            
+            - `distribution` is a
+            `distpy.distribution.Distribution.Distribution` object
+            - `transforms` is either a
+            `distpy.transform.TransformList.TransformList` or something that
+            can be cast to one (see the
+            `distpy.transform.TransformList.TransformList.cast` method). It
+            should describe the space in which the distribution applies. For
+            example, to draw a variable from a normal distribution in log10
+            space, `distribution` should be a
+            `distpy.distribution.GaussianDistribution.GaussianDistribution` and
+            `transforms` should be a
+            `distpy.transform.Log10Transform.Log10Transform`. The result will
+            contain only positive numbers.
+        """
         self._data = []
         if type(distribution_tuples) in sequence_types:
             for idistribution in range(len(distribution_tuples)):
@@ -63,25 +80,22 @@ class DistributionList(Distribution):
     @property
     def empty(self):
         """
-        Finds whether this DistributionList is empty.
-        
-        returns True if no distributions have been added, False otherwise
+        Boolean describing whether this `DistributionList` is empty.
         """
         return (len(self._data) == 0)
 
     @property
     def numparams(self):
         """
-        Property storing the number of parameters in this DistributionList.
+        The total number of parameters described by in this `DistributionList`.
         """
         return len(self.transform_list)
     
     @property
     def mean(self):
         """
-        Property storing the approximate mean of this distribution. If the
-        transform has a large second derivative at the mean, then this
-        approximation is poor.
+        The approximate mean of this distribution. If the transform has a large
+        second derivative at the mean, then this approximation is poor.
         """
         if not hasattr(self, '_mean'):
             mean = []
@@ -99,7 +113,7 @@ class DistributionList(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The covariance of this distribution.
         """
         if not hasattr(self, '_variance'):
             variances = []
@@ -119,14 +133,24 @@ class DistributionList(Distribution):
 
     def add_distribution(self, distribution, transforms=None):
         """
-        Adds a distribution and any transforms which go with it to the
-        DistributionList.
+        Adds a `distpy.distribution.Distribution.Distribution` and the
+        parameters it describes to the `DistributionList`.
         
-        distribution: Distribution object describing the given variates
-        transforms: TransformList object (or something castable to one, such as
-                    a sequence of strings which can be cast to Transform
-                    objects) which apply to the variates (can be a single
-                    string if the distribution is univariate)
+        Parameters
+        ----------
+        distribution : `distpy.distribution.Distribution.Distribution`
+            the distribution to add
+        transforms : `distpy.transform.TransformList.TransformList` or\
+        `distpy.transform.Transform.Transform` or sequence or str or None
+            a `distpy.transform.TransformList.TransformList` object (or
+            something castable to one, see
+            `distpy.transform.TransformList.TransformList.cast`) which apply to
+            the parameters (can be a single
+            `distpy.transform.Transform.Transform` or something castable to
+            one, see `distpy.transform.CastTransform.cast_to_transform`, if the
+            distribution is univariate). If `transforms` is None, then the
+            transforms are assumed to be
+            `distpy.transform.NullTransform.NullTransform`
         """
         if isinstance(distribution, Distribution):
             transforms = TransformList.cast(transforms,\
@@ -139,20 +163,23 @@ class DistributionList(Distribution):
     @property
     def num_distributions(self):
         """
-        Property storing the number of distributions in this DistributionList
-        object.
+        The number of distributions stored in this `DistributionList` object.
         """
         return len(self._data)
     
     def __add__(self, other):
         """
-        Adds this DistributionList to another.
+        Adds this `DistributionList` to another to create a combined set.
         
-        other: a DistributionList object with parameters distinct from the
-               parameters of self
+        Parameters
+        ----------
+        other : `DistributionList`
+            another `DistributionList` with parameters distinct from this one
         
-        returns: DistributionList object which is the combination of the given
-                 DistributionList objects
+        Returns
+        -------
+        sum : `DistributionList`
+            the combination of the two `DistributionList` objects being added
         """
         if isinstance(other, DistributionList):
             return DistributionList(distribution_tuples=self._data+other._data)
@@ -162,9 +189,18 @@ class DistributionList(Distribution):
     
     def __iadd__(self, other):
         """
-        Adds all distributions from other to this DistributionList.
+        Adds all distributions from `other` to this `DistributionList`.
         
-        other: DistributionList object
+        Parameters
+        ----------
+        other : `DistributionList`
+            set of distributions to add into this one
+        
+        Returns
+        -------
+        enlarged : `DistributionList`
+            this `DistributionList` after the distributions from `other` have
+            been added in
         """
         if isinstance(other, DistributionList):
             for distribution_tuple in other._data:
@@ -176,15 +212,25 @@ class DistributionList(Distribution):
     
     def modify_transforms(self, new_transform_list):
         """
-        Finds a DistributionList with the same distributions but different
-        transforms. Draws from this DistributionList and the returned
-        DistributionList will differ by the given transforms.
+        Creates a `DistributionList` with the same distribution and parameters
+        but different transforms. Draws from this `DistributionList` and the
+        returned `DistributionList` will differ by the given transforms.
         
-        new_transform_list: TransformList (or something that can be cast into
-                            one) containing the new transforms
+        Parameters
+        ----------
+        new_transform_list : `distpy.transform.TransformList.TransformList` or\
+        `distpy.transform.Transform.Transform` or str or None
+            a `distpy.transform.TransformList.TransformList` containing the new
+            transforms (or something that can be cast to one with a number of
+            transforms equal to the `DistributionList.numparams`; see
+            `distpy.transform.TransformList.TransformList.cast` for details on
+            what can be cast successfully)
         
-        returns: new DistributionList object with the same distribution but
-                 different transforms
+        Returns
+        -------
+        modified : `DistributionList`
+            new `DistributionList` object with the same distribution and
+            parameters but different transforms
         """
         new_transform_list =\
             TransformList.cast(transforms, num_transforms=self.numparams)
@@ -199,13 +245,26 @@ class DistributionList(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws a point from this distribution by drawing points from all
-        component distributions.
+        Draws a point from all distributions.
         
-        shape: shape of arrays which are values of return value
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            shape of arrays which are values of return value
+        random : `numpy.random.RandomState`
+            the random number generator to use (default: numpy.random)
         
-        returns a numpy.ndarray with shape given by shape+(numparams,)
+        Returns
+        -------
+        drawn_points : `numpy.ndarray`
+            random variates drawn from the distribution (in the following `p`
+            is `DistributionList.numparams`):
+            - if `shape` is None, then `drawn_points` is a 1D `numpy.ndarray`
+            of length `p`
+            - if `shape` is an integer, then `drawn_points` is a 2D
+            `numpy.ndarray` of shape `(shape,p)`
+            - if `shape` is a tuple, then drawn points is a `numpy.ndarray` of
+            shape `shape + (p,)`
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -235,13 +294,19 @@ class DistributionList(Distribution):
     
     def log_value(self, point):
         """
-        Evaluates the log of the product of the values of the distributions
-        contained in this DistributionList.
+        Evaluates the log of the product of the values of the
+        `distpy.distribution.Distribution.Distribution` objects contained in
+        this `DistributionList`, which is the sum of their log values.
         
-        point: an numparams-length 1D numpy.ndarray
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            array of parameter values
         
-        returns: the total log_value coming from contributions from all
-                 distributions
+        Returns
+        -------
+        total_log_value : float
+            total log_value coming from contributions from all distributions
         """
         if type(point) in numerical_types:
             point = [point]
@@ -276,11 +341,18 @@ class DistributionList(Distribution):
     
     def __getitem__(self, which):
         """
-        Gets a DistributionList with only the specified distributions.
+        Gets a `DistributionList` with only the specified distributions.
         
-        which: either an int, slice, or sequence of ints
+        Parameters
+        ----------
+        which : int or slice or sequence
+            the index or indices of the distributions to include in the
+            returned value
         
-        returns: a DistributionList object
+        Returns
+        -------
+        sublist : `DistributionList`
+            a `DistributionList` object with only the specified distribution(s)
         """
         if type(which) in int_types:
             distribution_list =\
@@ -299,18 +371,25 @@ class DistributionList(Distribution):
     
     def delete_distribution(self, index):
         """
-        Deletes a distribution from this DistributionList.
+        Deletes a distribution from this `DistributionList`.
         
-        index: the integer index of the distribution to delete
+        Parameters
+        ----------
+        index : int
+            the index of the distribution to delete
         """
         self._data = self._data[:index] + self._data[index+1:]
     
     def __delitem__(self, which):
         """
-        Deletes the specified distributions. For documentation, see
-        delete_distribution function.
+        Deletes a distribution from this `DistributionList`. Alias of
+        `DistributionList.delete_distribution` that allows for usage of the
+        `del` keyword.
         
-        which: either an integer, a slice, or a sequence of integers
+        Parameters
+        ----------
+        index : int
+            the index of the distribution to delete
         """
         if type(which) in int_types:
             self.delete_distribution(which)
@@ -327,15 +406,14 @@ class DistributionList(Distribution):
     @property
     def summary_string(self):
         """
-        Property which yields a string with the dimenstionality of the
-        distribution.
+        A string with the dimenstionality of the distribution.
         """
         return '{:d}D DistributionList'.format(self.numparams)
     
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         if not hasattr(self, '_minimum'):
             self._minimum = []
@@ -352,7 +430,7 @@ class DistributionList(Distribution):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         if not hasattr(self, '_maximum'):
             self._maximum = []
@@ -369,53 +447,74 @@ class DistributionList(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing whether all of the distributions in this list are
+        Boolean describing whether all of the distributions in this list are
         discrete.
         """
         return all([distribution.is_discrete\
             for (distribution, transforms) in self._data])
     
+    @staticmethod
+    def _distribution_tuples_equal(first, second):
+        """
+        Checks whether two distribution tuples are equal.
+        
+        Parameters
+        ----------
+        first : tuple
+            tuple of form `(distribution, parameters)` as internally
+            represented in a `DistributionList`
+        second : tuple
+            tuple of form `(distribution, transforms)` as internally
+            represented in a `DistributionList`
+        
+        Returns
+        -------
+        result : bool
+            True if and only if the distribution and transformations stored in
+            `first` are the same as those stored in `second`.
+        """
+        (first_distribution, first_transforms) = first
+        (second_distribution, second_transforms) = second
+        numparams = first_distribution.numparams
+        if second_distribution.numparams == numparams:
+            for (first_transform, second_transform) in\
+                zip(first_transforms, second_transforms):
+                if first_transform != second_transform:
+                    return False
+            return (first_distribution == second_distribution)
+        else:
+            return False
+    
     def __eq__(self, other):
         """
-        Checks for equality of this DistributionList with other. Returns True
-        if other has the same distribution_tuples and False otherwise.
+        Checks for equality of this `DistributionList` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `DistributionList` with the same
+            distribution tuples (though they need not be internally stored in
+            the same order).
         """
-        def distribution_tuples_equal(first, second):
-            #
-            # Checks whether two distribution_tuple's are equal. Returns True
-            # if the distribution and transforms stored in first are the same
-            # as those stored in second and False otherwise.
-            #
-            (fdistribution, ftransforms) = first
-            (sdistribution, stransforms) = second
-            numparams = fdistribution.numparams
-            if sdistribution.numparams == numparams:
-                for (ftransform, stransform) in zip(ftransforms, stransforms):
-                    if ftransform != stransform:
-                        return False
-                return (fdistribution == sdistribution)
-            else:
-                return False
         if isinstance(other, DistributionList):
             if len(self._data) == len(other._data):
-                return all([distribution_tuples_equal(stuple, otuple)\
-                    for (stuple, otuple) in zip(self._data, other._data)])
+                return all([DistributionList._distribution_tuples_equal(\
+                    *tuples) for tuples in zip(self._data, other._data)])
             else:
                 return False
         else:
             return False
     
-    def __ne__(self, other):
-        """
-        This function simply asserts that (a != b) == (not (a == b))
-        """
-        return (not self.__eq__(other))
-    
     @property
     def transform_list(self):
         """
-        Property storing the TransformList object describing the transforms in
-        this DistributionList.
+        The `distpy.transform.TransformList.TransformList` object describing
+        the transforms in this `DistributionList`.
         """
         answer = TransformList()
         for (distribution, transforms) in self._data:
@@ -424,11 +523,15 @@ class DistributionList(Distribution):
     
     def discrete_sublist(self):
         """
-        Function which compiles a sublist of the Distribution objects in this
-        DistributionList: those that represent discrete variables.
+        Compiles the subset of the `Distribution` objects in this
+        `DistributionList` that represent discrete variables.
         
-        returns: a DistributionList object containing all Distribution objects
-                 in this DistributionList which describe discrete variables
+        Returns
+        -------
+        subset : `DistributionList`
+            a `DistributionList` object containing all
+            `distpy.distribution.Distribution.Distribution` objects in this
+            `DistributionList` which describe discrete variables
         """
         answer = DistributionList()
         for (distribution, transforms) in self._data:
@@ -438,11 +541,15 @@ class DistributionList(Distribution):
     
     def continuous_sublist(self):
         """
-        Function which compiles a sublist of the Distribution objects in this
-        DistributionList: those that represent continuous variables.
+        Compiles the subset of the `Distribution` objects in this
+        `DistributionList` that represent continuous variables.
         
-        returns: a DistributionList object containing all Distribution objects
-                 in this DistributionList which describe continuous variables
+        Returns
+        -------
+        subset : `DistributionList`
+            a `DistributionList` object containing all
+            `distpy.distribution.Distribution.Distribution` objects in this
+            `DistributionList` which describe continuous variables
         """
         answer = DistributionList()
         for (distribution, transforms) in self._data:
@@ -452,9 +559,15 @@ class DistributionList(Distribution):
     
     def transformed_version(self):
         """
-        Function which returns a version of this DistributionList where the
-        parameters exist in transformed space (instead of transforms being
-        carried through this object).
+        Compiles a version of this `DistributionList` where the parameters
+        exist in transformed space (instead of transforms being carried through
+        this object).
+        
+        Returns
+        -------
+        transformless : `DistributionList`
+            a `DistributionList` with the same distributions and parameter
+            names but without transforms
         """
         answer = DistributionList()
         for (distribution, transforms) in self._data:
@@ -463,13 +576,17 @@ class DistributionList(Distribution):
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data about this DistributionList.
-        Each distribution tuple is saved as a subgroup in the hdf5 file.
+        Fills the given hdf5 file group with data about this
+        `DistributionList`.
         
-        group: the hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution list and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            the hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution list
+            and throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DistributionList'
         for (ituple, distribution_tuple) in enumerate(self._data):
@@ -481,13 +598,23 @@ class DistributionList(Distribution):
     @staticmethod
     def load_from_hdf5_group(group, *distribution_classes):
         """
-        Loads a DistributionList object from the given group.
+        Loads a `DistributionList` object from the given group.
         
-        group: the group which was included in self.fill_hdf5_group(group)
-        distribution_classes: Distribution subclasses with which to load
-                              subdistributions
+        Parameters
+        ----------
+        group : h5py.Group
+            the hdf5 file group in which a `DistributionList` was saved
+        distribution_classes : sequence
+            sequence of Distribution subclasses with which to load
+            subdistributions (if the sub-distributions are defined in `distpy`,
+            then these are not necessary because all distributions save their
+            class as an attribute when they run
+            `distpy.distribution.Distribution.Distribution.fill_hdf5_group`)
         
-        returns: DistributionList object
+        Returns
+        -------
+        loaded : `DistributionList`
+            a `DistributionList` that was saved in `group`
         """
         ituple = 0
         distribution_tuples = []
@@ -508,8 +635,8 @@ class DistributionList(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the distributions inside
+        this `DistributionList` have been implemented.
         """
         answer = True
         for (distribution, transforms) in self._data:
@@ -518,13 +645,19 @@ class DistributionList(Distribution):
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative(s) of log_value(point) with respect to the
-        parameter(s).
+        Computes the derivatives of the log value with respect to the
+        parameters.
         
-        point: array of values
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            array of parameter values
         
-        returns: 1D numpy.ndarray containing the N derivatives of the log value
-                 with respect to each individual parameter
+        Returns
+        -------
+        gradient : `numpy.ndarray`
+            1D array of length `DistributionSet.numparams` of derivative values
+            corresponding to the parameters
         """
         if type(point) in sequence_types:
             point = np.array(point)
@@ -556,8 +689,8 @@ class DistributionList(Distribution):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the distributions inside this
+        `DistributionList` have been implemented.
         """
         answer = True
         for (distribution, transforms) in self._data:
@@ -566,14 +699,19 @@ class DistributionList(Distribution):
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative(s) of log_value(point) with respect to
-        the parameter(s).
+        Computes the second derivatives of the log value with respect to the
+        parameters.
         
-        point: array of values
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            array of parameter values
         
-        returns: 2D square numpy.ndarray with dimension length equal to the
-                 number of parameters representing the N^2 different second
-                 derivatives of the log value
+        Returns
+        -------
+        gradient : `numpy.ndarray`
+            1D array of length `DistributionSet.numparams` of second derivative
+            values corresponding to the parameters
         """
         if type(point) in sequence_types:
             point = np.array(point)
@@ -606,7 +744,12 @@ class DistributionList(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this DistributionList.
+        Finds a deep copy of this `DistributionList`.
+        
+        Returns
+        -------
+        copied : `DistributionList`
+            deep copy of this `DistributionList`
         """
         copied = DistributionList()
         for (distribution, transforms) in self._data:

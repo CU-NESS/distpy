@@ -1,9 +1,11 @@
 """
-File: distpy/distribution/ChiSquaredDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a chi-squared distribution. Its PDF is
+represented by: $$f(x) = \\frac{x^{k/2}\\ e^{-x/2}}{2^{k/2}\\ \\Gamma(k/2)},$$
+where \\(\\Gamma(x)\\) is the Gamma function.
 
-Description: File containing class representing a chi-squared distribution.
+**File**: $DISTPY/distpy/distribution/ChiSquaredDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -14,16 +16,24 @@ from .Distribution import Distribution
 
 class ChiSquaredDistribution(Distribution):
     """
-    Class representing a chi-squared distribution. This is useful for variables
-    variables which are naturally positive or are representable as the sum of
-    squared gaussian-distributed variables. Its only parameter is the number of
-    degrees of freedom, a positive integer.
+    Class representing a chi-squared distribution. Its PDF is represented by:
+    $$f(x) = \\frac{x^{k/2}\\ e^{-x/2}}{2^{k/2}\\ \\Gamma(k/2)},$$ where
+    \\(\\Gamma(x)\\) is the Gamma function.
     """
     def __init__(self, degrees_of_freedom, reduced=False, metadata=None):
         """
-        Initializes a new chi-squared distribution with the given parameters.
+        Initializes a new `ChiSquaredDistribution` with the given parameter
+        values.
         
-        degrees_of_freedom: positive integer
+        Parameters
+        ----------
+        degrees_of_freedom : int
+            integer number of degrees of freedom, \\(k\\)
+        reduced : bool
+            - if True, the distribution is scaled so that the mean is 1
+            - if False, the mean of the distribution is \\(k\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.degrees_of_freedom = degrees_of_freedom
         self.reduced = reduced
@@ -32,7 +42,7 @@ class ChiSquaredDistribution(Distribution):
     @property
     def degrees_of_freedom(self):
         """
-        Property storing the number of degrees of freedom of the distribution.
+        The number of degrees of freedom, \\(k\\), of the distribution.
         """
         if not hasattr(self, '_degrees_of_freedom'):
             raise AttributeError("degrees_of_freedom was referenced before " +\
@@ -42,9 +52,12 @@ class ChiSquaredDistribution(Distribution):
     @degrees_of_freedom.setter
     def degrees_of_freedom(self, value):
         """
-        Setter for the number of degrees of freedom of this distribution.
+        Setter for `ChiSquaredDistribution.degrees_of_freedom`.
         
-        value: positive integer
+        Parameters
+        ----------
+        value : int
+            positive integer
         """
         if type(value) in int_types:
             if value > 0:
@@ -59,8 +72,11 @@ class ChiSquaredDistribution(Distribution):
     @property
     def const_lp_term(self):
         """
-        Property storing the constant part of the logarithm of the probability
-        density of this distribution.
+        The constant part of the logarithm of the probability density of this
+        distribution, given by
+        \\(-\\ln{\\Gamma\\left(\\frac{k}{2}\\right)}-\\frac{k}{2}\\ln{2} +\
+        \\begin{cases} \\ln{k} & \\text{reduced} \\\\ 0 & \\text{otherwise}\
+        \\end{cases}\\).
         """
         if not hasattr(self, '_const_lp_term'):
             self._const_lp_term =\
@@ -74,8 +90,8 @@ class ChiSquaredDistribution(Distribution):
     @property
     def reduced(self):
         """
-        Property storing a boolean which determines whether this distribution
-        represents a reduced chi squared statistic or not.
+        A boolean determining whether this distribution represents a reduced
+        chi squared statistic or not.
         """
         if not hasattr(self, '_reduced'):
             raise AttributeError("reduced referenced before it was set.")
@@ -84,11 +100,12 @@ class ChiSquaredDistribution(Distribution):
     @reduced.setter
     def reduced(self, value):
         """
-        Setter for the reduced property which determines whether this
-        distribution represents a reduced chi squared statistic or not.
+        Setter for `ChiSquaredDistribution.reduced`.
         
-        value: boolean determining whether this distribution represents a
-               reduced chi squared statistic or not.
+        Parameters
+        ----------
+        value : bool
+            True or False
         """
         if type(value) in bool_types:
             self._reduced = value
@@ -98,14 +115,15 @@ class ChiSquaredDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Chi-squared pdf is univariate, so numparams always returns 1.
+        The number of parameters of this `ChiSquaredDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `ChiSquaredDistribution`, \\(1\\) if
+        `ChiSquaredDistribution.reduced`, otherwise \\(d\\).
         """
         if not hasattr(self, '_mean'):
             if self.reduced:
@@ -117,7 +135,8 @@ class ChiSquaredDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `ChiSquaredDistribution`, \\(2/d\\) if
+        `ChiSquaredDistribution.reduced`, otherwise \\(2d\\).
         """
         if not hasattr(self, '_variance'):
             if self.reduced:
@@ -128,16 +147,25 @@ class ChiSquaredDistribution(Distribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `ChiSquaredDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         sample = random.chisquare(self.degrees_of_freedom, size=shape)
         if self.reduced:
@@ -147,10 +175,20 @@ class ChiSquaredDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is point.
+        Computes the logarithm of the value of this `ChiSquaredDistribution` at
+        the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if self.reduced:
             point = point * self.degrees_of_freedom
@@ -159,8 +197,8 @@ class ChiSquaredDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns the string representation of this
-        ChiSquaredDistribution.
+        Finds and returns a string version of this `ChiSquaredDistribution` of
+        the form `"ChiSquared(d)"` or `"ReducedChiSquared(d)"`.
         """
         if self.reduced:
             return "ChiSquared({})".format(self.degrees_of_freedom)
@@ -169,8 +207,19 @@ class ChiSquaredDistribution(Distribution):
     
     def __eq__(self, other):
         """
-        Checks for equality between other and this object. Returns True if
-        if other is a ChiSquaredDistribution with the same degrees_of_freedom.
+        Checks for equality of this `ChiSquaredDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `ChiSquaredDistribution` with the
+            same `ChiSquaredDistribution.degrees_of_freedom` and
+            `ChiSquaredDistribution.reduced`
         """
         if isinstance(other, ChiSquaredDistribution):
             dof_equal = (self.degrees_of_freedom == other.degrees_of_freedom)
@@ -182,9 +231,18 @@ class ChiSquaredDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of the cumulative distribution function.
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `ChiSquaredDistribution`.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         answer = 2 * gammaincinv(self.degrees_of_freedom / 2, cdf)
         if self.reduced:
@@ -194,34 +252,38 @@ class ChiSquaredDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return 0
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return None
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. Only
-        thing to save is the number of degrees of freedom.
+        Fills the given hdf5 file group with data about this
+        `ChiSquaredDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'ChiSquaredDistribution'
         group.attrs['degrees_of_freedom'] = self.degrees_of_freedom
@@ -232,13 +294,18 @@ class ChiSquaredDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a ChiSquaredDistribution from the given hdf5 file group.
+        Loads a `ChiSquaredDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a ChiSquaredDistribution object created from the information
-                 in the given group
+        Returns
+        -------
+        distribution : `ChiSquaredDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'ChiSquaredDistribution'
@@ -254,19 +321,30 @@ class ChiSquaredDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `ChiSquaredDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `ChiSquaredDistribution` at the given point.
         
-        point: single number at which to evaluate the deravitve
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : float
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a float
         """
         constant = 1.
         if self.reduced:
@@ -276,26 +354,42 @@ class ChiSquaredDistribution(Distribution):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `ChiSquaredDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `ChiSquaredDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : float
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\boldsymbol{\\nabla}^T\
+            \\ln{\\big(f(x)\\big)}\\) as a float
         """
         return ((2 - self.degrees_of_freedom) / (2. * (point ** 2)))
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `ChiSquaredDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return ChiSquaredDistribution(self.degrees_of_freedom,\
             reduced=self.reduced)

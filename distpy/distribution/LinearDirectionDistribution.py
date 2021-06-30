@@ -1,10 +1,17 @@
 """
-File: distpy/distribution/LinearDirectionDistribution.py
-Author: Keith Tauscher
-Date: 3 Oct 2018
+Module containing class representing a distribution that exists along a
+great circle on the sphere. Its PDF is represented by:
+$$f(\\boldsymbol{\\hat{n}})=\\delta(\\boldsymbol{\\hat{n}}\\cdot\
+\\boldsymbol{\\hat{n}}_{\\text{pole}})\\ g\\left\\{\\text{arg}\\left[\
+\\boldsymbol{\\hat{n}}\\cdot\\left(\\boldsymbol{\\hat{n}}_{\\text{center}} +\
+i\\boldsymbol{\\hat{n}}_{\\text{pole}}\\times\
+\\boldsymbol{\\hat{n}}_{\\text{center}}\\right)\\right]\\right\\},$$ where
+\\(g\\) is the PDF of an angle distribution and \\(\\delta(x)\\) is the Dirac
+delta function.
 
-Description: File containing a class representing a linear distribution
-             existing on the surface of a sphere.
+**File**: $DISTPY/distpy/distribution/LinearDirectionDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -19,21 +26,41 @@ else:
 
 class LinearDirectionDistribution(Distribution):
     """
-    Class representing a linear distribution existing on the surface of a
-    sphere.
+    Class representing a distribution that exists along a great circle on the
+    sphere. Its PDF is represented by: $$f(\\boldsymbol{\\hat{n}})=\
+    \\delta(\\boldsymbol{\\hat{n}}\\cdot\
+    \\boldsymbol{\\hat{n}}_{\\text{pole}})\\ g\\left\\{\\text{arg}\\left[\
+    \\boldsymbol{\\hat{n}}\\cdot\\left(\\boldsymbol{\\hat{n}}_{\\text{center}}\
+    +i\\boldsymbol{\\hat{n}}_{\\text{pole}}\\times\
+    \\boldsymbol{\\hat{n}}_{\\text{center}}\\right)\\right]\\right\\},$$ where
+    \\(g\\) is the PDF of an angle distribution and \\(\\delta(x)\\) is the
+    Dirac delta function.
     """
     def __init__(self, central_pointing, phase_delayed_pointing,\
         angle_distribution, metadata=None):
         """
-        Creates a new UniformDistribution with the given range.
+        Initializes a new `LinearDirectionDistribution` with the given
+        parameter values.
         
-        central_pointing: 
-        phase_delayed_pointing: 
-        angle_distribution: Distribution object determining how to draw values
-                            of the angle around the great circle (with respect
-                            to 0 at the central pointing and pi/2 at the phase
-                            delayed pointing
-        metadata: any data wished to be stored alongside this distribution
+        Parameters
+        ----------
+        central_pointing : tuple
+            2-tuple of the form `(latitude, longitude)`, where both are given
+            in degrees, that is the point corresponding to zero angle.
+            `central_pointing` corresponds to
+            \\(\\boldsymbol{\\hat{n}}_{\\text{center}}\\)
+        phase_delayed_pointing : tuple
+            2-tuple of the form `(latitude, longitude)`, where both are given
+            in degrees, that is somewhere along the great circle ahead of the
+            starting point, `central_pointing`. If the phase delay is
+            \\(\\pi/2\\), then `phase_delayed_pointing` corresponds to
+            \\(\\boldsymbol{\\hat{n}}_{\\text{pole}}\\times\
+            \\boldsymbol{\\hat{n}}_{\\text{center}}\\)
+        angle_distribution : `distpy.distribution.Distribution.Distribution`
+            the distribution, with PDF \\(g\\), of angles to draw along the
+            great circle
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         if not have_healpy:
             raise RuntimeError("LinearDirectionDistribution cannot be " +\
@@ -46,7 +73,8 @@ class LinearDirectionDistribution(Distribution):
     @property
     def central_pointing(self):
         """
-        Property storing the central pointing of the distribution.
+        The central pointing of the distribution in a 2-tuple of form
+        `(lat, lon)`.
         """
         if not hasattr(self, '_central_pointing'):
             raise AttributeError("central_pointing was referenced before " +\
@@ -56,9 +84,12 @@ class LinearDirectionDistribution(Distribution):
     @central_pointing.setter
     def central_pointing(self, value):
         """
-        Setter for the central pointing. This corresponds to an angle of 0.
+        Setter for `LinearDirectionDistribution.central_pointing`.
         
-        value: sequence of 2 numbers, (latitude, longitude) in degrees
+        Parameters
+        ----------
+        value : sequence
+            sequence of 2 numbers, `(lat, lon)` in degrees
         """
         if type(value) in sequence_types:
             if len(value) == 2:
@@ -76,8 +107,8 @@ class LinearDirectionDistribution(Distribution):
     @property
     def central_pointing_vector(self):
         """
-        Property storing the vector which points from the center of the sphere
-        to the central pointing.
+        The vector which points from the center of the sphere to
+        `LinearDirectionDistribution.central_pointing`.
         """
         if not hasattr(self, '_central_pointing_vector'):
             (latitude, longitude) = self.central_pointing
@@ -88,7 +119,9 @@ class LinearDirectionDistribution(Distribution):
     @property
     def phase_delayed_pointing(self):
         """
-        Property storing the phase-delayed pointing of the distribution.
+        The phase-delayed pointing of the distribution, i.e. a pointing that is
+        along the great circle from
+        `LinearDirectionDistribution.central_pointing`.
         """
         if not hasattr(self, '_phase_delayed_pointing'):
             raise AttributeError("phase_delayed_pointing was referenced " +\
@@ -98,10 +131,12 @@ class LinearDirectionDistribution(Distribution):
     @phase_delayed_pointing.setter
     def phase_delayed_pointing(self, value):
         """
-        Setter for a pointing between central_pointing and its antipodal point
-        in the direction of increasing angle.
+        Setter for `LinearDirectionDistribution.phase_delayed_pointing`.
         
-        value: sequence of 2 numbers, (latitude, longitude) in degrees
+        Parameters
+        ----------
+        value : tuple
+            sequence of 2 numbers, `(lat, lon)` in degrees
         """
         if type(value) in sequence_types:
             if len(value) == 2:
@@ -120,8 +155,8 @@ class LinearDirectionDistribution(Distribution):
     @property
     def phase_delayed_pointing_vector(self):
         """
-        Property storing the vector which points from the center of the sphere
-        to the phase delayed pointing.
+        The vector which points from the center of the sphere to
+        `LinearDirectionDistribution.phase_delayed_pointing`.
         """
         if not hasattr(self, '_phase_delayed_pointing_vector'):
             (latitude, longitude) = self.phase_delayed_pointing
@@ -132,7 +167,8 @@ class LinearDirectionDistribution(Distribution):
     @property
     def corrected_phase_delayed_pointing_vector(self):
         """
-        A vector which is precisely pi/2 in phase ahead of central_pointing.
+        A vector which is precisely pi/2 in phase ahead of
+        `LinearDirectionDistribution.central_pointing`.
         """
         if not hasattr(self, '_corrected_phase_delayed_pointing_vector'):
             central_lonlat = np.array(self.central_pointing)[-1::-1]
@@ -149,7 +185,7 @@ class LinearDirectionDistribution(Distribution):
     @property
     def angle_distribution(self):
         """
-        Property storing the 1D distribution of angles to draw in radians.
+        The 1D distribution of angles to draw in radians.
         """
         if not hasattr(self, '_angle_distribution'):
             raise AttributeError("angle_distribution was referenced before " +\
@@ -159,10 +195,12 @@ class LinearDirectionDistribution(Distribution):
     @angle_distribution.setter
     def angle_distribution(self, value):
         """
-        Setter for the distribution from which angles are drawn.
+        Setter for `LinearDirectionDistribution.angle_distribution`.
         
-        value: Distribution object describing exactly one parameter (angle in
-               radians)
+        Parameters
+        ----------
+        value : `distpy.distribution.Distribution.Distribution`
+            distribution describing exactly one parameter (angle in radians)
         """
         if isinstance(value, Distribution):
             if value.numparams == 1:
@@ -173,24 +211,29 @@ class LinearDirectionDistribution(Distribution):
             raise TypeError("angle_distribution was set to a " +\
                 "non-Distribution.")
     
-    @property
-    def numparams(self):
-        """
-        Pointing directions involve 2 numbers, so numparams is 2. However,
-        this distribution is degenerate and the 2 numbers are mutually
-        dependent.
-        """
-        return 2
-    
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `LinearDirectionDistribution`.
         
-        shape: if None, returns single random variate in a length-2 array
-               if int, n, returns n random variates in an array of shape (n,2)
-               if tuple of n ints, returns that many random variates in an
-                                   array of shape (shape+(2,))
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length 2
+            is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,2)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(2,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -216,10 +259,8 @@ class LinearDirectionDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is value.
-        
-        point: numerical value of the variable
+        The `LinearDirectionDistribution` is improper, so its log value cannot
+        be evaluated.
         """
         raise NotImplementedError("log_value is not implemented because " +\
             "the distribution is degenerate: the two angles which are " +\
@@ -227,15 +268,27 @@ class LinearDirectionDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns a string representation of this distribution.
+        Finds and returns a string version of this
+        `LinearDirectionDistribution` of the form `"LinDir"`.
         """
         return "LinDir"
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a LinearDirectionDistribution with the same orientation and
-        angle distribution and False otherwise.
+        Checks for equality of this `LinearDirectionDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `LinearDirectionDistribution` with
+            the same `LinearDirectionDistribution.central_pointing`,
+            `LinearDirectionDistribution.phase_delayed_pointing`, and
+            `LinearDirectionDistribution.angle_distribution`
         """
         if isinstance(other, LinearDirectionDistribution):
             tol_kwargs = {'rtol': 0., 'atol': 1e-9}
@@ -255,20 +308,24 @@ class LinearDirectionDistribution(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. All
-        that needs to be saved is the class name and high and low values.
+        Fills the given hdf5 file group with data about this
+        `LinearDirectionDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                      if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'LinearDirectionDistribution'
         group.attrs['central_pointing'] = np.array(self.central_pointing)
@@ -282,16 +339,20 @@ class LinearDirectionDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group, angle_distribution_class):
         """
-        Loads a LinearDirectionDistribution from the given hdf5 file group.
+        Loads a `LinearDirectionDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
-        angle_distribution_class: the Distribution subclass which created the
-                                  angle_distribution of the
-                                  LinearDirectionDistribution to be loaded.
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
+        angle_distribution_class : class
+            class of angle distribution
         
-        returns: LinearDirectionDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `LinearDirectionDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'LinearDirectionDistribution'
@@ -309,49 +370,31 @@ class LinearDirectionDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `LinearDirectionDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return False
-    
-    def gradient_of_log_value(self, point):
-        """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
-        
-        point: single number at which to evaluate the derivative
-        
-        returns: returns single number representing derivative of log value
-        """
-        raise NotImplementedError("gradient_of_log_value can't be defined " +\
-            "because this distribution has 1 degree of freedom but exists " +\
-            "in 2 dimensions.")
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `LinearDirectionDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return False
     
-    def hessian_of_log_value(self, point):
-        """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
-        
-        point: single value
-        
-        returns: single number representing second derivative of log value
-        """
-        raise NotImplementedError("hessian_of_log_value can't be defined " +\
-            "because this distribution has 1 degree of freedom but exists " +\
-            "in 2 dimensions.")
-    
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `LinearDirectionDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return LinearDirectionDistribution(\
             np.array(self.central_pointing).copy(),\

@@ -1,10 +1,14 @@
 """
-File: distpy/distribution/TruncatedGaussianDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a truncated Gaussian distribution. Its PDF
+is represented by: $$f(x) = \\sqrt{\\frac{2}{\\pi\\sigma^2}}\\ \
+\\frac{e^{-(x-\\mu)^2/(2\\sigma^2)}}{\\text{erf}\\left(\\frac{x_{\\text{max}}-\
+\\mu}{\\sqrt{2}\\sigma}\\right)-\\text{erf}\\left(\\frac{x_{\\text{min}}-\
+\\mu}{\\sqrt{2}\\sigma}\\right)},$$ where
+\\(x_{\\text{min}}\\le x\\le x_{\\text{max}}\\).
 
-Description: File containing class representing a truncated 1-dimensional
-             gaussian distribution.
+**File**: $DISTPY/distpy/distribution/TruncatedGaussianDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -15,19 +19,34 @@ from .Distribution import Distribution
 
 class TruncatedGaussianDistribution(Distribution):
     """
-    Class representing a truncated Gaussian distribution. These are useful if
-    one has some knowledge of the actual value of the parameter but also needs
-    it to lie outside a given region.
+    Class representing a truncated Gaussian distribution. Its PDF is
+    represented by: $$f(x) = \\sqrt{\\frac{2}{\\pi\\sigma^2}}\\ \
+    \\frac{e^{-(x-\\mu)^2/(2\\sigma^2)}}{\\text{erf}\
+    \\left(\\frac{x_{\\text{max}}-\\mu}{\\sqrt{2}\\sigma}\\right)-\
+    \\text{erf}\\left(\\frac{x_{\\text{min}}-\\mu}{\\sqrt{2}\\sigma}\
+    \\right)},$$ where \\(x_{\\text{min}}\\le x\\le x_{\\text{max}}\\).
     """
     def __init__(self, mean, variance, low=None, high=None, metadata=None):
         """
-        Initializes a new TruncatedGaussianDistribution using the given
-        parameters.
+        Initializes a new `TruncatedGaussianDistribution` with the given
+        parameter values.
         
-        mean the mean of the (untruncated!) Gaussian
-        variance the variance of the (untrucated!) Gaussian
-        low lower limit of distribution. If None then it is assumed to be -inf
-        high upper limit of distribution. If None then it is assumed to be +inf
+        Parameters
+        ----------
+        mean : float
+            mean, \\(\\mu\\), of **un-truncated** gaussian
+        variance : float
+            variance, \\(\\sigma^2\\) of **un-truncated** gaussian
+        low : None or float
+            the lowest point with nonzero probability density,
+            \\(x_{\\text{min}}\\). `low` being None is the same as setting
+            \\(x_{\\text{min}}\\rightarrow -\\infty\\)
+        high : None or float
+            the highest point with nonzero probability density,
+            \\(x_{\\text{max}}\\). `high` being None is the same as setting
+            \\(x_{\\text{max}}\\rightarrow +\\infty\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.internal_mean = mean
         self.internal_variance = variance
@@ -38,8 +57,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def low(self):
         """
-        Property storing the lowest allowable value drawn from this
-        distribution.
+        The lowest allowable value drawn from this distribution.
         """
         if not hasattr(self, '_low'):
             raise AttributeError("low was referenced before it was set.")
@@ -48,9 +66,12 @@ class TruncatedGaussianDistribution(Distribution):
     @low.setter
     def low(self, value):
         """
-        Setter for the lowest allowable value drawn from this distribution.
+        Setter for `TruncatedGaussianDistribution.low`.
         
-        value: a real number
+        Parameters
+        ----------
+        value : float
+            a real number
         """
         if type(value) is type(None):
             self._low = None
@@ -62,8 +83,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def high(self):
         """
-        Property storing the highest allowable value drawn from this
-        distribution.
+        The highest allowable value drawn from this distribution.
         """
         if not hasattr(self, '_high'):
             raise AttributeError("high was referenced before it was set.")
@@ -72,9 +92,12 @@ class TruncatedGaussianDistribution(Distribution):
     @high.setter
     def high(self, value):
         """
-        Setter for the highest allowable value drawn from this distribution.
+        Setter for `TruncatedGaussianDistribution.high`.
         
-        value: a real number
+        Parameters
+        ----------
+        value : float
+            a real number larger than `TruncatedGaussianDistribution.low`
         """
         if type(value) is type(None):
             self._high = None
@@ -90,8 +113,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def const_lp_term(self):
         """
-        Property storing the constant part of the log probability density of
-        this distribution.
+        The constant part of the log probability density of this distribution.
         """
         if not hasattr(self, '_const_lp_term'):
             self._const_lp_term =\
@@ -102,7 +124,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def low_term(self):
         """
-        Property storing the scaled error function at the low point.
+        The scaled error function at the low point.
         """
         if not hasattr(self, '_low_term'):
             if type(self.low) is type(None):
@@ -115,7 +137,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def high_term(self):
         """
-        Property storing the scaled error function at the high point.
+        The scaled error function at the high point.
         """
         if not hasattr(self, '_high_term'):
             if type(self.high) is type(None):
@@ -128,7 +150,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def internal_mean(self):
         """
-        Property storing the mean of the untruncated Gaussian used.
+        The mean of the untruncated Gaussian used.
         """
         if not hasattr(self, '_internal_mean'):
             raise AttributeError("internal_mean was referenced before it " +\
@@ -138,9 +160,12 @@ class TruncatedGaussianDistribution(Distribution):
     @internal_mean.setter
     def internal_mean(self, value):
         """
-        Setter for the mean of the untruncated Gaussian used.
+        Setter for `TruncatedGaussianDistribution.internal_mean`.
         
-        value: any real number
+        Parameters
+        ----------
+        value : float
+            any real number
         """
         if type(value) in numerical_types:
             self._internal_mean = (value * 1.)
@@ -150,7 +175,7 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def internal_variance(self):
         """
-        Property storing the variance of the untruncated Gaussian used.
+        The variance of the untruncated Gaussian used.
         """
         if not hasattr(self, '_internal_variance'):
             raise AttributeError("internal_variance was referenced before " +\
@@ -160,9 +185,12 @@ class TruncatedGaussianDistribution(Distribution):
     @internal_variance.setter
     def internal_variance(self, value):
         """
-        Setter for the variance of the untruncated Gaussian used.
+        Setter for `TruncatedGaussianDistribution.internal_variance`.
         
-        value: any positive number
+        Parameters
+        ----------
+        value : float
+            any positive number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -175,15 +203,15 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def numparams(self):
         """
-        As of now, only univariate TruncatedGaussianDistribution's are
-        implemented so numparams always returns 1.
+        The number of parameters of this `TruncatedGaussianDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `TruncatedGaussianDistribution`, which is different
+        from \\(\\mu\\) in general because of the truncation.
         """
         if not hasattr(self, '_mean'):
             self._mean = self.internal_mean -\
@@ -198,7 +226,8 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `TruncatedGaussianDistribution`, which is
+        different from \\(\\sigma^2\\) in general because of the truncation.
         """
         if not hasattr(self, '_variance'):
             variance = 1
@@ -218,16 +247,25 @@ class TruncatedGaussianDistribution(Distribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `TruncatedGaussianDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -246,10 +284,20 @@ class TruncatedGaussianDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is point.
+        Computes the logarithm of the value of this
+        `TruncatedGaussianDistribution` at the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if (type(self.low) is not type(None) and point < self.low) or\
                 (type(self.high) is not type(None) and point > self.high):
@@ -259,7 +307,9 @@ class TruncatedGaussianDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns string representation of this distribution.
+        Finds and returns a string version of this
+        `TruncatedGaussianDistribution` of the form
+        `"Normal(mu, sigma2) on [low,high]"`.
         """
         if type(self.low) is type(None):
             low_string = "-inf"
@@ -275,10 +325,19 @@ class TruncatedGaussianDistribution(Distribution):
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution to other. Returns True if
-        other is a TruncatedGaussianDistribution with the same mean (down to
-        10^-9 level) and variance (down to 10^-12 dynamic range), and hi and
-        lo (down to 10^-9 level) and False otherwise.
+        Checks for equality of this `TruncatedGaussianDistribution` with
+        `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `TruncatedGaussianDistribution`
+            with the same internal mean and variance and bounds
         """
         if isinstance(other, TruncatedGaussianDistribution):
             mean_close = np.isclose(self.internal_mean, other.internal_mean,\
@@ -306,9 +365,18 @@ class TruncatedGaussianDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of cumulative distribution function.
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `TruncatedGaussianDistribution`.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         erfinv_args =\
             (self.low_term + (cdf * (self.high_term - self.low_term)))
@@ -318,35 +386,38 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return self.low
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return self.high
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        low, high, mean, and variance values need to be saved along with the
-        class name.
+        Fills the given hdf5 file group with data about this
+        `TruncatedGaussianDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'TruncatedGaussianDistribution'
         if type(self.low) is not type(None):
@@ -361,13 +432,18 @@ class TruncatedGaussianDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a TruncatedGaussianDistribution from the given hdf5 file group.
+        Loads a `TruncatedGaussianDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a TruncatedGaussianDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `TruncatedGaussianDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'TruncatedGaussianDistribution'
@@ -391,45 +467,72 @@ class TruncatedGaussianDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `TruncatedGaussianDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `TruncatedGaussianDistribution` at the given point.
         
-        point: single number at which to evaluate the derivative
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : float
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a float
         """
         return (self.internal_mean - point) / self.internal_variance
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `TruncatedGaussianDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `TruncatedGaussianDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : float
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\boldsymbol{\\nabla}^T\
+            \\ln{\\big(f(x)\\big)}\\) as a float
         """
         return (-1.) / self.internal_variance
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `TruncatedGaussianDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return TruncatedGaussianDistribution(self.internal_mean,\
             self.internal_variance, self.low, self.high)

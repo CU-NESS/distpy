@@ -1,10 +1,12 @@
 """
-File: distpy/distribution/GaussianDirectionDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a Gaussian distribution on the sphere. Its
+PDF is represented by: $$f(\\boldsymbol{\\hat{n}}) \\propto\\exp{\\left\\{\
+-\\frac{1}{2}\\left[\\frac{\\arccos{\\left(\\boldsymbol{\\hat{n}}\\cdot\
+\\boldsymbol{\\hat{n}}_0\\right)}}{\\alpha}\\right]^2\\right\\}}$$
 
-Description: File containing class representing Gaussian distribution on the
-             surface of the sphere.
+**File**: $DISTPY/distpy/distribution/ABCDEFDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -14,20 +16,30 @@ from .UniformDistribution import UniformDistribution
 
 class GaussianDirectionDistribution(DirectionDistribution):
     """
-    Class representing Gaussian distribution on the surface of the sphere.
+    Class representing a Gaussian distribution on the sphere. Its PDF is
+    represented by: $$f(\\boldsymbol{\\hat{n}}) \\propto\\exp{\\left\\{\
+    -\\frac{1}{2}\\left[\\frac{\\arccos{\\left(\\boldsymbol{\\hat{n}}\\cdot\
+    \\boldsymbol{\\hat{n}}_0\\right)}}{\\alpha}\\right]^2\\right\\}}$$
     """
     def __init__(self, pointing_center=(90, 0), sigma=1, degrees=True,\
         metadata=None):
         """
-        Generates a new GaussianPointingPrior centered at the given pointing
-        and with the given angular scale.
+        Initializes a new `GaussianDirectionDistribution` with the given
+        parameter values.
         
-        pointing_center: (latitude, longitude) always given in degrees, no
-                         matter value of degrees parameter. Only (90,0) is
-                         allowed if healpy is not installed.
-        sigma: angular scale of Gaussian. in degrees if degrees parameter is
-               True
-        degrees: if True, sigma is in degres; if False, sigma is in radians
+        Parameters
+        ----------
+        pointing_center : tuple
+            2-tuple of the form `(latitude, longitude)`, where both are in
+            degrees regardless of `degrees` parameter, giving the central point
+            of the distribution (i.e. the peak of the Gaussian)
+        sigma : float
+            1-\\(\\sigma\\) size of distribution
+        degrees : bool
+            - if True, `sigma` is given in degrees
+            - if False, `sigma` is given in radians
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.psi_center = 0
         self.pointing_center = pointing_center
@@ -40,8 +52,8 @@ class GaussianDirectionDistribution(DirectionDistribution):
     @property
     def psi_distribution(self):
         """
-        Property storing the distribution of the azimuthal angle about
-        pointing_center.
+        The distribution of the azimuthal angle about `pointing_center`
+        (uniform).
         """
         if not hasattr(self, '_psi_distribution'):
             self._psi_distribution = UniformDistribution(0, 2 * np.pi)
@@ -50,7 +62,7 @@ class GaussianDirectionDistribution(DirectionDistribution):
     @property
     def sigma(self):
         """
-        Property storing the angular scale of this distribution in radians.
+        The angular scale of this distribution, \\(\\sigma\\), in radians.
         """
         if not hasattr(self, '_sigma'):
             raise AttributeError("sigma was referenced before it was set.")
@@ -59,9 +71,12 @@ class GaussianDirectionDistribution(DirectionDistribution):
     @sigma.setter
     def sigma(self, value):
         """
-        Setter for the angular scale of this distribution (in radians).
+        Setter for `GaussianDirectionDistribution.sigma`.
         
-        value: single positive number (in radians)
+        Parameters
+        ----------
+        value : float
+            single positive number (in radians)
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -76,8 +91,8 @@ class GaussianDirectionDistribution(DirectionDistribution):
     @property
     def const_log_value_contribution(self):
         """
-        Property storing the constant part of the logarithm of the value of the
-        distribution at each given point.
+        The constant part of the logarithm of the value of the distribution at
+        each given point, given by \\(-\\ln{(2\\pi\\sigma^2)}\\).
         """
         if not hasattr(self, '_const_log_value_contribution'):
             self._const_log_value_contribution =\
@@ -86,16 +101,29 @@ class GaussianDirectionDistribution(DirectionDistribution):
     
     def to_string(self):
         """
-        Creates a string representation of this distribution.
+        Finds and returns a string version of this
+        `GaussianDirectionDistribution` of the form
+        `"GaussianDirection(lat, lon, sigma)"`.
         """
         return 'GaussianDirection(({0:.3g}, {1:.3g}), {2:.3g})'.format(\
             self.pointing_center[0], self.pointing_center[1], self.sigma)
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at point.
+        Computes the logarithm of the value of this
+        `GaussianDirectionDistribution` at the given point.
         
-        point: tuple of form (latitude, longitude)
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            `point` should be a length-2 `numpy.ndarray`
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         sine_latitude_product = np.sin(np.radians(point[0])) *\
             self.cos_theta_center
@@ -110,11 +138,27 @@ class GaussianDirectionDistribution(DirectionDistribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws value(s) from this distribution.
+        Draws point(s) from this `GaussianDirectionDistribution`.
         
-        shape: if None, returns single pair (latitude, longitude) in degrees
-               if int, n, returns n random variates (array of shape (n, 2))
-               if tuple of n ints, (n+1)-D array
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length
+            2 is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,2)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(2,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         psi_draw = self.psi_distribution.draw(shape=shape, random=random)
         if type(shape) is type(None):
@@ -131,8 +175,22 @@ class GaussianDirectionDistribution(DirectionDistribution):
     
     def __eq__(self, other):
         """
-        Checks for equality between this and other. Returns True iff
-        theta_center, phi_center, and sigma are all equal.
+        Checks for equality of this `GaussianDirectionDistribution` with
+        `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `GaussianDirectionDistribution`
+            with the same defining
+            `GaussianDirectionDistribution.theta_center`,
+            `GaussianDirectionDistribution.phi_center`, and
+            `GaussianDirectionDistribution.sigma`
         """
         if isinstance(other, GaussianDirectionDistribution):
             tol_kwargs = {'rtol': 0., 'atol': 1e-9}
@@ -149,12 +207,17 @@ class GaussianDirectionDistribution(DirectionDistribution):
 
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data about this distribution.
+        Fills the given hdf5 file group with data about this
+        `GaussianDirectionDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to file with data about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GaussianDirectionDistribution'
         DirectionDistribution.fill_hdf5_group(self, group,\
@@ -164,13 +227,18 @@ class GaussianDirectionDistribution(DirectionDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GaussianDirectionDistribution from the given hdf5 file group.
+        Loads a `GaussianDirectionDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a GaussianDirectionDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `GaussianDirectionDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'GaussianDirectionDistribution'
@@ -185,8 +253,12 @@ class GaussianDirectionDistribution(DirectionDistribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `GaussianDirectionDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return GaussianDirectionDistribution(\
             pointing_center=[element for element in self.pointing_center],\

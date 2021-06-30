@@ -1,10 +1,12 @@
 """
-File: distpy/distribution/DeterministicDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a "deterministic distribution," which is
+essentially a sample, not a distribution. It is initialized with an array of
+samples and can only be drawn from as many times as there are elements in that
+array.
 
-Description: File containing a class for a pseudo-distribution, characterized
-             by no values and deterministic drawn points.
+**File**: $DISTPY/distpy/distribution/DeterministicDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 from .Distribution import Distribution
@@ -13,19 +15,26 @@ from ..util import int_types, sequence_types, bool_types, create_hdf5_dataset,\
 
 class DeterministicDistribution(Distribution):
     """
-    Class representing a deterministic distribution which simply yields draws
-    which come from an array given at initialization.
+    Class representing a "deterministic distribution," which is essentially a
+    sample, not a distribution. It is initialized with an array of samples and
+    can only be drawn from as many times as there are elements in that array.
     """
     def __init__(self, points, is_discrete=False, metadata=None):
         """
-        Initializes a new DeterministicDistribution based around the given
-        points.
+        Initializes a new `DeterministicDistribution` with the given parameter
+        values.
         
-        points: 1D (only if this distribution is 1D) or 2D array of points to
-                return (in order)
-        is_discrete: boolean describing whether the underlying distribution
-                     from which points was sampled is discrete or continuous
-        metadata: data to store alongside the distribution
+        Parameters
+        ----------
+        points : `numpy.ndarray`
+            the sequence of points in an array of shape \\(N\\) if this is a
+            univariate distribution or \\((N,n)\\) if it is an
+            \\(N\\)-dimensional distribution (\\(n\\) is arbitrary)
+        is_discrete : bool
+            bool determining whether this `DeterministicDistribution` should be
+            considered discrete
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.points = points
         self.is_discrete = is_discrete
@@ -34,9 +43,9 @@ class DeterministicDistribution(Distribution):
     @property
     def points(self):
         """
-        The points which will be returned (in order) by this deterministic
-        distribution in a 2D array whose first dimension is the number of
-        parameters of this distribution.
+        The points which will be returned (in order) by this
+        `DeterministicDistribution` in a 2D array whose first dimension is the
+        number of parameters of this distribution.
         """
         if not hasattr(self, '_points'):
             raise AttributeError("points was referenced before it was set.")
@@ -45,9 +54,15 @@ class DeterministicDistribution(Distribution):
     @points.setter
     def points(self, value):
         """
-        Setter for the points this distribution will return (in order).
+        Setter for `DeterministicDistribution.points`.
         
-        value: 1D (only if this distribution is 1D) or 2D array of points
+        Parameters
+        ----------
+        value : numpy.ndarray
+            - if this distribution is 1D, `value` should be a 1D numpy array of
+            floats
+            - if this distribution is \\(n\\)-dimensional, `value` should be a
+            2D numpy array whose second axis has length \\(n\\)
         """
         if type(value) in sequence_types:
             value = np.array(value)
@@ -66,9 +81,8 @@ class DeterministicDistribution(Distribution):
     @property
     def num_points(self):
         """
-        Property storing the maximum number of points this distribution can
-        return (the same as the number of points originally given to this
-        distribution).
+        The integer maximum number of points this distribution can return (the
+        same as the number of points originally given to this distribution).
         """
         if not hasattr(self, '_num_points'):
             self._num_points = self.points.shape[0]
@@ -77,7 +91,7 @@ class DeterministicDistribution(Distribution):
     @property
     def current_index(self):
         """
-        Property storing the index of the next point to return.
+        The integer index of the next point to return.
         """
         if not hasattr(self, '_current_index'):
             self._current_index = 0
@@ -86,9 +100,12 @@ class DeterministicDistribution(Distribution):
     @current_index.setter
     def current_index(self, value):
         """
-        Setter for the index of the next point to return.
+        Setter for `DeterministicDistribution.current_index`.
         
-        value: a positive integer
+        Parameters
+        ----------
+        value : int
+            integer index of the next point to return
         """
         if type(value) in int_types:
             if value >= 0:
@@ -100,26 +117,43 @@ class DeterministicDistribution(Distribution):
     
     def reset(self):
         """
-        Resets this DeterministicDistribution by setting the current_index to 0
+        Resets this `DeterministicDistribution` by setting
+        `DeterministicDistribution.current_index` to 0
         """
         if hasattr(self, '_current_index'):
             delattr(self, '_current_index')
     
     def draw(self, shape=None, random=None):
         """
-        Draws a point from the distribution. Must be implemented by any base
-        class.
+        Draws point(s) from this `DeterministicDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -148,13 +182,8 @@ class DeterministicDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
-        
-        point: either single value (if distribution is 1D) or array of values
-        
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        The `DeterministicDistribution` is improper, so its log value cannot be
+        computed.
         """
         raise NotImplementedError("The DeterministicDistribution class can " +\
             "not be evaluated because it is not a real distribution. It " +\
@@ -163,24 +192,27 @@ class DeterministicDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `DeterministicDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return False
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `DeterministicDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return False
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution.
+        The number of parameters of this `DiscreteDistribution`.
         """
         if self.points.ndim == 1:
             return 1
@@ -190,7 +222,8 @@ class DeterministicDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `DeterministicDistribution`, which is the mean of the
+        points that it returns.
         """
         if not hasattr(self, '_mean'):
             self._mean = np.mean(self.points, axis=0)
@@ -199,7 +232,7 @@ class DeterministicDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The (co)variance of this `DeterministicDistribution`.
         """
         if not hasattr(self, '_variance'):
             if self.numparams == 1:
@@ -210,19 +243,25 @@ class DeterministicDistribution(Distribution):
     
     def to_string(self):
         """
-        Returns a string representation of this distribution. It must be
-        implemented by all subclasses.
+        Finds and returns a string version of this `DeterministicDistribution`
+        of the form `"nD DeterministicDistribution"`.
         """
         return "{:d}D DeterministicDistribution".format(self.numparams)
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Checks for equality of this `DeterministicDistribution` with `other`.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `DeterministicDistribution` with
+            the same `DeterministicDistribution.points`
         """
         if isinstance(other, DeterministicDistribution):
             if self.points.shape == other.points.shape:
@@ -237,7 +276,7 @@ class DeterministicDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         if not hasattr(self, '_minimum'):
             self._minimum = np.min(self.points, axis=0)
@@ -246,7 +285,7 @@ class DeterministicDistribution(Distribution):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         if not hasattr(self, '_maximum'):
             self._maximum = np.max(self.points, axis=0)
@@ -255,8 +294,8 @@ class DeterministicDistribution(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         if not hasattr(self, '_is_discrete'):
             raise AttributeError("is_discrete was referenced before it was " +\
@@ -266,10 +305,12 @@ class DeterministicDistribution(Distribution):
     @is_discrete.setter
     def is_discrete(self, value):
         """
-        Setter of whether the underlying distribution exists on a discrete
-        domain.
+        Setter for `DeterministicDistribution.is_discrete`.
         
-        value: True or False
+        Parameters
+        ----------
+        value : bool
+            True or False
         """
         if type(value) in bool_types:
             self._is_discrete = value
@@ -278,13 +319,17 @@ class DeterministicDistribution(Distribution):
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        Fills the given hdf5 file group with data about this
+        `DeterministicDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'DeterministicDistribution'
         create_hdf5_dataset(group, 'points', data=self.points)
@@ -294,15 +339,18 @@ class DeterministicDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a Distribution from the given hdf5 file group. All Distribution
-        subclasses must implement this method if things are to be saved in hdf5
-        files.
+        Loads a `DeterministicDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a Distribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `DeterministicDistribution`
+            distribution created from the information in the given group
         """
         points = get_hdf5_value(group['points'])
         metadata = Distribution.load_metadata(group)
@@ -310,12 +358,24 @@ class DeterministicDistribution(Distribution):
     
     def __mul__(self, other):
         """
-        "Multiplies" this DeterministicDistribution by another
-        DeterministicDistribution by combining them. The two distributions must
-        contain the same number of points, but may contain different numbers of
-        parameters. This function ignores metadata.
+        "Multiplies" this `DeterministicDistribution` by another
+        `DeterministicDistribution` by combining them. The two distributions
+        must contain the same number of points, but may contain different
+        numbers of parameters. This function ignores metadata.
         
-        other: another DeterministicDistribution to combine with this one
+        Parameters
+        ----------
+        other : `DeterministicDistribution`
+            another `DeterministicDistribution` to combine with this one
+        
+        Returns
+        -------
+        combined : `DeterministicDistribution`
+            if this distribution represented the distribution of
+            \\(\\boldsymbol{x}\\) and `other` represented the distribution of
+            \\(\\boldsymbol{y}\\), `combined` represents the distribution of
+            \\(\\begin{bmatrix} \\boldsymbol{x} \\\\ \\boldsymbol{y}\
+            \\end{bmatrix}\\)
         """
         if isinstance(other, DeterministicDistribution):
             self_points_slice = (None if self.numparams == 1 else slice(None))
@@ -331,13 +391,25 @@ class DeterministicDistribution(Distribution):
     @staticmethod
     def combine(*distributions):
         """
-        Combines the given DeterministicDistributions into a single
-        DeterministicDistribution. Same as product staticmethod of this class.
+        Combines many `DeterministicDistribution` objects. The distributions
+        must contain the same number of points, but may contain different
+        numbers of parameters. This function ignores metadata. Same as
+        `DeterministicDistribution.product` static method.
         
-        distributions: the DeterministicDistribution objects to combine
+        Parameters
+        ----------
+        distributions : sequence
+            sequence of `DeterministicDistribution` objects to combine
         
-        returns: DeterministicDistribution object which encodes the combination
-                 of all of the given distributions
+        Returns
+        -------
+        combined : `DeterministicDistribution`
+            if `distributions` represented the distributions of
+            \\(\\boldsymbol{x}_1,\\boldsymbol{x}_2,\\ldots,\
+            \\boldsymbol{x}_N\\), then `combined` represents the distribution
+            of \\(\\begin{bmatrix} \\boldsymbol{x}_1 \\\\\
+            \\boldsymbol{x}_2 \\\\ \\vdots \\\\ \\boldsymbol{x}_N\
+            \\end{bmatrix}\\)
         """
         if all([isinstance(distribution, DeterministicDistribution)\
             for distribution in distributions]):
@@ -361,15 +433,24 @@ class DeterministicDistribution(Distribution):
     @staticmethod
     def product(*distributions):
         """
-        Combines the given DeterministicDistributions into a single
-        DeterministicDistribution. Should return same thing as combine
-        staticmethod of this class but is implemented through repeated
-        multiplication.
+        Combines many `DeterministicDistribution` objects. The distributions
+        must contain the same number of points, but may contain different
+        numbers of parameters. This function ignores metadata.
         
-        distributions: the DeterministicDistribution objects to combine
+        Parameters
+        ----------
+        distributions : sequence
+            sequence of `DeterministicDistribution` objects to combine
         
-        returns: DeterministicDistribution object which encodes the combination
-                 of all of the given distributions
+        Returns
+        -------
+        combined : `DeterministicDistribution`
+            if `distributions` represented the distributions of
+            \\(\\boldsymbol{x}_1,\\boldsymbol{x}_2,\\ldots,\
+            \\boldsymbol{x}_N\\), then `combined` represents the distribution
+            of \\(\\begin{bmatrix} \\boldsymbol{x}_1 \\\\\
+            \\boldsymbol{x}_2 \\\\ \\vdots \\\\ \\boldsymbol{x}_N\
+            \\end{bmatrix}\\)
         """
         product_distribution = None
         for distribution in distributions:
@@ -381,8 +462,12 @@ class DeterministicDistribution(Distribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `DeterministicDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return DeterministicDistribution(self.points.copy())
 

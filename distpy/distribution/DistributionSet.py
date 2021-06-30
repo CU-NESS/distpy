@@ -357,9 +357,9 @@ class DistributionSet(Savable, Loadable):
                     broken = True
                     break
             if not broken:
-                raise ValueError(("The parameter {!s} was not found in this " +\
-                    "DistributionSet, so couldn't be used to populate a " +\
-                    "DistributionList object.").format(first_parameter))
+                raise ValueError(("The parameter {!s} was not found in " +\
+                    "this DistributionSet, so couldn't be used to populate " +\
+                    "a DistributionList object.").format(first_parameter))
             (distribution, params, transforms) =\
                 self._data[distribution_order[-1]]
             for (distribution_param, list_param) in\

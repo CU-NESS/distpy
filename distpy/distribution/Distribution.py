@@ -1,9 +1,43 @@
 """
-File: distpy/distribution/Distribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing base class for all distributions. All subclasses must
+implement:
 
-Description: File containing base class for all distributions.
+- `Distribution.draw` method: draws one or more random variates from the
+distribution
+- `Distribution.log_value` method: evaluates the distribution at a given point
+- `Distribution.gradient_computable` property: boolean describing whether the
+gradient of the log value of this distribution can be computed. If so,
+`Distribution.gradient_of_log_value` method should be implemented.
+- `Distribution.hessian_computable` property: boolean describing whether the
+hessian of the log value of this distribution can be computed. If so,
+`Distribution.hessian_of_log_value` method should be implemented.
+- `Distribution.numparams` property: the number of parameters described by the
+distribution
+- `Distribution.mean` property: the mean of the distribution
+- `Distribution.variance` property: the (co)variance of the distribution
+- `Distribution.minimum` property: the minimum allowable parameter value(s)
+- `Distribution.maximum` property: the maximum allowable parameter value(s)
+- `Distribution.is_discrete` property: determines whether the distribution is
+discrete or continuous
+- `Distribution.inverse_cdf` method: finds the inverse of the cumulative
+distribution function (only necessary if this distribution is continuous and
+univariate) 
+- `Distribution.to_string` method: creates a string summary of the distribution
+- `Distribution.copy` method: creates a deep copy of the distribution
+- `Distribution.__eq__` method: checks for equality with another object
+- `Distribution.fill_hdf5_group` method: fills hdf5 file group with info about
+this distribution so it can be loaded later
+- `Distribution.load_from_hdf5_group` static method: loads a new `Distribution`
+of the current subclass
+
+In addition to the above methods and properties, all `Distribution` objects can
+be stored with metadata. If this data can be saved (see
+`Distribution.save_metadata`), then it can be saved and loaded in hdf5 files as
+well.
+
+**File**: $DISTPY/distpy/distribution/Distribution.py  
+**Author**: Keith Tauscher  
+**Date**: 30 May 2021
 """
 import numpy as np
 import matplotlib.pyplot as pl
@@ -16,14 +50,6 @@ try:
 except:
     # this try/except allows for python 2/3 compatible string type checking
     basestring = str
-    
-try:
-    from mpi4py import MPI
-    rank = MPI.COMM_WORLD.rank
-    size = MPI.COMM_WORLD.size
-except ImportError:
-    rank = 0
-    size = 1
 
 cannot_instantiate_distribution_error = NotImplementedError("Some part of " +\
     "Distribution class was not implemented by subclass or Distribution is " +\
@@ -31,79 +57,128 @@ cannot_instantiate_distribution_error = NotImplementedError("Some part of " +\
 
 class Distribution(Savable, Loadable):
     """
-    This class exists for error catching. Since it exists as
-    a superclass of all the distributions, one can call
-    isinstance(to_check, Distribution) to see if to_check is indeed a kind of
-    distribution.
+    Base class for all distributions. All subclasses must implement:
     
-    All subclasses of this one will implement
-    self.draw() --- draws a point from this distribution
-    self.log_value(point) --- computes the log of the value of this
-                              distribution at the given point
-    self.numparams --- property, not function, storing number of parameters
-    self.mean --- property storing mean of distribution, if implemented (some
-                  distributions are too complicated for this to be implemented)
-    self.variance --- property storing (co)variance of distribution, if
-                      implemented (some distributions are too complicated for
-                      this to be implemented)
-    self.to_string() --- string summary of this distribution
-    self.__eq__(other) --- checks for equality with another object
-    self.fill_hdf5_group(group) --- fills given hdf5 group with data from
-                                    distribution
-    
-    In draw() and log_value(), point is a configuration. It could be a
-    single number for a univariate distribution or a numpy.ndarray for a
-    multivariate distribution.
+    - `Distribution.draw` method: draws one or more random variates from the
+    distribution
+    - `Distribution.log_value` method: evaluates the distribution at a given
+    point
+    - `Distribution.gradient_computable` property: boolean describing the
+    gradient of the log value of this distribution can be computed. If so,
+    `Distribution.gradient_of_log_value` method should be implemented.
+    - `Distribution.hessian_computable` property: boolean describing the
+    hessian of the log value of this distribution can be computed. If so,
+    `Distribution.hessian_of_log_value` method should be implemented.
+    - `Distribution.numparams` property: the number of parameters described by
+    the distribution
+    - `Distribution.mean` property: the mean of the distribution
+    - `Distribution.variance` property: the (co)variance of the distribution
+    - `Distribution.minimum` property: the minimum allowable parameter value(s)
+    - `Distribution.maximum` property: the maximum allowable parameter value(s)
+    - `Distribution.is_discrete` property: determines whether the distribution
+    is discrete or continuous
+    - `Distribution.inverse_cdf` method: finds the inverse of the cumulative
+    distribution function (only necessary if this distribution is continuous
+    and univariate) 
+    - `Distribution.to_string` method: creates a string summary of the
+    distribution
+    - `Distribution.copy` method: creates a deep copy of the distribution
+    - `Distribution.__eq__` method: checks for equality with another object
+    - `Distribution.fill_hdf5_group` method: fills hdf5 file group with info
+    about this distribution so it can be loaded later
+    - `Distribution.load_from_hdf5_group` static method: loads a new
+    `Distribution` of the current subclass
     """
     def draw(self, shape=None, random=None):
         """
-        Draws a point from the distribution. Must be implemented by any base
-        class.
+        Draws a point from the distribution. Must be implemented by all
+        subclasses.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         raise cannot_instantiate_distribution_error
     
     def log_value(self, point):
         """
         Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
+        point. Must be implemented by all subclasses.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         raise cannot_instantiate_distribution_error
     
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True, `Distribution.gradient_of_log_value` method
+        can be called safely.
         """
         raise cannot_instantiate_distribution_error
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative(s) of log_value(point) with respect to the
-        parameter(s).
+        Computes the gradient (derivative) of the logarithm of the value of
+        this distribution at the given point. Must be implemented by all
+        subclasses.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        derivative of log value
-                 else, returns 1D numpy.ndarray containing the N derivatives of
-                       the log value with respect to each individual parameter
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 1D
+            `numpy.ndarray` of length \\(p\\) is returned
         """
         if not self.gradient_computable:
             raise NotImplementedError("The gradient of the log value of " +\
@@ -113,23 +188,37 @@ class Distribution(Savable, Loadable):
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True, `Distribution.hessian_of_log_value` method
+        can be called safely.
         """
         raise cannot_instantiate_distribution_error
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative(s) of log_value(point) with respect to
-        the parameter(s).
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this distribution at the given point. Must be implemented by all
+        subclasses.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        second derivative of log value
-                 else, returns 2D square numpy.ndarray with dimension length
-                       equal to the number of parameters representing the N^2
-                       different second derivatives of the log value
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 2D
+            `numpy.ndarray` that is \\(p\\times p\\) is returned
         """
         if not self.hessian_computable:
             raise NotImplementedError("The hessian of the log value of " +\
@@ -138,42 +227,60 @@ class Distribution(Savable, Loadable):
     
     def __call__(self, point):
         """
-        Alias for log_value function.
+        Computes the logarithm of the value of this distribution at the given
+        point. Alias of the `Distribution.log_value` method.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         return self.log_value(point)
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution. It
+        must be implemented by all subclasses.
         """
         raise cannot_instantiate_distribution_error
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution, if implemented.
+        The mean of this distribution, if implemented.
+        
+        - if this distribution is univariate, this is a float
+        - if this distribution describes \\(p\\) parameters, this is a 1D
+        `numpy.ndarray` of length \\(p\\)
         """
         raise cannot_instantiate_distribution_error
     
     @property
     def variance(self):
         """
-        Property storing the (co)variance of this distribution, if implemented.
+        The (co)variance of this distribution, if implemented.
+        
+        - if this distribution is univariate, this is a float variance
+        - if this distribution describes \\(p\\) parameters, this is a 2D
+        `numpy.ndarray` \\(p\\times p\\) covariance matrix
         """
         raise cannot_instantiate_distribution_error
     
     @property
     def standard_deviation(self):
         """
-        Property storing the standard deviation of univariate distributions
-        whose variance is implemented.
+        The standard deviation of the distribution (only valid if this
+        distribution is univariate)
         """
         if not hasattr(self, '_standard_deviation'):
             if self.numparams == 1:
@@ -185,16 +292,26 @@ class Distribution(Savable, Loadable):
     
     def __len__(self):
         """
-        Returns the number of parameters in a Distribution so that
-        len(distribution) can be used to get the number of parameters of a
-        Distribution object without explicitly referencing numparams.
+        Alias for `Distribution.numparams` created so that `len(distribution)`
+        can be used to get the number of parameters of a `Distribution` object
+        without explicitly referencing `Distribution.numparams`.
+        
+        Returns
+        -------
+        numparams : int
+            the number of parameters in a Distribution 
         """
         return self.numparams
     
     def to_string(self):
         """
-        Returns a string representation of this distribution. It must be
+        Finds a string representation of this distribution. It must be
         implemented by all subclasses.
+        
+        Returns
+        -------
+        representation : str
+            a string summary of this distribution
         """
         raise cannot_instantiate_distribution_error
     
@@ -203,31 +320,68 @@ class Distribution(Savable, Loadable):
         Tests for equality between this distribution and other. All subclasses
         must implement this function.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` represents this distribution
         """
         raise cannot_instantiate_distribution_error
+    
+    def __ne__(self, other):
+        """
+        Tests for inequality between this distribution and other.
+        
+        Parameters
+        ----------
+        other : object
+            object with which to check for inequality
+        
+        Returns
+        -------
+        result : bool
+            False if and only if `other` represents this distribution
+        """
+        return (not self.__eq__(other))
     
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution. It must be
+        implemented by all subclasses.
+        
+        - if this distribution is univariate, this is a float
+        - if this distribution describes \\(p\\) parameters, this is a 1D array
+        of length \\(p\\)
         """
         raise cannot_instantiate_distribution_error
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution. It must be
+        implemented by all subclasses.
+        
+        - if this distribution is univariate, this is a float
+        - if this distribution describes \\(p\\) parameters, this is a 1D array
+        of length \\(p\\)
         """
         raise cannot_instantiate_distribution_error
     
     @property
     def bounds(self):
         """
-        Property storing the bounds of this distribution. It merely combines
-        the minimum and maximum properties.
+        The bounds of this distribution. It merely combines the
+        `Distribution.minimum` and `Distribution.maximum` properties.
+        
+        - if this distribution is univariate, this is a 2-tuple containing the
+        minimum and maximum
+        - if this distribution describes \\(p\\) parameters, this is a list of
+        2-tuples containing the minima and maxima of the parameters
         """
         if self.numparams == 1:
             return (self.minimum, self.maximum)
@@ -237,51 +391,127 @@ class Distribution(Savable, Loadable):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False). It must be implemented by all subclasses.
         """
         raise cannot_instantiate_distribution_error
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
         Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        distribution so that it can be saved later. All subclasses must
+        implement this function. Aside from data necessary to load the
+        distribution later, each subclass should save the name of its class in
+        `group.attrs['class']`.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this distribution
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         raise cannot_instantiate_distribution_error
     
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a Distribution from the given hdf5 file group. All Distribution
-        subclasses must implement this method if things are to be saved in hdf5
-        files.
+        Loads a `Distribution` subclass from the given hdf5 file group. All
+        subclasses must implement this method if things are to be saved/loaded
+        in hdf5 files.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            a `Distribution` was saved
         
-        returns: a Distribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `Distribution`
+            loaded distribution of the current subclass
         """
         raise cannot_instantiate_distribution_error
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution. This function ignores metadata.
+        
+        Returns
+        -------
+        copied : `Distribution`
+            a deep copy of this Distribution.
         """
         raise cannot_instantiate_distribution_error
+
+    @property
+    def metadata(self):
+        """
+        Any piece(s) of data which one may want to keep with this
+        `Distribution` object. Keep in mind that this can only be saved to an
+        hdf5 file if it is a dictionary whose keys are bools, numbers, strings,
+        `numpy.ndarray` objects, or `distpy.util.Savable.Savable` objects.
+        """
+        if not hasattr(self, '_metadata'):
+            raise AttributeError("metadata referenced before it was set.")
+        return self._metadata
+        
+    @metadata.setter
+    def metadata(self, value):
+        """
+        Setter for `Distribution.metadata`.
+        
+        Parameters
+        ----------
+        value : obj
+            any object
+        """
+        if type(value) is not type(None):
+            is_string = isinstance(value, basestring)
+            is_number = (type(value) in numerical_types)
+            is_bool = (type(value) in bool_types)
+            is_dictionary = isinstance(value, dict)
+            is_array = isinstance(value, np.ndarray)
+            is_savable = isinstance(value, Savable)
+            if not any([is_string, is_number, is_bool, is_dictionary,\
+                is_array, is_savable]):
+                print("distpy: Even though metadata will be stored in " +\
+                    "memory, an error will be thrown if fill_hdf5_group is " +\
+                    "called because it is unknown how to save this " +\
+                    "metadata to disk (i.e. it is not hdf5-able).")
+        self._metadata = value
+    
+    def metadata_equal(self, other):
+        """
+        Checks to see if `other` has the same metadata as this `Distribution`.
+        
+        Parameters
+        ----------
+        other : `Distribution`
+            object whose metadata to compare
+        
+        Returns
+        -------
+        result : bool
+            True if and only if metadata is the same in both `Distribution`
+            objects
+        """
+        try:
+            return np.all(self.metadata == other.metadata)
+        except:
+            return False
     
     def save_metadata(self, group):
         """
         Saves the metadata from this distribution.
         
-        group: the same group with which fill_hdf5_group is being called on a
-               Distribution subclass
+        Parameters
+        ----------
+        group : h5py.Group
+            the same group with which fill_hdf5_group is being called on a
+            `Distribution` subclass
         """
         if type(self.metadata) is not type(None):
             save_dictionary({'metadata': self.metadata},\
@@ -290,14 +520,20 @@ class Distribution(Savable, Loadable):
     @staticmethod
     def load_metadata(group):
         """
-        Loads the metadata saved with the save_metadata() function if any (if
-        there is no metadata, this function returns None).
+        Loads the metadata saved with the `Distribution.save_metadata` method,
+        if any.
         
-        group: the group with which fill_hdf5_group was called on a
-               Distribution subclass
+        Parameters
+        ----------
+        group : h5py.Group
+            the group with which `fill_hdf5_group` was called on a
+            `Distribution` subclass
         
-        returns: None (if no metadata was saved) or the metadata saved when
-                 fill_hdf5_group method of a Distribution subclass was called
+        Returns
+        -------
+        metadata : object or None
+            - if no metadata was stored, `metadata` is None
+            - otherwise, `metadata` is the metadata that was saved
         """
         if 'metadata' in group:
             metadata_container = load_dictionary(group['metadata'])
@@ -305,26 +541,45 @@ class Distribution(Savable, Loadable):
         else:
             return None
     
-    def __ne__(self, other):
-        """
-        This merely enforces that (a!=b) equals (not (a==b)) for all
-        distribution objects a and b.
-        """
-        return (not self.__eq__(other))
-    
     @property
     def can_give_confidence_intervals(self):
         """
-        Confidence intervals for most distributions can be generated as long as
-        this distribution describes only one dimension.
+        Bool describing whether confidence intervals can be returned for this
+        distribution. It is usually True if this is a continuous, univariate
+        distribution.
         """
         return ((not self.is_discrete) and (self.numparams == 1))
+    
+    def inverse_cdf(self, probability):
+        """
+        Finds the value that is larger than `probability` of the variates drawn
+        from this distribution.
+        
+        Parameters
+        ----------
+        probability : float
+            the probability at which to evaluate the inverse cdf
+        
+        Returns
+        -------
+        value : float
+            `value` is such that the distribution has probability `probability`
+            to yield variates below `value`
+        """
+        if self.can_give_confidence_intervals:
+            raise NotImplementedError("inverse_cdf is not implemented even " +\
+                "though can_give_confidence_intervals is True.")
+        else:
+            raise NotImplementedError("inverse_cdf cannot be evaluated for " +\
+                "this distribution because it is not a continuous " +\
+                "univariate distribution or its inverse_cdf has not been " +\
+                "implemented.")
     
     @property
     def median(self):
         """
-        Property storing the median of distributions which have inverse_cdv
-        functions (which are most analytical univariate distributions).
+        The median of this distribution. This is only implemented when
+        `Distribution.can_give_confidence_intervals` is True
         """
         if not hasattr(self, '_median'):
             if self.can_give_confidence_intervals:
@@ -336,12 +591,19 @@ class Distribution(Savable, Loadable):
     
     def left_confidence_interval(self, probability_level):
         """
-        Finds confidence interval furthest to the left.
+        Finds the confidence interval furthest to the left. This is only
+        implemented when `Distribution.can_give_confidence_intervals` is True.
         
-        probability_level: the probability with which a random variable with
-                           this distribution will exist in returned interval
+        Parameters
+        ----------
+        probability_level : float
+            the probability with which a random variable with this distribution
+            will exist in returned interval
         
-        returns: (low, high) interval
+        Returns
+        -------
+        interval: tuple
+            `(low, high)`
         """
         if self.can_give_confidence_intervals:
             return (self.inverse_cdf(0), self.inverse_cdf(probability_level))
@@ -351,13 +613,20 @@ class Distribution(Savable, Loadable):
     
     def central_confidence_interval(self, probability_level):
         """
-        Finds confidence interval which has same probability of lying above or
-        below interval.
+        Finds the confidence interval which has same probability of lying above
+        or below interval. This is only implemented when
+        `Distribution.can_give_confidence_intervals` is True.
         
-        probability_level: the probability with which a random variable with
-                           this distribution will exist in returned interval
+        Parameters
+        ----------
+        probability_level : float
+            the probability with which a random variable with this distribution
+            will exist in returned interval
         
-        returns: (low, high) interval
+        Returns
+        -------
+        interval: tuple
+            `(low, high)`
         """
         if self.numparams == 1:
             return (self.inverse_cdf((1 - probability_level) / 2),\
@@ -368,12 +637,19 @@ class Distribution(Savable, Loadable):
     
     def right_confidence_interval(self, probability_level):
         """
-        Finds confidence interval furthest to the right.
+        Finds the confidence interval furthest to the right. This is only
+        implemented when `Distribution.can_give_confidence_intervals` is True.
         
-        probability_level: the probability with which a random variable with
-                           this distribution will exist in returned interval
+        Parameters
+        ----------
+        probability_level : float
+            the probability with which a random variable with this distribution
+            will exist in returned interval
         
-        returns: (low, high) interval
+        Returns
+        -------
+        interval: tuple
+            `(low, high)`
         """
         if self.numparams == 1:
             return\
@@ -381,98 +657,60 @@ class Distribution(Savable, Loadable):
         else:
             raise ValueError("Confidence intervals cannot be found for " +\
                 "this distribution.")
-
-    @property
-    def metadata(self):
-        """
-        Property storing any piece of data which one may want to keep with this
-        Distribution object. Keep in mind that this can only be saved to an
-        hdf5 file if it is a dictionary whose keys are Savable objects (see
-        distpy.util.Savable.py; i.e. it must implement a function with the
-        following signature: self.fill_hdf5_group(group)) or arrays.
-        """
-        if not hasattr(self, '_metadata'):
-            raise AttributeError("metadata referenced before it was set.")
-        return self._metadata
-        
-    @metadata.setter
-    def metadata(self, value):
-        """
-        Setter for metadata to store with this Disribution. Keep in mind that
-        the metadata can only be saved in an hdf5 file group if it is a number,
-        bool, string, numpy.ndarray of numbers, a Savable object, or a
-        dictionary of such objects.
-        
-        value: any object, but if saving to hdf5 file is desired check
-               description above for acceptable types
-        """
-        if type(value) is not type(None):
-            is_string = isinstance(value, basestring)
-            is_number = (type(value) in numerical_types)
-            is_bool = (type(value) in bool_types)
-            is_dictionary = isinstance(value, dict)
-            is_array = isinstance(value, np.ndarray)
-            is_savable = isinstance(value, Savable)
-            if not any([is_string, is_number, is_bool, is_dictionary,\
-                is_array, is_savable]):
-                
-                if rank == 0:
-                    print("distpy: Even though metadata will be stored in memory, an " +\
-                        "error will be thrown if fill_hdf5_group is called " +\
-                        "because it is unknown how to save this metadata to " +\
-                        "disk (i.e. it is not hdf5-able).")
-                        
-        self._metadata = value
-    
-    def metadata_equal(self, other):
-        """
-        Checks to see if other's metadata is the same as self's.
-        
-        other: a Distribution object
-        
-        returns: True if metadata is the same in both Distributions,
-                 False otherwise
-        """
-        try:
-            return np.all(self.metadata == other.metadata)
-        except:
-            return False
     
     def reset(self):
         """
-        This function exists so that conceptual distributions can be stored
-        alongside DeterministicDistributions, which are really just samples.
+        Resets the distribution to resample. This method exists so that
+        conceptual, truly random distributions can be stored alongside
+        `distpy.distribution.DeterministicDistribution.DeterministicDistribution`
+        objects, which are really just samples.
         """
         pass
     
     def plot(self, x_values, scale_factor=1, center=False, xlabel='',\
         ylabel='', title='', fontsize=24, ax=None, show=False, **kwargs):
         """
-        Plots the PDF of this distribution evaluated at the given x values.
+        Plots the probability density function of this distribution evaluated
+        at the given x values.
         
-        x_values: 1D numpy.ndarray of sorted x values at which to plot this
-                  distribution (if center is True, then the distribution is
-                  plotted at these numbers of standard deviations from the
-                  mean)
-        scale_factor: allows for the pdf values to be scaled by a constant
-                      (default 1)
-        center: boolean determining whether numbers of standard deviations from
-                the mean (True) are plotted or values themselves (False) are
-                plotted
-        xlabel: label to place on x axis
-        ylabel: label to place on y axis
-        title: title to place on top of plot
-        fontsize: size of labels and title
-        ax: Axes object on which to plot distribution values.
-            If None, a new Axes object is created on a new Figure object
-        show: if True, matplotlib.pyplot.show() is called before this function
-              returns
-        **kwargs: keyword arguments to pass to the matplotlib.pyplot.plot
-                  function if this is a continuous distribution or the
-                  matplotlib.pyplot.scatter function if this is a discrete
-                  distribution
+        Parameters
+        ----------
+        x_values : `numpy.ndarray`
+            1D `numpy.ndarray` of sorted \\(x\\) values at which to plot this
+            distribution (if `center` is True, then the distribution is plotted
+            at these numbers of standard deviations from the mean)
+        scale_factor : float
+            pdf values scaled by this factor are plotted
+        center : bool
+            determines whether numbers of standard deviations from the mean
+            (True) are plotted or values themselves (False) are plotted
+        xlabel : str
+            label to place on x axis
+        ylabel : str
+            label to place on y axis
+        title : str
+            title to place on top of plot
+        fontsize : int or str
+            size of labels and title
+        ax : `matplotlib.Axes`
+            `matplotlib.Axes` object on which to plot distribution values. If
+            None, a new `matplotlib.Axes` object is created on a new
+            `matplotlib.Figure` object
+        show : bool
+            if True, `matplotlib.pyplot.show` is called before this function
+            returns
+        kwargs : dict
+            keyword arguments to pass to the `matplotlib.pyplot.plot` function
+            if this is a continuous distribution or the
+            `matplotlib.pyplot.scatter` function if this is a discrete
+            distribution
         
-        returns: ax if show is False, None otherwise
+        Returns
+        -------
+        axes : `matplotlib.Axes` or None
+            - if `show` is False, `axes` is the `matplotlib.Axes` object on
+            which plot was made
+            - if `show` is True, `axes` is None
         """
         if self.numparams != 1:
             raise NotImplementedError('plot can only be called with 1D ' +\
@@ -506,4 +744,3 @@ class Distribution(Savable, Loadable):
             pl.show()
         else:
             return ax
-

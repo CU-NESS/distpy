@@ -1,9 +1,12 @@
 """
-File: distpy/distribution/BetaDistribution.py
-Author: Keith Tauscher
-Date: 15 Oct 2019
+Module containing class representing a beta distribution. Its PDF is
+represented by:
+$$f(x) = \\frac{x^{\\alpha-1}(1-x)^{\\beta-1}}{B(\\alpha,\\beta)},$$ where
+\\(B(x,y)\\) is the beta function.
 
-Description: File containing class representing a beta distribution.
+**File**: $DISTPY/distpy/distribution/BetaDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 from __future__ import division
 import numpy as np
@@ -15,17 +18,22 @@ from .Distribution import Distribution
 
 class BetaDistribution(Distribution):
     """
-    Class representing a beta distribution. Useful for parameters which must
-    lie between 0 and 1. Classically, this is the distribution of the
-    probability of success in a binary experiment where alpha successes and
-    beta failures have been observed.
+    Class representing a beta distribution. Its PDF is represented by:
+    $$f(x) = \\frac{x^{\\alpha-1}(1-x)^{\\beta-1}}{B(\\alpha,\\beta)},$$ where
+    \\(B(x,y)\\) is the beta function.
     """
     def __init__(self, alpha, beta, metadata=None):
         """
-        Initializes a new BetaDistribution.
+        Initializes a new `BetaDistribution` with the given parameter values.
         
-        alpha, beta parameters representing number of successes/failures
-                    (both must be greater than 0)
+        Parameters
+        ----------
+        alpha : float
+            real number, \\(\\alpha>0\\)
+        beta : float
+            real number, \\(\\beta>0\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.alpha = alpha
         self.beta = beta
@@ -34,12 +42,17 @@ class BetaDistribution(Distribution):
     @staticmethod
     def create_from_mean_and_variance(mean, variance, metadata=None):
         """
-        Creates a new BetaDistribution with the given mean and variance.
+        Creates a new `BetaDistribution` with the given mean and variance.
         
-        mean: the mean of the desired distribution, must satisfy 0<mean<1
-        variance: the variance of the desired distribution,
-                  must satisfy 0<variance<(mean*(1-mean))
-        metadata: data to store alongside distribution, should be hdf5-able
+        Parameters
+        ----------
+        mean : float
+            the mean of the desired distribution, must satisfy `0<mean<1`
+        variance : float
+            the variance of the desired distribution, must satisfy
+            `0<variance<(mean*(1-mean))`
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution
         """
         if (mean <= 0) or (mean >= 1):
             raise ValueError("The mean of a BetaDistribution must be " +\
@@ -55,7 +68,7 @@ class BetaDistribution(Distribution):
     @property
     def alpha(self):
         """
-        Property storing the alpha parameter of this distribution.
+        The parameter, \\(\\alpha\\), of this distribution.
         """
         if not hasattr(self, '_alpha'):
             raise AttributeError("alpha was referenced before it was set.")
@@ -64,9 +77,12 @@ class BetaDistribution(Distribution):
     @alpha.setter
     def alpha(self, value):
         """
-        Setter for the alpha parameter of this distribution.
+        Setter for `BetaDistribution.beta`.
         
-        value: positive number
+        Parameters
+        ----------
+        value : float
+            positive number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -79,7 +95,7 @@ class BetaDistribution(Distribution):
     @property
     def alpha_minus_one(self):
         """
-        Property storing alpha-1.
+        \\(alpha-1\\)
         """
         if not hasattr(self, '_alpha_minus_one'):
             self._alpha_minus_one = self.alpha - 1
@@ -88,7 +104,7 @@ class BetaDistribution(Distribution):
     @property
     def beta(self):
         """
-        Property storing the beta parameter of this distribution.
+        The parameter, \\(\\beta\\), of this distribution.
         """
         if not hasattr(self, '_beta'):
             raise AttributeError("beta was referenced before it was set.")
@@ -97,9 +113,12 @@ class BetaDistribution(Distribution):
     @beta.setter
     def beta(self, value):
         """
-        Setter for the beta parameter of this distribution.
+        Setter for `BetaDistribution.beta`
         
-        value: positive number
+        Parameters
+        ----------
+        value : float
+            positive number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -112,7 +131,7 @@ class BetaDistribution(Distribution):
     @property
     def beta_minus_one(self):
         """
-        Property storing beta-1.
+        \\(\\beta-1\\)
         """
         if not hasattr(self, '_beta_minus_one'):
             self._beta_minus_one = self.beta - 1
@@ -121,7 +140,8 @@ class BetaDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `BetaDistribution`,
+        \\(\\frac{\\alpha}{\\alpha+\\beta}\\).
         """
         if not hasattr(self, '_mean'):
             self._mean = self.alpha / (self.alpha + self.beta)
@@ -130,7 +150,8 @@ class BetaDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `BetaDistribution`,
+        \\(\\frac{\\alpha\\beta}{(\\alpha+\\beta)^2(\\alpha+\\beta+1)}\\).
         """
         if not hasattr(self, '_variance'):
             self._variance = (self.alpha * self.beta) /\
@@ -141,8 +162,8 @@ class BetaDistribution(Distribution):
     @property
     def const_lp_term(self):
         """
-        Property storing the constant term in the log of the pdf of this
-        distribution.
+        The constant term in the log of the pdf of this distribution, given by
+        \\(-\\ln{B(\\alpha,\\beta)}\\) where \\(B(x,y)\\) is the Beta function.
         """
         if not hasattr(self, '_const_lp_term'):
             self._const_lp_term = -np.log(beta_func(self.alpha, self.beta))
@@ -151,31 +172,50 @@ class BetaDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Beta distribution pdf is univariate, so numparams always returns 1.
+        The number of parameters of this `BetaDistribution`, 1.
         """
         return 1
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `BetaDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         return random.beta(self.alpha, self.beta, size=shape)
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is point.
+        Computes the logarithm of the value of this `BetaDistribution` at the
+        given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if (point <= 0) or (point >= 1):
             return -np.inf
@@ -184,15 +224,25 @@ class BetaDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns a string representation of this BetaDistribution.
+        Finds and returns a string version of this `BetaDistribution` of the
+        form `"Beta(alpha, beta)"`.
         """
         return "Beta({0:.2g}, {1:.2g})".format(self.alpha, self.beta)
     
     def __eq__(self, other):
         """
-        Checks for equality of this object with other. Returns True if other is
-        a BetaDistribution with nearly the same alpha and beta (down to 10^-9
-        level) and False otherwise.
+        Checks for equality of this `BetaDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `BetaDistribution` with the same
+            `BetaDistribution.alpha` and `BetaDistribution.beta`
         """
         if isinstance(other, BetaDistribution):
             tol_kwargs = {'rtol': 0., 'atol': 1e-9}
@@ -206,34 +256,38 @@ class BetaDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return 0
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return 1
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 group with data from this distribution. All that
-        is to be saved is the class name, alpha, and beta.
+        Fills the given hdf5 file group with data about this `BetaDistribution`
+        so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'BetaDistribution'
         group.attrs['alpha'] = self.alpha
@@ -244,13 +298,18 @@ class BetaDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a BetaDistribution from the given hdf5 file group.
+        Loads a `BetaDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a BetaDistribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `BetaDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'BetaDistribution'
@@ -264,56 +323,89 @@ class BetaDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of the cumulative distribution function (cdf) of this
-        distribution.
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `BetaDistribution`.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         return betaincinv(self.alpha, self.beta, cdf)
     
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True, `BetaDistribution.gradient_of_log_value`
+        method can be called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `BetaDistribution` at the given point.
         
-        point: single number at which to evaluate the derivative
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : float
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a float
         """
         return (((self.alpha - 1) / point) - ((self.beta - 1) / (1 - point)))
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True, `BetaDistribution.hessian_of_log_value`
+        method can be called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `BetaDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : float
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\boldsymbol{\\nabla}^T\
+            \\ln{\\big(f(x)\\big)}\\) as a float
         """
         return (-(((self.alpha - 1) / (point ** 2)) +\
             ((self.beta - 1) / ((1 - point) ** 2))))
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `BetaDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return BetaDistribution(self.alpha, self.beta)
 

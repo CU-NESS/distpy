@@ -1,10 +1,10 @@
 """
-File: distpy/distribution/GriddedDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution defined on a user-defined
+grid. Within grid squares, the pdf is uniform.
 
-Description: File containing class representing an arbitrary dimensional
-             distribution given by a rectangular array-defined pdf.
+**File**: $DISTPY/distpy/distribution/GriddedDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -15,14 +15,22 @@ from .Distribution import Distribution
 
 def search_sorted(array, value):
     """
-    Searches the given sorted array for the given value using a
-    BinarySearch which should execute in O(log N).
+    Searches the given sorted array for the given value using a binary search
+    which should execute in O(log N).
     
-    array a 1D sorted numerical array
-    value the numerical value to search for
-
-    returns index of array closest to value
-            returns None if value is outside variable bounds
+    Parameters
+    ----------
+    array : `numpy.ndarray`
+        a 1D sorted numerical array
+    value : float
+        the numerical value to search for
+    
+    Returns
+    -------
+    index : int
+        - if `value` is between `array[0]` and `array[-1]`, then `index` is the
+        integer index of `array` closest to `value`
+        - if `value<array[0]` or `value > array[-1]`, then `index` is None
     """
     def index_to_check(rmin, rmax):
         return (rmin + rmax) // 2
@@ -59,17 +67,26 @@ def search_sorted(array, value):
 
 class GriddedDistribution(Distribution):
     """
-    A class representing an arbitrary dimensional (well, up to 32 dimensions)
-    probability distribution (of finite support!).
+    Class representing a distribution defined on a user-defined grid. Within
+    grid squares, the pdf is uniform.
     """
     def __init__(self, variables, pdf=None, metadata=None):
         """
-        Initializes a new GriddedDistribution using the given variables.
+        Initializes a new `GriddedDistribution` with the given parameter
+        values.
         
-        variables list of variable ranges (i.e. len(variables) == ndim
-                  and variables[i] is the set of the ith variables)
-        pdf numpy.ndarray with same ndim as number of parameters and with
-              the ith axis having the same length as the ith variables range
+        Parameters
+        ----------
+        variables : sequence
+            sequence of 1D arrays of lengths \\(N_1,N_2,\\ldots,N_n\\) defining
+            grid square edges
+        pdf : None or `numpy.ndarray`
+            - if `pdf` is None, each grid square is equally likely
+            - otherwise, `pdf` should be an \\(n\\)-dimensional array giving
+            the (possibly unnormalized) probability of landing in each grid
+            square
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         if type(variables) in sequence_types:
             self._N = len(variables)
@@ -109,15 +126,14 @@ class GriddedDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Finds and returns the number of parameters which this distribution
-        describes.
+        The number of parameters of this `GriddedDistribution`.
         """
         return self._N
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of the `GriddedDistribution` class is not implemented.
         """
         if not hasattr(self, '_mean'):
             raise NotImplementedError("mean is not implemented for the " +\
@@ -127,7 +143,7 @@ class GriddedDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of the `GriddedDistribution` class is not implemented.
         """
         if not hasattr(self, '_variance'):
             raise NotImplementedError("variance is not implemented for the " +\
@@ -136,16 +152,35 @@ class GriddedDistribution(Distribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a point from this distribution.
+        Draws point(s) from this `GriddedDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate:
+                - if this distribution is univariate, a scalar is returned
+                - if this distribution describes \\(p\\) parameters, then a 1D
+                array of length \\(p\\) is returned
+            - if int, \\(n\\), returns \\(n\\) random variates:
+                - if this distribution is univariate, a 1D array of length
+                \\(n\\) is returned
+                - if this distribution describes \\(p\\) parameters, then a 2D
+                array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates:
+                - if this distribution is univariate, an \\(n\\)-D array of
+                shape `shape` is returned
+                - if this distribution describes \\(p\\) parameters, then an
+                \\((n+1)\\)-D array of shape `shape+(p,)` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if type(shape) is type(None):
             shape = ()
@@ -155,10 +190,19 @@ class GriddedDistribution(Distribution):
     
     def inverse_cdf(self, cdf):
         """
-        Inverse of the cumulative distribution function (only expected to work
-        for if self.numparams == 1 but works nonetheless in higher dimensions).
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `GriddedDistribution`. Only works when
+        `GriddedDistribution.numparams` is 1.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         if type(cdf) in numerical_types:
             inv_cdf_index = self._inverse_cdf_by_packed_index(cdf)
@@ -178,12 +222,22 @@ class GriddedDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Evaluates and returns the log of the pdf of this distribution at the
-        given point.
+        Computes the logarithm of the value of this `GriddedDistribution` at
+        the given point.
         
-        point: numpy.ndarray of variable values describing the point
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns the log of the pdf associated with the pixel containing point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         index = self._packed_index_from_point(point)
         if (type(index) is type(None)) or (self.pdf[index] == 0):
@@ -192,15 +246,25 @@ class GriddedDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns a string representation of this GriddedDistribution.
+        Finds and returns a string version of this `GriddedDistribution` of the
+        form `"Gridded(user defined)"`.
         """
         return "Gridded(user defined)"
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a GriddedDistribution with the same variable ranges and pdf
-        and False otherwise.
+        Checks for equality of this `GriddedDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `GriddedDistribution` with the
+            same custom grid
         """
         if isinstance(other, GriddedDistribution):
             if self.numparams == other.numparams:
@@ -339,34 +403,40 @@ class GriddedDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return [np.min(var) for var in self.vars]
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return [np.max(var) for var in self.vars]
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, pdf_link=None, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        class name, variables list, and pdf values.
+        Fills the given hdf5 file group with data about this
+        `GriddedDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        pdf_link : str or h5py.Dataset or None
+            link to pdf in hdf5 file, if it exists
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GriddedDistribution'
         group.attrs['numparams'] = self.numparams
@@ -379,13 +449,18 @@ class GriddedDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GriddedDistribution from the given hdf5 file group.
+        Loads a `GriddedDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a GriddedDistribution object created from the information in
-                 the given group
+        Returns
+        -------
+        distribution : `GriddedDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'GriddedDistribution'
@@ -405,23 +480,31 @@ class GriddedDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. It has not been implemented, so it returns False.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `GriddedDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return False 
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. It has not been implemented, so it returns False.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `GriddedDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `GriddedDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return GriddedDistribution(self.vars, self.pdf)
 

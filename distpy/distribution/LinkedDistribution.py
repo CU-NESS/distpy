@@ -1,10 +1,12 @@
 """
-File: distpy/distribution/LinkedDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution where all parameters are
+equal and can follow any univariate distribution. Its PDF is represented by:
+$$f(x_1,x_2,\\ldots,x_N)=g(x_1)\\prod_{k=2}^N\\delta(x_k-x_1),$$ where \\(g\\)
+is the PDF (or PMF) of a univariate distribution.
 
-Description: File containing class representing distribution of many random
-             variates which must all be equal.
+**File**: $DISTPY/distpy/distribution/LinkedDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -13,21 +15,23 @@ from .Distribution import Distribution
 
 class LinkedDistribution(Distribution):
     """
-    Class representing a distribution which is shared by an arbitrary number of
-    parameters. It piggybacks on another (univariate) distribution (called the
-    "shared_distribution") by drawing from it and evaluating its log_value
-    while ensuring that the variables linked by this distribution must be
-    identical.
+    Class representing a distribution where all parameters are equal and can
+    follow any univariate distribution. Its PDF is represented by:
+    $$f(x_1,x_2,\\ldots,x_N)=g(x_1)\\prod_{k=2}^N\\delta(x_k-x_1),$$ where
+    \\(g\\) is the PDF (or PMF) of a univariate distribution.
     """
     def __init__(self, shared_distribution, numparams, metadata=None):
         """
-        Initializes a new LinkedDistribution with the given
-        shared_distribution and number of parameters.
+        Initializes a new `LinkedDistribution` with the given parameter values.
         
-        shared_distribution: the Distribution which describes how the
-                             individual values are distributed (must be a
-                             Distribution)
-        numparams the number of parameters which this distribution describes
+        Parameters
+        ----------
+        shared_distribution : `distpy.distribution.Distribution.Distribution`
+            the distribution, with PDF \\(g\\), of the shared value
+        numparams : int
+            the integer, \\(n>2\\), number of parameters of this distribution
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.shared_distribution = shared_distribution
         self.numparams = numparams
@@ -36,7 +40,7 @@ class LinkedDistribution(Distribution):
     @property
     def shared_distribution(self):
         """
-        Property storing the distribution shared by all of the parameters.
+        The distribution shared by all of the parameters.
         """
         if not hasattr(self, '_shared_distribution'):
             raise AttributeError("shared_distribution was referenced " +\
@@ -46,9 +50,12 @@ class LinkedDistribution(Distribution):
     @shared_distribution.setter
     def shared_distribution(self, value):
         """
-        Setter for the distribution shared by all of the parameters.
+        Setter for `LinkedDistirbution.shared_distribution`.
         
-        value: a univariate distribution
+        Parameters
+        ----------
+        value : `distpy.distribution.Distribution.Distribution`
+            a univariate distribution
         """
         if isinstance(value, Distribution):
             if value.numparams == 1:
@@ -64,8 +71,7 @@ class LinkedDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Finds and returns the number of parameters which this distribution
-        describes.
+        The number of parameters of this `LinkedDistribution`.
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams was referenced before it was set.")
@@ -74,7 +80,9 @@ class LinkedDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `LinkedDistribution`, which is a
+        `LinkedDistribution.numparams`-length array containing copies of the
+        mean of the `LinkedDistribution.shared_distribution`.
         """
         if not hasattr(self, '_mean'):
             self._mean =\
@@ -84,7 +92,7 @@ class LinkedDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The (singular) covariance of this `LinkedDistribution`.
         """
         if not hasattr(self, '_variance'):
             self._variance = self.shared_distribution.variance *\
@@ -94,7 +102,12 @@ class LinkedDistribution(Distribution):
     @numparams.setter
     def numparams(self, value):
         """
-        Setter for the number of parameters which this distribution describes.
+        Setter for `LinkedDistribution.numparams`.
+        
+        Parameters
+        ----------
+        value : int
+            positive integer
         """
         if (type(value) in numerical_types):
             if value > 1:
@@ -108,19 +121,28 @@ class LinkedDistribution(Distribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws value from shared_distribution and assigns that value to all
-        parameters.
+        Draws point(s) from this `LinkedDistribution`. Below, `p` is
+        `LinkedDistribution.numparams`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length
+            `p` is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(p,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns numpy.ndarray of values (all are equal by design)
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if type(shape) is type(None):
             return np.ones(self.numparams) *\
@@ -134,14 +156,21 @@ class LinkedDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution at the
+        Computes the logarithm of the value of this `LinkedDistribution` at the
         given point.
         
-        point: can be 0D or 1D (if 1D, all values must be identical for
-               this function to return something other than -np.inf)
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: the log of the value of this distribution at the given point
-                 (ignoring delta functions)
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if type(point) in numerical_types:
             return self.shared_distribution.log_value(point)
@@ -161,15 +190,27 @@ class LinkedDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns a string representation of this LinkedDistribution.
+        Finds and returns a string version of this `LinkedDistribution` of
+        the form `"Linked(shared)"`, where `"shared"` is the string form of
+        `LinkedDistribution.shared_distribution`.
         """
         return "Linked({!s})".format(self.shared_distribution.to_string())
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a LinkedDistribution with the same number of parameters and
-        the same shared_distribution and False otherwise.
+        Checks for equality of this `LinkedDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `LinkedDistribution` with the same
+            `LinkedDistribution.numparams` and
+            `LinkedDistribution.shared_distribution`
         """
         if isinstance(other, LinkedDistribution):
             numparams_equal = (self.numparams == other.numparams)
@@ -183,35 +224,38 @@ class LinkedDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return [self.shared_distribution.minimum] * self.numparams
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return [self.shared_distribution.maximum] * self.numparams
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return self.shared_distribution.is_discrete
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        class name is saved alongside the component distribution and the number
-        of parameters.
+        Fills the given hdf5 file group with data about this
+        `LinkedDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'LinkedDistribution'
         group.attrs['numparams'] = self.numparams
@@ -225,19 +269,26 @@ class LinkedDistribution(Distribution):
     def load_from_hdf5_group(group, shared_distribution_class, *args,\
         **kwargs):
         """
-        Loads a LinkedDistribution from the given hdf5 file group.
+        Loads a `LinkedDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
-        shared_distribution_class: the class of the distribution shared by the
-                                   parameters of this distribution
-        args: positional arguments to pass on to the load_from_hdf5_group
-              method of the shared_distribution_class
-        kwargs: keyword arguments to pass on to the load_from_hdf5_group
-              method of the shared_distribution_class
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
+        shared_distribution_class : class
+            class of the univariate shared distribution
+        args : sequence
+            positional arguments to pass to the `load_from_hdf5_group` method
+            of `shared_distribution_class`
+        kwargs : dict
+            keyword arguments to pass to the `load_from_hdf5_group` method of
+            `shared_distribution_class`
         
-        returns: LinkedDistribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `LinkedDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'LinkedDistribution'
@@ -254,23 +305,30 @@ class LinkedDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. It has not been implemented, so it returns False.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `LinkedDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return False 
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. It has not been implemented, so it returns False.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `LinkedDistribution.hessian_of_log_value` method can be called safely.
         """
         return False
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `LinkedDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return\
             LinkedDistribution(self.shared_distribution.copy(), self.numparams)

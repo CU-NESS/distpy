@@ -1,11 +1,12 @@
 """
-File: distpy/distribution/GeneralizedParetoDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a generalized Pareto distribution. Its PDF
+is represented by: $$f(x) = \\left(\\frac{\\alpha-1}{\\sigma}\\right)\\ \
+\\left[1 + \\left(\\frac{x-\\mu}{\\sigma}\\right)\\right]^{\\alpha},$$ where
+\\(x\\ge\\mu\\).
 
-Description: File containing a class representing a generalized form of the
-             Pareto distribution. Its cdf is given by
-             F(x)=1-(1+((x-mu)/sigma))^(1-alpha) where alpha > 1
+**File**: $DISTPY/distpy/distribution/ABCDEFDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -14,16 +15,26 @@ from .Distribution import Distribution
 
 class GeneralizedParetoDistribution(Distribution):
     """
-    Class representing a generalized form of the Pareto distribution. Its cdf
-    is given by F(x)=1-(1+((x-mu)/sigma))^(1-alpha) where alpha > 1
+    Class representing a generalized Pareto distribution. Its PDF is
+    represented by: $$f(x) = \\left(\\frac{\\alpha-1}{\\sigma}\\right)\\ \
+    \\left[1 + \\left(\\frac{x-\\mu}{\\sigma}\\right)\\right]^{\\alpha},$$
+    where \\(x\\ge\\mu\\).
     """
     def __init__(self, shape, location=0, scale=1, metadata=None):
         """
-        Creates a new GeneralizedParetoDistribution object.
+        Initializes a new `GeneralizedParetoDistribution` with the given
+        parameter values.
         
-        shape: alpha in the CDF, strictly greater than 1
-        location: mode (and also lower bound) of distribution
-        scale: sigma in the CDF, strictly greater than 0
+        Parameters
+        ----------
+        shape : float
+            positive real number, \\(\\alpha\\)
+        location : float
+            real number, \\(\\mu\\)
+        scale : float
+            positive real number \\(\\sigma\\)
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.shape = shape
         self.location = location
@@ -33,8 +44,7 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def shape(self):
         """
-        Property storing the shape parameter, alpha, of this distribution. It
-        is strictly greater than 1.
+        The shape parameter, \\(\\alpha\\), of this distribution.
         """
         if not hasattr(self, '_shape'):
             raise AttributeError("shape was referenced before it was set.")
@@ -43,9 +53,12 @@ class GeneralizedParetoDistribution(Distribution):
     @shape.setter
     def shape(self, value):
         """
-        Setter for the shape parameter, alpha, of this distribution.
+        Setter for `GeneralizedParetoDistribution.shape`.
         
-        value: number greater than 1
+        Parameters
+        ----------
+        value : float
+            number greater than 1
         """
         if type(value) in numerical_types:
             if value > 1:
@@ -58,8 +71,8 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def location(self):
         """
-        Property storing the location parameter, mu, of this distribution. It
-        is strictly greater than 1.
+        Property storing the location parameter, \\(\\mu\\), of this
+        distribution.
         """
         if not hasattr(self, '_location'):
             raise AttributeError("location was referenced before it was set.")
@@ -68,9 +81,12 @@ class GeneralizedParetoDistribution(Distribution):
     @location.setter
     def location(self, value):
         """
-        Setter for the location parameter, mu, of this distribution.
+        Setter for the `GeneralizedParetoDistribution.location`
         
-        value: number
+        Parameters
+        ----------
+        value : float
+            real number
         """
         if type(value) in numerical_types:
             self._location = float(value)
@@ -80,8 +96,7 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def scale(self):
         """
-        Property storing the scale parameter, sigma, of this distribution. It
-        is strictly greater than 0.
+        The scale parameter, \\(\\sigma\\), of this distribution.
         """
         if not hasattr(self, '_scale'):
             raise AttributeError("scale was referenced before it was set.")
@@ -90,9 +105,12 @@ class GeneralizedParetoDistribution(Distribution):
     @scale.setter
     def scale(self, value):
         """
-        Setter for the scale parameter, sigma, of this distribution.
+        Setter for `GeneralizedParetoDistribution.scale`.
         
-        value: number greater than 0
+        Parameters
+        ----------
+        value : float
+            positive real number
         """
         if type(value) in numerical_types:
             if value > 0:
@@ -105,15 +123,15 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Only univariate uniform distributions are included here so numparams
-        always returns 1.
+        The number of parameters of this `GeneralizedParetoDistribution`, 1.
         """
         return 1
     
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `GeneralizedParetoDistribution`,
+        \\(\\mu+\\frac{\\sigma}{\\alpha-2}\\).
         """
         if not hasattr(self, '_mean'):
             if self.shape <= 2:
@@ -126,7 +144,8 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of this `GeneralizedParetoDistribution`,
+        \\(\\frac{\\sigma^2(\\alpha-1)}{(\\alpha-3)(\\alpha-2)^2}\\).
         """
         if not hasattr(self, '_variance'):
             if self.shape <= 3:
@@ -139,16 +158,25 @@ class GeneralizedParetoDistribution(Distribution):
     
     def draw(self, shape=None, random=rand):
         """
-        Draws and returns a value from this distribution using numpy.random.
+        Draws point(s) from this `GeneralizedParetoDistribution`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a scalar
+            - if int, \\(n\\), returns \\(n\\) random variates in a 1D array of
+            length \\(n\\)
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\(n\\)-D array of shape `shape` is returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if type(shape) is type(None):
             shape = ()
@@ -161,7 +189,8 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def log_value_constant(self):
         """
-        Property storing the constant part of the log of the distribution
+        The constant part of the log of the distribution, given by
+        \\(\\ln{\\frac{\\alpha-1}{\\theta}}\\).
         """
         if not hasattr(self, '_log_value_constant'):
             self._log_value_constant = np.log((self.shape - 1) / self.scale)
@@ -169,10 +198,20 @@ class GeneralizedParetoDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Evaluates and returns the log of the value of this distribution when
-        the variable is value.
+        Computes the logarithm of the value of this
+        `GeneralizedParetoDistribution` at the given point.
         
-        point: numerical value of the variable
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate PDF
+        
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if point >= self.location:
             return self.log_value_constant - (self.shape *\
@@ -181,16 +220,30 @@ class GeneralizedParetoDistribution(Distribution):
     
     def to_string(self):
         """
-        Finds and returns a string representation of this distribution.
+        Finds and returns a string version of this
+        `GeneralizedParetoDistribution` of the form
+        `"Pareto(alpha, mu, sigma)"`.
         """
         return "Pareto({0:.2g}, {1:.2g}, {2:.2g})".format(self.shape,\
             self.location, self.scale)
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a GeneralizedParetoDistribution with the same shape, location,
-        and scale (down to 1e-9 level) and False otherwise.
+        Checks for equality of this `GeneralizedParetoDistribution` with
+        `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `GeneralizedParetoDistribution`
+            with the same `GeneralizedParetoDistribution.shape`,
+            `GeneralizedParetoDistribution.location`, and
+            `GeneralizedParetoDistribution.scale`
         """
         if isinstance(other, GeneralizedParetoDistribution):
             shape_close =\
@@ -205,19 +258,20 @@ class GeneralizedParetoDistribution(Distribution):
         else:
             return False
     
-    @property
-    def log_prior_constant(self):
-        """
-        Property storing the constant in the natural logarithm of this
-        distribution's value. It is equal to ln[(alpha - 1) / sigma]
-        """
-        return np.log((self.shape - 1) / self.scale)
-    
     def inverse_cdf(self, cdf):
         """
-        Inverse of cumulative distribution function.
+        Computes the inverse of the cumulative distribution function (cdf) of
+        this `GeneralizedParetoDistribution`.
         
-        cdf: value between 0 and 1
+        Parameters
+        ----------
+        cdf : float
+            probability value between 0 and 1
+        
+        Returns
+        -------
+        point : float
+            value which yields `cdf` when it the CDF is evaluated at it
         """
         return self.location +\
             (self.scale * (np.power(cdf, 1 / (1 - self.shape)) - 1))
@@ -225,34 +279,38 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return self.location
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return None
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. All
-        that needs to be saved is the class name and high and low values.
+        Fills the given hdf5 file group with data about this
+        `GeneralizedParetoDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'GeneralizedParetoDistribution'
         group.attrs['shape'] = self.shape
@@ -264,13 +322,18 @@ class GeneralizedParetoDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a GeneralizedParetoDistribution from the given hdf5 file group.
+        Loads a `GeneralizedParetoDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: UniformDistribution object created from the information in the
-                 given group
+        Returns
+        -------
+        distribution : `GeneralizedParetoDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'GeneralizedParetoDistribution'
@@ -287,45 +350,72 @@ class GeneralizedParetoDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `GeneralizedParetoDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative of log_value(point) with respect to the
-        parameter.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `GeneralizedParetoDistribution` at the given point.
         
-        point: single number at which to evaluate the derivative
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: returns single number representing derivative of log value
+        Returns
+        -------
+        value : float
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a float
         """
         return self.shape / ((self.location - point) - self.scale)
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `GeneralizedParetoDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative of log_value(point) with respect to the
-        parameter.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `GeneralizedParetoDistribution` at the given point.
         
-        point: single value
+        Parameters
+        ----------
+        point : float
+            scalar at which to evaluate the gradient
         
-        returns: single number representing second derivative of log value
+        Returns
+        -------
+        value : float
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\boldsymbol{\\nabla}^T\
+            \\ln{\\big(f(x)\\big)}\\) as a float
         """
         return self.shape / (((self.location - point) - self.scale) ** 2)
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `GeneralizedParetoDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return GeneralizedParetoDistribution(self.shape, self.location,\
             self.scale)

@@ -1,11 +1,12 @@
 """
-File: distpy/distribution/UniformConditionDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution. Its PDF is
+represented by: $$f(x)\\propto\\begin{cases} 1 & p(x)\\text{ true} \\\\\
+0 & p(x)\\text{ false} \\end{cases},$$ where \\(p(x)\\) is a proposition
+depending on \\(x\\).
 
-Description: File containing class representing a distribution which takes on
-             the log_value 0 (unnormalized) when a condition  is met and -inf
-             when the condition is not met.
+**File**: $DISTPY/distpy/distribution/UniformConditionDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 from ..util import int_types, bool_types, Expression
@@ -13,20 +14,26 @@ from .Distribution import Distribution
 
 class UniformConditionDistribution(Distribution):
     """
-    A class representing a distribution which takes on the log_value 0
-    (unnormalized) when a condition  is met and -inf when the condition is not
-    met.
+    Class representing a distribution. Its PDF is represented by:
+    $$f(x)\\propto\\begin{cases} 1 & p(x)\\text{ true} \\\\ 0 &\
+    p(x)\\text{ false} \\end{cases},$$ where \\(p(x)\\) is a proposition
+    depending on \\(x\\).
     """
     def __init__(self, expression, is_discrete=False, metadata=None):
         """
-        Initializes a new UniformConditionDistribution
+        Initializes a new `BinomialDistribution` with the given parameter
+        values.
         
-        expression: the condition which defines where the log_value of this
-                    distribution is finite. expression.num_arguments is the
-                    dimension of this distribution
-        is_discrete: True if the variable underlying this distribution is
-                     discrete. False otherwise (default False)
-        metadata: data to store alongside this distribution
+        Parameters
+        ----------
+        expression : `distpy.util.Expression.Expression`
+            expression, \\(p(x)\\) determining where this distribution is
+            nonzero
+        is_discrete : bool
+            bool determining whether this distribution should be considered
+            discrete
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.expression = expression
         self.is_discrete = is_discrete
@@ -35,8 +42,8 @@ class UniformConditionDistribution(Distribution):
     @property
     def expression(self):
         """
-        Property storing the Expression object which takes parameters as inputs
-        and produces the model output.
+        The `distpy.util.Expression.Expression` object which takes parameters
+        as inputs and produces the model output.
         """
         if not hasattr(self, '_expression'):
             raise AttributeError("expression referenced before it was set.")
@@ -45,9 +52,12 @@ class UniformConditionDistribution(Distribution):
     @expression.setter
     def expression(self, value):
         """
-        Setter for the Expression object at the core of this model.
+        Setter for `UniformConditionDistribution.expression`.
         
-        value: must be an Expression object
+        Parameters
+        ----------
+        value : `distpy.util.Expression.Expression`
+            condition
         """
         if isinstance(value, Expression):
             self._expression = value
@@ -56,8 +66,8 @@ class UniformConditionDistribution(Distribution):
     
     def draw(self, shape=None, random=None):
         """
-        Draws a point from the distribution. Since this Distribution cannot be
-        drawn from, this throws a NotImplementedError.
+        Draws a point from this `UniformConditionDistribution`. Since it
+        cannot be drawn from, this throws a NotImplementedError.
         """
         raise NotImplementedError("UniformConditionDistribution objects " +\
             "cannot be drawn from because there is zero probability of its " +\
@@ -65,17 +75,21 @@ class UniformConditionDistribution(Distribution):
     
     def log_value(self, point):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point.
+        Computes the logarithm of the value of this
+        `UniformConditionDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point. This distribution is not normalized because that
-                 would require knowing the exact region in which the condition
-                 at the heart of this distribution is True. If one knew that,
-                 they wouldn't be using the UniformConditionDistribution class,
-                 they'd use a more specific class.
+        Returns
+        -------
+        value : float
+            0 if the `UniformConditionDistribution.expression` is True at
+            `point`, -np.inf otherwise
         """
         if self.numparams == 1:
             return (0. if self.expression(point) else -np.inf)
@@ -85,53 +99,87 @@ class UniformConditionDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `UniformConditionDistribution.gradient_of_log_value` method can be
+        called safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivative(s) of log_value(point) with respect to the
-        parameter(s).
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `UniformConditionDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        derivative of log value
-                 else, returns 1D numpy.ndarray containing the N derivatives of
-                       the log value with respect to each individual parameter
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 1D
+            `numpy.ndarray` of length \\(p\\) is returned
         """
-        return np.zeros(self.numparams)
+        if self.numparams == 1:
+            return 0.
+        else:
+            return np.zeros(self.numparams)
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `UniformConditionDistribution.hessian_of_log_value` method can be
+        called safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivative(s) of log_value(point) with respect to
-        the parameter(s).
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `UniformConditionDistribution` at the given point.
         
-        point: either single value (if distribution is 1D) or array of values
+        Parameters
+        ----------
+        point : float or `numpy.ndarray`
+            - if this distribution is univariate, `point` should be a scalar
+            - if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: if distribution is 1D, returns single number representing
-                                        second derivative of log value
-                 else, returns 2D square numpy.ndarray with dimension length
-                       equal to the number of parameters representing the N^2
-                       different second derivatives of the log value
+        Returns
+        -------
+        value : float or `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\):
+            
+            - if this distribution is univariate, then a float representing the
+            derivative is returned
+            - if this distribution describes \\(p\\) parameters, then a 2D
+            `numpy.ndarray` that is \\(p\\times p\\) is returned
         """
-        return np.zeros((self.numparams, self.numparams))
+        if self.numparams == 1:
+            return 0.
+        else:
+            return np.zeros((self.numparams, self.numparams))
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution.
+        The number of parameters of this `UniformConditionDistribution`.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = self.expression.num_arguments
@@ -140,7 +188,8 @@ class UniformConditionDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of the `UniformConditionDistribution` class is not
+        implemented.
         """
         if not hasattr(self, '_mean'):
             raise NotImplementedError("mean is not implemented for " +\
@@ -150,7 +199,8 @@ class UniformConditionDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of the `UniformConditionDistribution` class is not
+        implemented.
         """
         if not hasattr(self, '_variance'):
             raise NotImplementedError("variance is not implemented for " +\
@@ -159,12 +209,20 @@ class UniformConditionDistribution(Distribution):
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Checks for equality of this `UniformConditionDistribution` with
+        `other`.
         
-        other: Distribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `UniformConditionDistribution`
+            with the same `UniformConditionDistribution.expression` and
+            `UniformConditionDistribution.is_discrete`
         """
         if not isinstance(other, UniformConditionDistribution):
             return False
@@ -177,8 +235,8 @@ class UniformConditionDistribution(Distribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         if not hasattr(self, '_is_discrete'):
             raise AttributeError("is_discrete referenced before it was set.")
@@ -187,26 +245,38 @@ class UniformConditionDistribution(Distribution):
     @is_discrete.setter
     def is_discrete(self, value):
         """
-        Setter for whether this distribution is discrete or continuous (the
-        form itself does not determine this since this distribution cannot be
-        drawn from).
+        Setter for `UniformConditionDistribution.is_discrete`
         
-        value: must be a bool (True for discrete, False for continuous)
+        Parameters
+        ----------
+        value : bool
+            True or False
         """
         if type(value) in bool_types:
             self._is_discrete = value
         else:
             raise TypeError("is_discrete was set to a non-bool.")
+
+    def to_string(self):
+        """
+        Finds and returns a string version of this
+        `UniformConditionDistribution` of the form `"UniformCondition"`.
+        """
+        return "UniformCondition"
     
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        Fills the given hdf5 file group with data about this
+        `UniformConditionDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'UniformConditionDistribution'
         group.attrs['is_discrete'] = self.is_discrete
@@ -217,13 +287,18 @@ class UniformConditionDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a UniformConditionDistribution from the given hdf5 file group.
+        Loads a `UniformConditionDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a UniformConditionDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `UniformConditionDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'UniformConditionDistribution'
@@ -239,30 +314,34 @@ class UniformConditionDistribution(Distribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
-        The one for this Distribution is not known, so it set to None.
+        The minimum allowable value(s) in this distribution. The one for this
+        `UniformConditionDistribution` is not known, so it set to None.
         """
         return (None if (self.numparams == 1) else ([None] * self.numparams))
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
-        The one for this Distribution is not known, so it set to None.
+        The maximum allowable value(s) in this distribution. The one for this
+        `UniformConditionDistribution` is not known, so it set to None.
         """
         return (None if (self.numparams == 1) else ([None] * self.numparams))
     
     @property
     def can_give_confidence_intervals(self):
         """
-        Confidence intervals for most distributions can be generated as long as
-        this distribution describes only one dimension.
+        Unnormalized distributions do not support confidence intervals.
         """
         return False
     
     def copy(self):
         """
-        Returns a copy of this Distribution. This function ignores metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `UniformConditionDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return UniformConditionDistribution(self.expression,\
             is_dicrete=self.is_discrete)

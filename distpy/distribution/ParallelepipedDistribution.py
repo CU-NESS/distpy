@@ -1,10 +1,10 @@
 """
-File: distpy/distribution/ParallelepipedDistribution.py
-Author: Keith Tauscher
-Date: Oct 15 2019
+Module containing class representing a distribution that is uniform over a
+parallelepiped in an arbitrary number of dimensions.
 
-Description: File containing class represening a uniform distribution over an
-             arbitrary parallelepiped (in arbitrary number of dimensions).
+**File**: $DISTPY/distpy/distribution/ParallelepipedDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -17,25 +17,41 @@ def _normed(vec):
     """
     Finds and returns a normalized version of the given vector.
     
-    vec: 1D sequence of numbers
+    Parameters
+    ----------
+    vec : sequence
+        vector to norm
+    
+    Returns
+    -------
+    normed : `numpy.ndarray`
+        if `vec` is \\(\\boldsymbol{x}\\), then `normed` is
+        \\(\\boldsymbol{x}/\\sqrt{\\boldsymbol{x}\\cdot\\boldsymbol{x}}\\)
     """
     arrvec = np.array(vec)
-    return (arrvec / np.sqrt(np.dot(arrvec, arrvec)))
+    return (arrvec / np.sqrt(np.vdot(arrvec, arrvec)))
 
 class ParallelepipedDistribution(Distribution):
     """
-    Class representing a uniform distribution over a parallelepiped shaped
-    region. The region is defined by constraints on linear combinations of the
-    variables. See __init__ for more details.
+    Class representing a distribution that is uniform over a parallelepiped in
+    an arbitrary number of dimensions.
     """
     def __init__(self, center, face_directions, distances, metadata=None):
         """
-        Initializes a new ParallelepipedDistribution.
+        Initializes a new `ParallelepipedDistribution` with the given parameter
+        values.
         
-        center: the vector to the center of the region
-        face_directions: list of directions to the faces of the parallelepiped.
-                         These will be normalized
-        distances: distances from center in given directions
+        Parameters
+        ----------
+        center : `numpy.ndarray`
+            array describing vector pointing to center of parallelepiped
+        face_directions : sequence
+            sequence of arrays giving unit vectors from center of
+            parallelepiped to its faces
+        distances : `numpy.ndarray`
+            array of distances to each face from the center
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.center = center
         self.face_directions = face_directions
@@ -45,7 +61,7 @@ class ParallelepipedDistribution(Distribution):
     @property
     def center(self):
         """
-        Property storing the center point of the parallelepiped.
+        The center point of the parallelepiped.
         """
         if not hasattr(self, '_center'):
             raise AttributeError("center was referenced before it was set.")
@@ -54,9 +70,12 @@ class ParallelepipedDistribution(Distribution):
     @center.setter
     def center(self, value):
         """
-        Setter for the center point of the parallelepiped.
+        Setter for `ParallelepipedDistribution.center`.
         
-        value: 1D numpy.ndarray of length numparams
+        Parameters
+        ----------
+        value : numpy.ndarray
+            1D numpy.ndarray of length `ParallelepipedDistribution.numparams`
         """
         if (type(value) in sequence_types):
             value = np.array(value)
@@ -73,8 +92,7 @@ class ParallelepipedDistribution(Distribution):
     @property
     def face_directions(self):
         """
-        Property storing a matrix encoding the directions to each face of the
-        parallelepiped.
+        A matrix encoding the directions to each face of the parallelepiped.
         """
         if not hasattr(self, '_face_directions'):
             raise AttributeError("face_directions was referenced before it " +\
@@ -84,10 +102,13 @@ class ParallelepipedDistribution(Distribution):
     @face_directions.setter
     def face_directions(self, value):
         """
-        Setter for the directions to each face of the parallelepiped.
+        Setter for `ParallelepipedDistribution.face_directions`.
         
-        value: list of directions to the faces of the parallelepiped. These
-               will be normalized
+        Parameters
+        ----------
+        value : sequence
+            list of directions to the faces of the parallelepiped. These will
+            be normalized
         """
         if (type(value) in sequence_types):
             value = np.array(value)
@@ -106,7 +127,7 @@ class ParallelepipedDistribution(Distribution):
     @property
     def distances(self):
         """
-        Property storing the distances to each face of the parallelepiped.
+        The distances to each face of the parallelepiped.
         """
         if not hasattr(self, '_distances'):
             raise AttributeError("distances was referenced before it was set.")
@@ -115,9 +136,13 @@ class ParallelepipedDistribution(Distribution):
     @distances.setter
     def distances(self, value):
         """
-        Setter for the distances to each face of the parallelepiped.
+        Setter for `ParallelepipedDistribution.distances`.
         
-        value: 1D array of positive numbers with the same shape as center
+        Parameter
+        ---------
+        value : numpy.ndarray
+            1D array of positive numbers with the same shape as
+            `ParallelepipedDistribution.center`
         """
         if (type(value) in sequence_types):
             value = np.array(value)
@@ -135,8 +160,8 @@ class ParallelepipedDistribution(Distribution):
     @property
     def inv_face_directions(self):
         """
-        Property storing the inverse of the matrix describing the directions to
-        the faces of the parallelepiped.
+        The inverse of the matrix describing the directions to the faces of the
+        parallelepiped.
         """
         if not hasattr(self, '_inv_face_directions'):
             self._inv_face_directions = lalg.inv(self.face_directions)
@@ -145,8 +170,7 @@ class ParallelepipedDistribution(Distribution):
     @property
     def numparams(self):
         """
-        Finds and returns the number of parameters to which this
-        ParallelepipedDistribution applies.
+        The number of parameters of this `ParallelepipedDistribution`.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = len(self.center)
@@ -155,7 +179,8 @@ class ParallelepipedDistribution(Distribution):
     @property
     def mean(self):
         """
-        Property storing the mean of this distribution.
+        The mean of this `ParallelepipedDistribution`, which is the center of
+        the parallelepiped.
         """
         if not hasattr(self, '_mean'):
             self._mean = self.center
@@ -164,7 +189,8 @@ class ParallelepipedDistribution(Distribution):
     @property
     def variance(self):
         """
-        Property storing the covariance of this distribution.
+        The variance of the `ParallelepipedDistribution` class is not
+        implemented.
         """
         if not hasattr(self, '_variance'):
             raise AttributeError("variance is not implemented for the " +\
@@ -174,10 +200,8 @@ class ParallelepipedDistribution(Distribution):
     @property
     def matrix(self):
         """
-        Finds the matrix whose rows are vectors pointing from the vertex to
-        all adjacent vertices.
-        
-        returns the matrix which has the directions from the vertex as its rows
+        The matrix whose rows are vectors pointing from the vertex to all
+        adjacent vertices.
         """
         if not hasattr(self, '_matrix'):
             def row(index):
@@ -196,12 +220,12 @@ class ParallelepipedDistribution(Distribution):
     @property
     def vertex(self):
         """
-        Finds and returns the vertex which satisfies:
-        
-        (vec(v)-vec(c)) dot face_directions[i] == distances[i]   for all i
-        
-        where vec(v) is the vector to the vertex and vec(c) is the vector to
-        the center
+        The vertex which satisfies
+        \\((\\boldsymbol{v}-\\boldsymbol{c})\\cdot\\boldsymbol{\\hat{n}}_i=\
+        d_i\\) for all \\(k\\), where \\(\\boldsymbol{v}\\) is the vertex,
+        \\(\\boldsymbol{c}\\) is the center, \\(\\boldsymbol{\\hat{n}}_k\\) is
+        the \\(k^{\\text{th}}\\) normalized face direction to the, and
+        \\(d_k\\) is the distance to the \\(k^{\\text{th}}\\) face.
         """
         if not hasattr(self, '_vertex'):
             from_cent = self.inv_face_directions * np.matrix(self.distances).T
@@ -212,9 +236,9 @@ class ParallelepipedDistribution(Distribution):
     @property
     def area(self):
         """
-        Finds the "area" (more like hypervolume in the general case) of the
+        The "area" (more like hypervolume in the general case) of the
         parallelepiped-shaped region described by this
-        ParallelepipedDistribution.
+        `ParallelepipedDistribution`.
         """
         if not hasattr(self, '_area'):
             self._area = np.abs(lalg.det(self.matrix))
@@ -222,19 +246,28 @@ class ParallelepipedDistribution(Distribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws a value from the parallelepiped this object describes (uniform
-        distribution over support).
+        Draws point(s) from this `ParallelepipedDistribution`. Below, `p` is
+        `ParallelepipedDistribution.numparams`.
         
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length
+            `p` is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,p)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(p,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
         
-        returns random draw in form of numpy.ndarray
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -250,11 +283,21 @@ class ParallelepipedDistribution(Distribution):
 
     def log_value(self, point):
         """
-        Computes the log of the value of this distribution at the given point.
+        Computes the logarithm of the value of this
+        `ParallelepipedDistribution` at the given point.
         
-        point the point at which to evaluate the log value; a numpy.ndarray
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: log of the value of the distribution at the given point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         if self._in_region(point):
             return -np.log(self.area)
@@ -262,21 +305,27 @@ class ParallelepipedDistribution(Distribution):
 
     def to_string(self):
         """
-        Finds and returns a string representation of this
-        ParallelepipedDistribution.
+        Finds and returns a string version of this `ParallelepipedDistribution`
+        of the form `"Parallelepiped(center, face_directions, distance)"`.
         """
         return "Parallelepiped({0!s}, {1!s}, {2!s})".format(self.center,\
-            self.face_directions, self.distance)
+            self.face_directions, self.distances)
 
     def _in_region(self, point):
-        #
-        # Finds if the given point is in the region defined by this
-        # ParallelepipedDistribution.
-        #
-        # point the point to test for inclusion
-        #
-        # returns True if point in region, False otherwise
-        #
+        """
+        Finds if the given point is in the region defined by this
+        ParallelepipedDistribution.
+        
+        Parameters
+        ----------
+        point : numpy.ndarray
+            the point to test for inclusion
+        
+        Returns
+        -------
+        containment : bool
+            True if point in region, False otherwise
+        """
         if type(point) not in sequence_types:
             raise ValueError('point given to log_value was not of an ' +\
                 'array-like type.')
@@ -294,10 +343,20 @@ class ParallelepipedDistribution(Distribution):
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True if
-        other is a ParallelepipedDistribution with the same center,
-        face_directions, and distances (to a dynamic range of 10^-9) and False
-        otherwise.
+        Checks for equality of this `ParallelepipedDistribution` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `ParallelepipedDistribution` with
+            the same `ParallelepipedDistribution.center`,
+            `ParallelepipedDistribution.face_directions`, and
+            `ParallelepipedDistribution.distances`
         """
         if isinstance(other, ParallelepipedDistribution):
             tol_kwargs = {'rtol': 1e-9, 'atol': 0.}
@@ -315,43 +374,52 @@ class ParallelepipedDistribution(Distribution):
     @property
     def can_give_confidence_intervals(self):
         """
-        Confidence intervals cannot be made with this distribution.
+        Multivariate distributions do not support confidence intervals.
         """
         return False
     
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable value(s) in this distribution.
+        The minimum allowable value(s) in this distribution.
         """
         return self.center - np.abs(self.vertex - self.center)
     
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable value(s) in this distribution.
+        The maximum allowable value(s) in this distribution.
         """
         return self.center + np.abs(self.vertex - self.center)
     
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        Boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         return False
     
     def fill_hdf5_group(self, group, center_link=None,\
         face_directions_link=None, distances_link=None, save_metadata=True):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        class name of the distribution is saved along with the center,
-        face_directions, and distances.
+        Fills the given hdf5 file group with data about this
+        `ParallelepipedDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        center_link : str or h5py.Dataset or None
+            link to mean in hdf5 file, if it exists
+        face_directions_link : str or h5py.Dataset or None
+            link to face_directions in hdf5 file, if it exists
+        distances_link : str or h5py.Dataset or None
+            link to distances to faces in hdf5 file, if it exists
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'ParallelepipedDistribution'
         create_hdf5_dataset(group, 'center', data=self.center,\
@@ -366,13 +434,18 @@ class ParallelepipedDistribution(Distribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a ParallelepipedDistribution from the given hdf5 file group.
+        Loads a `ParallelepipedDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a ParallelepipedDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `ParallelepipedDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'ParallelepipedDistribution'
@@ -389,45 +462,75 @@ class ParallelepipedDistribution(Distribution):
     @property
     def gradient_computable(self):
         """
-        Property which stores whether the gradient of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the gradient of the given distribution has
+        been implemented. If True,
+        `ParallelepipedDistribution.gradient_of_log_value` method can be called
+        safely.
         """
         return True
     
     def gradient_of_log_value(self, point):
         """
-        Computes the derivatives of log_value(point) with respect to the
-        parameters.
+        Computes the gradient (derivative) of the logarithm of the value of
+        this `ParallelepipedDistribution` at the given point.
         
-        point: vector at which to evaluate the derivatives
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: returns vector of derivatives of log value
+        Returns
+        -------
+        value : `numpy.ndarray`
+            gradient of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is
+            \\(\\boldsymbol{\\nabla}\\ln{\\big(f(x)\\big)}\\) as a 1D
+            `numpy.ndarray` of length \\(p\\)
         """
         return np.zeros((self.numparams,))
     
     @property
     def hessian_computable(self):
         """
-        Property which stores whether the hessian of the given distribution
-        has been implemented. Since it has been implemented, it returns True.
+        Boolean describing whether the hessian of the given distribution has
+        been implemented. If True,
+        `ParallelepipedDistribution.hessian_of_log_value` method can be called
+        safely.
         """
         return True
     
     def hessian_of_log_value(self, point):
         """
-        Computes the second derivatives of log_value(point) with respect to the
-        parameters.
+        Computes the hessian (second derivative) of the logarithm of the value
+        of this `ParallelepipedDistribution` at the given point.
         
-        point: vector at which to evaluate the derivatives
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            if this distribution describes \\(p\\) parameters, `point` should
+            be a length-\\(p\\) `numpy.ndarray`
         
-        returns: 2D square matrix of second derivatives of log value
+        Returns
+        -------
+        value : `numpy.ndarray`
+            hessian of the natural logarithm of the value of this
+            distribution. If \\(f\\) is this distribution's PDF and \\(x\\) is
+            `point`, then `value` is \\(\\boldsymbol{\\nabla}\
+            \\boldsymbol{\\nabla}^T\\ln{\\big(f(x)\\big)}\\) as a 2D
+            `numpy.ndarray` that is \\(p\\times p\\)
         """
         return np.zeros((self.numparams,) * 2)
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `ParallelepipedDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return ParallelepipedDistribution(self.center.A[0].copy(),\
             self.face_directions.A.copy(), self.distances.copy())

@@ -1,10 +1,20 @@
 """
-File: distpy/distribution/__init__.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing classes that represent many different kinds of distribution.
 
-Description: Imports classes in this module so that any given class, CLASS, can
-             be imported using "from distpy import CLASS"
+- The `distpy.distribution.Distribution.Distribution` class is an abstract
+class whose subclasses are different distributions. They implement the
+`distpy.util.Savable.Savable` and `distpy.util.Loadable.Loadable` interfaces.
+- The `distpy.distribution.DirectionDistribution.DirectionDistribution` class
+is an abstract class whose subclasses are distributions defined on the sphere
+- The `distpy.distribution.DistributionList.DistributionList` and
+`distpy.distribution.DistributionSet.DistributionSet` classes are containers
+(list- and dict-like, respectively). They allow the distributions to be defined
+in any transformed space that can be defined with a
+`distpy.transform.Transform.Transform` object.
+
+**File**: $DISTPY/distpy/distribution/\\_\\_init\\_\\_.py  
+**Author**: Keith Tauscher  
+**Date**: 30 May 2021
 """
 from distpy.distribution.Distribution import Distribution
 from distpy.distribution.WindowedDistribution import WindowedDistribution
@@ -28,7 +38,7 @@ from distpy.distribution.SparseGaussianDistribution import\
 from distpy.distribution.GeometricDistribution import GeometricDistribution
 from distpy.distribution.GriddedDistribution import GriddedDistribution
 from distpy.distribution.ParallelepipedDistribution import\
-    ParallelepipedDistribution
+    ParallelepipedDistribution	
 from distpy.distribution.PoissonDistribution import PoissonDistribution
 from distpy.distribution.KroneckerDeltaDistribution\
     import KroneckerDeltaDistribution

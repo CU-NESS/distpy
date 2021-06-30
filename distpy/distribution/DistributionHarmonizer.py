@@ -1,74 +1,73 @@
 """
-File: distpy/distribution/DistributionHarmonizer.py
-Author: Keith Tauscher
-Date: 27 May 2019
+Module containing class created to generate a set of
+`distpy.distribution.DeterministicDistribution.DeterministicDistribution`
+objects which harmonize \\(N-M\\) known (assumed) marginal distributions with
+\\(M\\) conditional (solved for with a user-defined solver once other
+components subtracted out) distributions.
 
-Description: File containing class created to generate a set of
-             DeterministicDistribution objects which harmonize N-M known
-             (assumed) marginal distributions with M conditional (solved for
-             with a user-defined solver once other components subtracted out)
-             distributions.
+
+**File**: $DISTPY/distpy/distribution/DistributionHarmonizer.py  
+**Author**: Keith Tauscher  
+**Date**: 30 May 2021
 """
 import numpy as np
-from ..util import int_types
+from ..util import int_types, sequence_types
 from ..transform import TransformList, NullTransform
 from .DeterministicDistribution import DeterministicDistribution
 from .DistributionSet import DistributionSet
 
 class DistributionHarmonizer(object):
     """
-    Class created to generate a set of DeterministicDistribution objects which
-    harmonize N-M known (assumed) marginal distributions with M conditional
-    (solved for with a user-defined solver once other components subtracted
-    out) distributions.
+    Class created to generate a set of
+    `distpy.distribution.DeterministicDistribution.DeterministicDistribution`
+    objects which harmonize \\(N-M\\) known (assumed) marginal distributions
+    with \\(M\\) conditional (solved for with a user-defined solver once other
+    components subtracted out) distributions.
     """
     def __init__(self, marginal_distribution_set, conditional_solver,\
         marginal_draws, conditional_draws=None, **transforms):
         """
-        Initializes a new DistributionHarmonizer with the given known (or
+        Initializes a new `DistributionHarmonizer` with the given known (or
         assumed) distribution sets, a solver for parameters not included in the
         distribution sets, and the desired number of samples.
         
-        marginal_distribution_set: DistributionSet object or sequence of
-                                   DistributionSet objects which describe the
-                                   parameters whose distribution is known
-                                   (and/or) assumed. If None, then no
-                                   parameters are assumed known
-        conditional_solver: a Callable which returns:
-                            1) if conditional_draws is None, a dictionary of
-                               solved-for parameters when a dictionary sample
-                               of known- (or assumed-) distribution parameters
-                               is given (if transforms are given,
-                               conditional_solver should return parameters in
-                               untransformed space)
-                            2) if conditional_draws is not None, a
-                               DistributionSet object that represents the
-                               conditional distribution of the unknown
-                               parameters given the known parameters (if
-                               transforms are given, the DistributionSet
-                               returned by conditional_solver should include
-                               these transforms in order to return values in
-                               untransformed space)
-        marginal_draws: a positive integer denoting the number of times the
-                        known distributions are drawn from
-        conditional_draws: if None (default), then the conditional distribution
-                                              is effectively degenerate, with
-                                              only the maximum probability
-                                              value being drawn (see case 1 in
-                                              the documentation of the
-                                              conditional_solver argument
-                                              above)
-                           otherwise, then this should be a positive integer
-                                      determining the number of times the
-                                      conditional distribution returned by
-                                      conditional_solver (see case 2 in the
-                                      documentation of the conditional_solver
-                                      argument above) should be drawn from for
-                                      each of the marginal_draws number of
-                                      draws from the marginal distribution.
-        transforms: dictionary of transform objects defining the space in which
-                    the DeterministicDistribution object included in the
-                    joint_distribution_set property should exist
+        Parameters
+        ----------
+        marginal_distribution_set: `distpy.distribution.DistributionSet.DistributionSet`\
+        or sequence
+            objects which describe the parameters whose distribution is known
+            (and/or) assumed. If None, then no parameters are assumed known
+        conditional_solver: `callable`
+            1. if `conditional_draws` is None, `conditional_solver` should
+            return a dictionary of solved-for parameters when a dictionary
+            sample of known- (or assumed-) distribution parameters is given (if
+            transforms are given, `conditional_solver` should return parameters
+            in untransformed space)
+            2. if `conditional_draws` is not None, `conditional_solver` should
+            return a `distpy.distribution.DistributionSet.DistributionSet`
+            object that represents the conditional distribution of the unknown
+            parameters given the known parameters (if transforms are given, the
+            `distpy.distribution.DistributionSet.DistributionSet` returned by
+            `conditional_solver` should include these transforms in order to
+            return values in untransformed space)
+        marginal_draws : int
+            the number of times the known distributions are drawn from
+        conditional_draws : int or None
+            - if None (default), then the conditional distribution is
+            effectively degenerate, with only the maximum probability value
+            being drawn (see case 1 in the documentation of the
+            `conditional_solver` argument above)
+            - otherwise, then this should be a positive integer determining the
+            number of times the distribution returned by `conditional_solver`
+            (see case 2 in the documentation of the `conditional_solver`
+            argument above) should be drawn from for each of the
+            `marginal_draws` number of draws from the marginal distribution.
+        transforms : dict
+            dictionary of transform objects defining the space in which the
+            `distpy.distribution.DeterministicDistribution.DeterministicDistribution`
+            object included in the
+            `DistributionHarmonizer.joint_distribution_set` property should
+            exist
         """
         self.marginal_distribution_set = marginal_distribution_set
         self.conditional_solver = conditional_solver
@@ -79,12 +78,13 @@ class DistributionHarmonizer(object):
     @property
     def conditional_draws(self):
         """
-        Property storing the number of draws to take from the conditional
-        distribution for each draw of the marginal distribution. This must be
-        either None or a positive integer. If it is None, conditional_solver
-        property must return a dictionary of unknown parameters when passed a
-        dictionary of known parameters. If it is a positive integer,
-        conditional_solver property must return a DistributionSet object
+        The number of draws to take from the conditional distribution for each
+        draw of the marginal distribution, either None or a positive integer.
+        If it is None, `DistributionHarmonizer.conditional_solver` must return
+        a dictionary of unknown parameters when passed a dictionary of known
+        parameters. If it is a positive integer,
+        `DistributionHarmonizer.conditional_solver` property must return a
+        `distpy.distribution.DistributionSet.DistributionSet` object
         representing the conditional distribution when passed a dictionary of
         parameters drawn from the marginal distribution is passed.
         """
@@ -96,12 +96,14 @@ class DistributionHarmonizer(object):
     @conditional_draws.setter
     def conditional_draws(self, value):
         """
-        Setter for the conditional draws property.
+        Setter for `DistributionHarminizer.conditional_draws`.
         
-        value: either None or a positive integer. The returned value of
-               conditional_solver depends on whether this is None or an
-               integer. See the documentation on this property's getter for
-               more information.
+        Parameters
+        ----------
+        value : int or None
+            The returned value of `DistributionHarmonizer.conditional_solver`
+            depends on whether this is None or an integer. See the
+            documentation `DistributionHarmonizer.conditional_draws`
         """
         if type(value) is type(None):
             self._conditional_draws = value
@@ -118,8 +120,8 @@ class DistributionHarmonizer(object):
     @property
     def transforms(self):
         """
-        Property storing the transform to use for each parameter name (in a
-        dictionary).
+        The `distpy.transform.Transform.Transform` to use for each parameter
+        name (in a dictionary).
         """
         if not hasattr(self, '_transforms'):
             raise AttributeError("transforms was referenced before it was " +\
@@ -129,9 +131,13 @@ class DistributionHarmonizer(object):
     @transforms.setter
     def transforms(self, value):
         """
-        Setter for the transforms to apply to the parameters.
+        Setter for the `DistributionHarmonizer.transforms`.
         
-        value: a dictionary with parameter names as keys
+        Parameters
+        ----------
+        value : dict
+            a dictionary with parameter names as keys and
+            `distpy.transform.Transform.Transform` objects as values
         """
         if isinstance(value, dict):
             self._transforms = value
@@ -141,8 +147,8 @@ class DistributionHarmonizer(object):
     @property
     def marginal_distribution_set(self):
         """
-        Property storing the distribution set describing the parameter whose
-        marginal distribution is known.
+        The `distpy.distribution.DistributionSet.DistributionSet` describing
+        the parameters whose marginal distribution is known.
         """
         if not hasattr(self, '_marginal_distribution_set'):
             raise AttributeError("marginal_distribution_set was referenced " +\
@@ -152,12 +158,14 @@ class DistributionHarmonizer(object):
     @marginal_distribution_set.setter
     def marginal_distribution_set(self, value):
         """
-        Setter for the marginal distribution set(s) for the known (or assumed)
-        parameters.
+        Setter for `DistributionHarmonizer.marginal_distribution_set`.
         
-        value: DistributionSet object or sequence of DistributionSet objects
-               which decribe the parameters whose distribution is known
-               (and/or) assumed
+        Parameters
+        ----------
+        value : `distpy.distribution.DistributionSet.DistributionSet` or\
+        sequence
+            distribution of the parameters whose distribution is known (and/or)
+            assumed
         """
         if type(value) is type(None):
             self._marginal_distribution_set = DistributionSet()
@@ -178,9 +186,15 @@ class DistributionHarmonizer(object):
     @property
     def conditional_solver(self):
         """
-        Property storing the solver Callable which returns a dictionary of
-        solved-for parameters when a dictionary sample of known- (or assumed-)
-        distribution parameters is given.
+        The solver Callable that returns one of the following:
+        
+        - a dictionary of solved-for parameters when a dictionary sample of
+        known- (or assumed-) distribution parameters is given (if
+        `DistributionHarmonizer.conditional_draws` is None).
+        - a `distpy.distribution.DistributionSet.DistributionSet` object
+        describing the distribution of the unknown parameters when a dictionary
+        sample of known- (or assumed-) distribution parameters is given (if
+        `DistributionHarmonizer.conditional_draws` is an int)
         """
         if not hasattr(self, '_conditional_solver'):
             raise AttributeError("conditional_solver was referenced before " +\
@@ -190,23 +204,30 @@ class DistributionHarmonizer(object):
     @conditional_solver.setter
     def conditional_solver(self, value):
         """
-        Property storing the solver which computes values of parameters whose
-        distributions are unknown (or not assumed) from the values of
-        parameters whose distributions are known (or assumed). Usually, this
-        involves a sort of conditionalization (e.g. over a likelihood
-        function).
+        Setter for `DistributionHarmonizer.conditional_solver`.
         
-        value: a Callable which returns a dictionary of solved-for parameters
-               when a dictionary sample of known- (or assumed-) distribution
-               parameters is given
+        Parameters
+        ----------
+        value: `callable`
+            1. if `conditional_draws` is None, `conditional_solver` should
+            return a dictionary of solved-for parameters when a dictionary
+            sample of known- (or assumed-) distribution parameters is given (if
+            transforms are given, `conditional_solver` should return parameters
+            in untransformed space)
+            2. if `conditional_draws` is not None, `conditional_solver` should
+            return a `distpy.distribution.DistributionSet.DistributionSet`
+            object that represents the conditional distribution of the unknown
+            parameters given the known parameters (if transforms are given, the
+            `distpy.distribution.DistributionSet.DistributionSet` returned by
+            `conditional_solver` should include these transforms in order to
+            return values in untransformed space)
         """
         self._conditional_solver = value
     
     @property
     def marginal_draws(self):
         """
-        Property storing the maximum number (an integer) of samples the
-        DistributionSet returned by this class can yield.
+        The integer number of times the known distributions are drawn from
         """
         if not hasattr(self, '_marginal_draws'):
             raise AttributeError("marginal_draws was referenced before it " +\
@@ -216,10 +237,12 @@ class DistributionHarmonizer(object):
     @marginal_draws.setter
     def marginal_draws(self, value):
         """
-        Setter for the maximum number of samples the DistributionSet returned
-        by this class can yield.
+        Setter for `DistributionHarmonizer.marginal_draws`.
         
-        value: a positive integer
+        Parameters
+        ----------
+        value : int
+            any positive integer
         """
         if type(value) in int_types:
             if value > 0:
@@ -233,8 +256,8 @@ class DistributionHarmonizer(object):
     @property
     def joint_distribution_set(self):
         """
-        Property storing the joint DistributionSet describing all parameters,
-        known and unknown.
+        The joint `distpy.distribution.DistributionSet.DistributionSet`
+        describing all parameters, known and unknown.
         """
         if not hasattr(self, '_joint_distribution_set'):
             marginal_draw =\

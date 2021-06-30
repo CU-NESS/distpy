@@ -1,10 +1,10 @@
 """
-File: distpy/distribution/UniformDirectionDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a distribution that is uniform on a region
+of the sphere.
 
-Description: File containing class representing uniform distribution on the
-             (2D) surface of the sphere.
+**File**: $DISTPY/distpy/distribution/UniformDirectionDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 31 May 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -14,25 +14,36 @@ from .UniformDistribution import UniformDistribution
 
 class UniformDirectionDistribution(DirectionDistribution):
     """
-    Class representing a uniform distribution on the surface of a sphere.
+    Class representing a distribution that is uniform on a region of the
+    sphere.
     """
     def __init__(self, low_theta=0, high_theta=np.pi, low_phi=0,\
         high_phi=2*np.pi, pointing_center=(90, 0), psi_center=0,\
         metadata=None):
         """
-        Initializes a new UniformDirectionDistribution with the given
-        parameters.
+        Initializes a new `UniformDirectionDistribution` with the given
+        parameter values.
         
-        low_theta, high_theta, low_phi, and high_phi: constants defining
-                                                      support of distribution.
-                                                      theta (phi) represents
-                                                      the polar (azimuthal)
-                                                      angle are given in
-                                                      radians.
-        pointing_center: (latitude, longitude) in degrees. Must be (90, 0)
-                         (i.e. left default) if healpy is not installed.
-        psi_center: single number in degrees. Must be 0 (i.e. left default) if
-                    healpy is not installed
+        Parameters
+        ----------
+        low_theta : float
+            lowest polar angle (in radians) when center is rotated to overhead
+        high_theta : float
+            highest polar angle (in radians) when center is rotated to overhead
+        low_phi : float
+            lowest azimuthal angle (in radians) when center is rotated to
+            overhead
+        high_phi : float
+            highest azimuthal angle (in radians) when center is rotated to
+            overhead
+        pointing_center : tuple
+            2-tuple of form `(latitude, longitude)` describing point to rotate
+            to overhead before defining spherical square
+        psi_center : float
+            the \\(\\psi\\) value (in degrees) describing the Euler rotation
+            that brings center overhead
+        metadata : number or str or dict or `distpy.util.Savable.Savable`
+            data to store alongside this distribution.
         """
         self.psi_center = psi_center
         self.pointing_center = pointing_center
@@ -45,8 +56,7 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def low_theta(self):
         """
-        Property storing the lowest value of the polar angle of distribution
-        support in radians.
+        The lowest value of the polar angle of distribution support in radians.
         """
         if not hasattr(self, '_low_theta'):
             raise AttributeError("low_theta was referenced before it was set.")
@@ -55,10 +65,12 @@ class UniformDirectionDistribution(DirectionDistribution):
     @low_theta.setter
     def low_theta(self, value):
         """
-        Setter for the lowest value of the polar angle of distribution support in
-        radians.
+        Setter for `UniformDirectionDistribution.low_theta`
         
-        value: Must be between 0 and pi, inclusive.
+        Parameters
+        ----------
+        value : float
+            angle between 0 and pi, inclusive.
         """
         if type(value) in numerical_types:
             if (value >= 0) and (value <= np.pi):
@@ -71,8 +83,7 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def cos_low_theta(self):
         """
-        Property storing cosine of smallest polar angle in the support of this
-        distribution.
+        Cosine of smallest polar angle in the support of this distribution.
         """
         if not hasattr(self, '_cos_low_theta'):
             self._cos_low_theta = np.cos(self.low_theta)
@@ -81,8 +92,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def high_theta(self):
         """
-        Property storing the highest value of the polar angle of distribution
-        support in radians.
+        The highest value of the polar angle of distribution support in
+        radians.
         """
         if not hasattr(self, '_high_theta'):
             raise AttributeError("high_theta was referenced before it was " +\
@@ -92,10 +103,12 @@ class UniformDirectionDistribution(DirectionDistribution):
     @high_theta.setter
     def high_theta(self, value):
         """
-        Setter for the highest value of the polar angle of distribution support
-        in radians.
+        Setter for `UniformDirectionDistribution.high_theta`.
         
-        value: Must be between 0 and pi, inclusive.
+        Parameters
+        ----------
+        value : float
+            Must be between 0 and pi, inclusive.
         """
         if type(value) in numerical_types:
             if (value >= self.low_theta) and (value <= np.pi):
@@ -109,8 +122,7 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def cos_high_theta(self):
         """
-        Property storing the cosine of the largest polar angle in the support
-        of this distribution.
+        Cosine of the largest polar angle in the support of this distribution.
         """
         if not hasattr(self, '_cos_high_theta'):
             self._cos_high_theta = np.cos(self.high_theta)
@@ -119,8 +131,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def delta_cos_theta(self):
         """
-        Property storing the difference between the largest and smallest values
-        of the cosine of the polar angle.
+        The difference between the largest and smallest values of the cosine of
+        the polar angle.
         """
         if not hasattr(self, '_delta_cos_theta'):
             self._delta_cos_theta = self.cos_low_theta - self.cos_high_theta
@@ -129,7 +141,7 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def cos_theta_distribution(self):
         """
-        Property storing the distribution of the cosine of the polar angle.
+        The distribution of the cosine of the polar angle.
         """
         if not hasattr(self, '_cos_theta_distribution'):
             self._cos_theta_distribution =\
@@ -139,8 +151,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def low_phi(self):
         """
-        Property storing the lowest value of the azimuthal angle of
-        distribution support in radians.
+        The lowest value of the azimuthal angle of distribution support in
+        radians.
         """
         if not hasattr(self, '_low_phi'):
             raise AttributeError("low_phi was referenced before it was set.")
@@ -149,10 +161,12 @@ class UniformDirectionDistribution(DirectionDistribution):
     @low_phi.setter
     def low_phi(self, value):
         """
-        Setter for the lowest value of the azimuthal angle of distribution
-        support in radians.
+        Setter for `UniformDirectionDistribution.low_phi`.
         
-        value: single number
+        Parameters
+        ----------
+        value : float
+            lowest azimuthal angle
         """
         if type(value) in numerical_types:
             self._low_phi = value
@@ -162,8 +176,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def high_phi(self):
         """
-        Property storing the highest value of the azimuthal angle of
-        distribution support in radians.
+        The highest value of the azimuthal angle of distribution support in
+        radians.
         """
         if not hasattr(self, '_high_phi'):
             raise AttributeError("high_phi was referenced before it was set.")
@@ -172,10 +186,12 @@ class UniformDirectionDistribution(DirectionDistribution):
     @high_phi.setter
     def high_phi(self, value):
         """
-        Setter for the highest value of the azimuthal angle of distribution
-        support in radians.
+        Setter for `UniformDirectionDistribution.high_phi`.
         
-        value: single number larger than low_phi
+        Parameters
+        ----------
+        value : float
+            single number larger than low_phi
         """
         if type(value) in numerical_types:
             if value > self.low_phi:
@@ -188,8 +204,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def delta_phi(self):
         """
-        Property storing difference between largest and smallest values of
-        azimuthal angle in distribution.
+        Difference between largest and smallest values of azimuthal angle in
+        distribution.
         """
         if not hasattr(self, '_delta_phi'):
             self._delta_phi = self.high_phi - self.low_phi
@@ -198,7 +214,7 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def phi_distribution(self):
         """
-        Property storing distribution of the azimuthal angle in radians.
+        Distribution of the azimuthal angle in radians.
         """
         if not hasattr(self, '_phi_distribution'):
             self._phi_distribution =\
@@ -208,8 +224,8 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def delta_omega(self):
         """
-        Property storing the size (in solid angle) of the support of this
-        distribution. The value of the distribution is 1 / delta_omega.
+        The size (in solid angle) of the support of this distribution. The
+        value of the distribution is \\(\\frac{1}{\\Delta\\Omega}\\).
         """
         if not hasattr(self, '_delta_omega'):
             self._delta_omega = self.delta_cos_theta * self.delta_phi
@@ -218,10 +234,9 @@ class UniformDirectionDistribution(DirectionDistribution):
     @property
     def const_log_value(self):
         """
-        Property storing the logarithm of the constant value of the
-        distribution of any point inside the support of the distribution.
-        
-        returns: -np.log(self.delta_omega)
+        The logarithm of the constant value of the distribution of any point
+        inside the support of the distribution. Given by
+        \\(-\\ln{\\Delta\\Omega}\\).
         """
         if not hasattr(self, '_const_log_value'):
             self._const_log_value = -np.log(self.delta_omega)
@@ -229,12 +244,27 @@ class UniformDirectionDistribution(DirectionDistribution):
 
     def draw(self, shape=None, random=rand):
         """
-        Draws a direction from this distribution.
+        Draws point(s) from this `UniformDirectionDistribution`.
         
-        shape: if None, returns single pair (latitude, longitude) in degrees
-               if int, n, returns n random variates (array of shape (n, 2))
-               if tuple of n ints, (n+1)-D array
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        shape : int or tuple or None
+            - if None, returns single random variate as a 1D array of length
+            2 is returned
+            - if int, \\(n\\), returns \\(n\\) random variates as a 2D
+            array of shape `(n,2)` is returned
+            - if tuple of \\(n\\) ints, returns `numpy.prod(shape)` random
+            variates as an \\((n+1)\\)-D array of shape `shape+(2,)` is
+            returned
+        random : `numpy.random.RandomState`
+            the random number generator to use (by default, `numpy.random` is
+            used)
+        
+        Returns
+        -------
+        variates : float or `numpy.ndarray`
+            either single random variates or array of such variates. See
+            documentation of `shape` above for type and shape of return value
         """
         if type(shape) is type(None):
             phi_draw = self.phi_distribution.draw(random=random)
@@ -254,11 +284,20 @@ class UniformDirectionDistribution(DirectionDistribution):
     
     def log_value(self, point):
         """
-        Calculates the log of the value of this distribution at given point.
+        Computes the logarithm of the value of this
+        `UniformDirectionDistribution` at the given point.
         
-        point: length-2 sequence containing (latitude, longitude) in degrees
+        Parameters
+        ----------
+        point : `numpy.ndarray`
+            `point` should be a length-2 `numpy.ndarray`
         
-        returns: natural logarithm of value of this distribution at point
+        Returns
+        -------
+        value : float
+            natural logarithm of the value of this distribution at `point`. If
+            \\(f\\) is this distribution's PDF and \\(x\\) is `point`, then
+            `value` is \\(\\ln{\\big(f(x)\\big)}\\)
         """
         rotated = self.rotator.I(point[1], point[0], lonlat=True)
         theta = np.radians(90 - rotated[1])
@@ -271,7 +310,9 @@ class UniformDirectionDistribution(DirectionDistribution):
     
     def to_string(self):
         """
-        Returns a string representation of this distribution.
+        Finds and returns a string version of this
+        `UniformDirectionDistribution` of the form
+        `"UniformDirection(lat, lon, theta_low, theta_high, phi_low, phi_high)"`.
         """
         return ("UniformDirection(({0:.3g}, {1:.3g}), {2:.3g}, {3:.3g}, " +\
             "{4:.3g}, {5:.3g})").format(self.pointing_center[0],\
@@ -280,8 +321,22 @@ class UniformDirectionDistribution(DirectionDistribution):
     
     def __eq__(self, other):
         """
-        Checks for equality of this distribution with other. Returns True iff
-        other is a UniformDirectionDistribution with the same bounds.
+        Checks for equality of this `UniformDirectionDistribution` with
+        `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is a `UniformDirectionDistribution`
+            with the same `UniformDirectionDistribution.low_theta`,
+            `UniformDirectionDistribution.high_theta`,
+            `UniformDirectionDistribution.low_phi`,
+            `UniformDirectionDistribution.high_phi`
         """
         if isinstance(other, UniformDirectionDistribution):
             tol_kwargs = {'rtol': 0., 'atol': 1e-9}
@@ -301,12 +356,17 @@ class UniformDirectionDistribution(DirectionDistribution):
 
     def fill_hdf5_group(self, group, save_metadata=True):
         """
-        Fills the given hdf5 group with data about this distribution.
+        Fills the given hdf5 file group with data about this
+        `UniformDirectionDistribution` so that it can be loaded later.
         
-        group: hdf5 file group to fill with data about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        save_metadata : bool
+            - if True, attempts to save metadata alongside distribution and
+            throws error if it fails
+            - if False, metadata is ignored in saving process
         """
         group.attrs['class'] = 'UniformDirectionDistribution'
         DirectionDistribution.fill_hdf5_group(self, group,\
@@ -319,13 +379,18 @@ class UniformDirectionDistribution(DirectionDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a UniformDirectionDistribution from the given hdf5 file group.
+        Loads a `UniformDirectionDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this Distribution was saved
         
-        returns: a UniformDirectionDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        distribution : `UniformDirectionDistribution`
+            distribution created from the information in the given group
         """
         try:
             assert group.attrs['class'] == 'UniformDirectionDistribution'
@@ -345,8 +410,12 @@ class UniformDirectionDistribution(DirectionDistribution):
     
     def copy(self):
         """
-        Returns a deep copy of this Distribution. This function ignores
-        metadata.
+        Copies this distribution.
+        
+        Returns
+        -------
+        copied : `UniformDirectionDistribution`
+            a deep copy of this distribution, ignoring metadata.
         """
         return UniformDirectionDistribution(self.low_theta, self.high_theta,\
             self.low_phi, self.high_phi, self.pointing_center, self.psi_center)
