@@ -20,6 +20,7 @@ identity = SparseSquareBlockDiagonalMatrix(np.ones((3, 1, 1)))
 assert(np.all(matrix1.dense() == scila.block_diag(*blocks)))
 assert(matrix1.symmetric)
 assert(matrix1.positive_semidefinite)
+assert(matrix1.positive_definite)
 assert(not matrix1.efficient)
 assert(matrix1 == matrix1.copy())
 assert(matrix1 == matrix1.transpose())
@@ -115,4 +116,15 @@ assert(np.all((matrix2.__matmul__(random_matrix)) ==\
     matrix2.array_matrix_multiplication(random_matrix)))
 assert(np.all(matrix2.array_matrix_multiplication(np.identity(3),\
     right=False) == matrix2.dense()))
+
+matrix3 =\
+    SparseSquareBlockDiagonalMatrix(np.random.normal(0, 1, size=(1000,5,5)))
+sym_matrix3 = matrix3.symmetric_part()
+asym_matrix3 = matrix3.antisymmetric_part()
+zero_matrix = SparseSquareBlockDiagonalMatrix(np.zeros((5000, 1, 1)))
+assert(matrix3 == sym_matrix3 + asym_matrix3)
+assert(sym_matrix3.symmetric)
+assert(asym_matrix3.antisymmetric)
+assert(asym_matrix3.symmetric_part() == zero_matrix)
+assert(sym_matrix3.antisymmetric_part() == zero_matrix)
 
