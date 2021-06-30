@@ -148,7 +148,12 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
         """
         The list of square blocks,
         \\(\\boldsymbol{A}_1,\\boldsymbol{A}_2,\\ldots,\\boldsymbol{A}_N\\)
-        as `numpy.ndarray` objects.
+        as `numpy.ndarray` objects. If all dimensions,
+        \\(\\text{dim}(\\boldsymbol{A}_k)\\), are equal, then
+        `SparseSquareBlockDiagonalMatrix.blocks` is stored as a 3D
+        `numpy.ndarray` and many operations, including matrix addition are
+        matrix multiplication can be done more efficiently (especially if the
+        blocks of the matrix being added and/or multiplied are the same size).
         """
         if not hasattr(self, '_blocks'):
             raise AttributeError("blocks was referenced before it was set.")
@@ -212,6 +217,40 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
         else:
             raise TypeError("blocks was set to a non-sequence.")
     
+    def symmetric_part(self):
+        """
+        Finds the symmetric part of this matrix.
+        
+        Returns
+        -------
+        result : `SparseSquareBlockDiagonalMatrix`
+            if this matrix is represented by \\(\\boldsymbol{M}\\), then
+            `result` is represented by
+            \\(\\frac{1}{2}(\\boldsymbol{M} + \\boldsymbol{M}^T)\\)
+        """
+        if self.efficient:
+            new_blocks = (self.blocks + np.swapaxes(self.blocks, -2, -1)) / 2
+        else:
+            new_blocks = [((block + block.T) / 2) for block in self.blocks]
+        return SparseSquareBlockDiagonalMatrix(new_blocks)
+    
+    def antisymmetric_part(self):
+        """
+        Finds the anti-symmetric part of this matrix.
+        
+        Returns
+        -------
+        result : `SparseSquareBlockDiagonalMatrix`
+            if this matrix is represented by \\(\\boldsymbol{M}\\), then
+            `result` is represented by
+            \\(\\frac{1}{2}(\\boldsymbol{M} - \\boldsymbol{M}^T)\\)
+        """
+        if self.efficient:
+            new_blocks = (self.blocks - np.swapaxes(self.blocks, -2, -1)) / 2
+        else:
+            new_blocks = [((block - block.T) / 2) for block in self.blocks]
+        return SparseSquareBlockDiagonalMatrix(new_blocks)
+    
     @property
     def num_blocks(self):
         """
@@ -265,8 +304,10 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
     
     def dense(self):
         """
-        Returns a dense form of this matrix. WARNING: for large matrices, this
-        may require an excessive amount of memory.
+        Returns a dense form of this matrix.
+        
+        **WARNING**: for large matrices, this may require an excessive amount
+        of memory.
         
         Returns
         -------
@@ -329,6 +370,30 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
                         rtol=self.symmetry_tolerance, atol=0))
                 self._symmetric = symmetric
         return self._symmetric
+    
+    @property
+    def antisymmetric(self):
+        """
+        Boolean describing whether this matrix is antisymmetric up to the
+        `SparseSquareBlockDiagonalMatrix.symmetry_tolerance`,
+        \\(\\varepsilon\\), which is
+        \\(\\left|(\\boldsymbol{A}_k)_{ij}+(\\boldsymbol{A}_k)_{ji}\\right|\
+        \\le\\varepsilon\\times\\left|(\\boldsymbol{A}_k)_{ij}\\right|,\\ \\ \
+        \\forall k\\in\\{1,2,\\ldots,N\\}\\).
+        """
+        if not hasattr(self, '_symmetric'):
+            if self.efficient:
+                self._antisymmetric = np.allclose(self.blocks,\
+                    -np.swapaxes(self.blocks, -2, -1),\
+                    rtol=self.symmetry_tolerance, atol=0)
+            else:
+                antisymmetric = True
+                for block in self.blocks:
+                    antisymmetric = (antisymmetric and\
+                        np.allclose(block, -block.T,\
+                        rtol=self.symmetry_tolerance, atol=0))
+                self._antisymmetric = antisymmetric
+        return self._antisymmetric
     
     def _check_definiteness(self):
         """
@@ -414,7 +479,7 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
             valid block list that can be used to create a new
             `SparseSquareBlockDiagonalMatrix`
         """
-        supported_operations = ['+', '-', '@', '==']
+        supported_operations = ['+', '-', '@', '@@', '==']
         if operation not in supported_operations:
             raise NotImplementedError("The '{0!s}' operation is not on the " +\
                 "supported_operations list, which is {1}.".format(\
@@ -449,6 +514,8 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
                     new_block = block1 - block2
                 elif operation == '@':
                     new_block = np.matmul(block1, block2)
+                elif operation == '@@':
+                    new_block = np.matmul(block2, np.matmul(block1, block2.T))
                 elif operation == '==':
                     new_block = np.allclose(block1, block2)
                 else:
@@ -822,7 +889,7 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
             if self.block_sizes == other.block_sizes:
                 if self.efficient:
                     new_blocks =\
-                        np.einsum('ijk,ikl->ijl', self.blocks, other.blocks)
+                        np.einsum('abc,acd->abd', self.blocks, other.blocks)
                 else:
                     new_blocks = [np.matmul(sblock, oblock)\
                         for (sblock, oblock) in zip(self.blocks, other.blocks)]
@@ -834,6 +901,41 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
             return self.array_matrix_multiplication(other, right=True)
         else:
             raise NotImplemented
+    
+    def conjugate(self, other):
+        """
+        Multiplies this matrix by another on the left and the transpose of it
+        on the right.
+        
+        Parameters
+        ----------
+        other : `SparseSquareBlockDiagonalMatrix`
+            another matrix, \\(\\boldsymbol{G}\\), with the same dimension
+        
+        Returns
+        -------
+        result : `SparseSquareBlockDiagonalMatrix`
+            if this matrix is represented by \\(\\boldsymbol{M}\\) and `other`
+            is represented by \\(\\boldsymbol{G}\\), then `result` is
+            represented by
+            \\(\\boldsymbol{G}\\boldsymbol{M}\\boldsymbol{G}^T\\)
+        """
+        if isinstance(other, SparseSquareBlockDiagonalMatrix):
+            if self.block_sizes == other.block_sizes:
+                if self.efficient:
+                    new_blocks = np.einsum('acd,abc,aed->abe', self.blocks,\
+                        other.blocks, other.blocks)
+                else:
+                    new_blocks =\
+                        [np.matmul(oblock, np.matmul(sblock, oblock.T))\
+                        for (sblock, oblock) in zip(self.blocks, other.blocks)]
+            else:
+                new_blocks = SparseSquareBlockDiagonalMatrix.combine_blocks(\
+                    self.blocks, other.blocks, '@@')
+            return SparseSquareBlockDiagonalMatrix(new_blocks)
+        else:
+            raise TypeError("Cannot conjugate with a " +\
+                "non-SparseSquareBlockDiagonalMatrix object.")
     
     def __rmatmul__(self, other):
         """
@@ -1167,8 +1269,15 @@ class SparseSquareBlockDiagonalMatrix(Savable, Loadable):
             with the same matrx representation, even if blocked differently
         """
         if isinstance(other, SparseSquareBlockDiagonalMatrix):
-            return SparseSquareBlockDiagonalMatrix.combine_blocks(self.blocks,\
-                other.blocks, '==')
+            if self.block_sizes == other.block_sizes:
+                if self.efficient:
+                    return np.allclose(self.blocks, other.blocks)
+                else:
+                    return all([np.allclose(sblock, oblock) for\
+                        (sblock, oblock) in zip(self.blocks, other.blocks)])
+            else:
+                return SparseSquareBlockDiagonalMatrix.combine_blocks(\
+                    self.blocks, other.blocks, '==')
         else:
             return False
     
