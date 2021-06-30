@@ -52,8 +52,8 @@ def univariate_histogram(sample, reference_value=None, bins=None,\
         integer size in points or one of ['xx-small', 'x-small', 'small',
         'medium', 'large', 'x-large', 'xx-large'] representing size of labels
     ax : matplotlib.Axes or None
-        if None, new Figure and Axes are created  
-        otherwise, this Axes object is plotted on
+        - if None, new Figure and Axes are created  
+        - otherwise, this Axes object is plotted on
     show : bool
         if True, `matplotlib.pyplot.show` is called before this function
         returns
@@ -66,8 +66,8 @@ def univariate_histogram(sample, reference_value=None, bins=None,\
     Returns
     -------
     axes : matplotlib.Axes or None
-        if `show` is True, None is returned  
-        otherwise, the Axes instance plotted on is returned
+        - if `show` is True, None is returned  
+        - otherwise, the Axes instance plotted on is returned
     """
     if not have_matplotlib:
         raise no_matplotlib_error
@@ -197,15 +197,15 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     ysample : sequence
         1D sample corresponding to variable on y-axis
     reference_value_mean : sequence or None
-        if None, no reference line is plotted  
-        otherwise, sequence of two elements representing the reference value
+        - if None, no reference line is plotted  
+        - otherwise, sequence of two elements representing the reference value
         for x- and y-samples. Each element can be either None (if no reference
         line should be plotted) or a value at which to plot a reference line.
     reference_value_covariance: numpy.ndarray or None
-        if `numpy.ndarray`, represents the covariance matrix used to generate
+        - if `numpy.ndarray`, represents the covariance matrix used to generate
         a reference ellipse around the reference mean.  
-        if None or if one or more of `reference_value_mean` is None, no ellipse
-        is plotted
+        - if None or if one or more of `reference_value_mean` is None, no
+        ellipse is plotted
     bins : int, sequence, or None
         bins to pass to `numpy.histogram2d`
     matplotlib_function : str
@@ -220,8 +220,8 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
         integer size in points or one of ['xx-small', 'x-small', 'small',
         'medium', 'large', 'x-large', 'xx-large'] representing size of labels
     ax : matplotlib.Axes or None
-        if None, new Figure and Axes are created  
-        otherwise, this Axes object is plotted on
+        - if None, new Figure and Axes are created  
+        - otherwise, this Axes object is plotted on
     show : bool
         if True, `matplotlib.pyplot.show` is called before this function
         returns
@@ -246,8 +246,8 @@ def bivariate_histogram(xsample, ysample, reference_value_mean=None,\
     Returns
     -------
     axes : matplotlib.Axes or None
-        if `show` is True, None is returned  
-        otherwise, the Axes instance plotted on is returned
+        - if `show` is True, None is returned  
+        - otherwise, the Axes instance plotted on is returned
     """
     if not have_matplotlib:
         raise no_matplotlib_error
@@ -394,6 +394,9 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     figsize : tuple
         tuple of form (width, height) representing the size of the figure on
         which to put the triangle plot
+    fig : `matplotlib.Figure` or None
+        - if provided, `fig` will be plotted on
+        - otherwise, a new `matplotlib.Figure` is created
     show : bool
         if True, `matplotlib.pyplot.show` is called before this function
         returns
@@ -410,13 +413,13 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
         the number of bins to use for each sample
     plot_type : str or sequence
         determines the matplotlib functions to use for univariate and bivariate
-        histogram
+        histograms
         
         - if `plot_type=='contourf'`: 'bar' and 'contourf' are used
         - if `plot_type=='contour'`: 'plot' and 'contour' are used
         - if `plot_type=='histogram'`: 'bar' and 'imshow' are used
         - otherwise: plot_type should be a length-2 sequence of the form
-          (matplotlib_function_1D, matplotlib_function_2D)
+        (matplotlib_function_1D, matplotlib_function_2D)
     reference_value_mean : sequence or None
         sequence of reference values to place on plots. Each element of the
         sequence (representing each random variable) can be either a number at
@@ -440,9 +443,9 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
         sequence of variable maxima to take into account when plotting ellipses
         (only used if `reference_value_covariance` is not None)
     plot_limits : sequence or None
-        if None, bins are used to decide plot limits  
-        otherwise, a sequence of 2-tuples of the form (low, high) representing
-        the desired axis limits for each variable
+        - if None, bins are used to decide plot limits  
+        - otherwise, a sequence of 2-tuples of the form (low, high)
+        representing the desired axis limits for each variable
     tick_label_format_string : str
         format string that can be called using
         `tick_label_format_string.format(x=loc)` where `loc` is the location of
@@ -463,8 +466,8 @@ def triangle_plot(samples, labels, figsize=(8, 8), fig=None, show=False,\
     Returns
     -------
     figure : matplotlib.Figure or None
-        if `show` is True, None is returned  
-        otherwise, the matplotlib.Figure instance plotted on is returned
+        - if `show` is True, None is returned  
+        - otherwise, the matplotlib.Figure instance plotted on is returned
     """
     if not have_matplotlib:
         raise no_matplotlib_error
