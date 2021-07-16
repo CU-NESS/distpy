@@ -1,10 +1,13 @@
 """
-File: distpy/jumping/JumpingDistributionSum.py
-Author: Keith Tauscher
-Date: 13 Jun 2018
+Module containing class representing a jumping distribution given by a weighted
+sum of other jumping distributions. If the PDFs of the constituent jumping
+distributions are \\(g_1,g_2,\\ldots,g_N\\), this distribution's PDF is given
+by $$f(\\boldsymbol{x},\\boldsymbol{y})=\\frac{\
+\\sum_{k=1}^Nw_kg_k(\\boldsymbol{x},\\boldsymbol{y})}{\\sum_{k=1}^Nw_k}$$
 
-Description: File containing class which represents a weighted sum of
-             distributions.
+**File**: $DISTPY/distpy/jumping/JumpingDistributionSum.py  
+**Author**: Keith Tauscher  
+**Date**: 3 Jul 2021
 """
 import numpy as np
 from ..util import int_types, sequence_types, create_hdf5_dataset,\
@@ -15,17 +18,28 @@ rand = np.random
 
 class JumpingDistributionSum(JumpingDistribution):
     """
-    Class which represents a weighted sum of JumpingDistribution objects.
+    Class representing a jumping distribution given by a weighted sum of other
+    jumping distributions. If the PDFs of the constituent jumping distributions
+    are \\(g_1,g_2,\\ldots,g_N\\), this distribution's PDF is given by
+    $$f(\\boldsymbol{x},\\boldsymbol{y})=\\frac{\
+    \\sum_{k=1}^Nw_kg_k(\\boldsymbol{x},\\boldsymbol{y})}{\\sum_{k=1}^Nw_k}$$
     """
     def __init__(self, jumping_distributions, weights):
         """
-        Creates a new JumpingDistributionSum object out of the given
-        JumpingDistribution objects.
+        Creates a new `JumpingDistributionSum` object out of the given
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` objects.
         
-        jumping_distributions: sequence of JumpingDistribution objects with the
-                               same numparams
-        weights: sequence of numbers with which to combine (need not be
-                 normalized but they must all be positive)
+        Parameters
+        ----------
+        jumping_distributions : sequence
+            sequence of
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` objects
+            with the same
+            `distpy.jumping.JumpingDistribution.JumpingDistribution.numparams`
+            that will be weighted
+        weights : sequence
+            weighted with which to combine `jumping_distributions` (need not be
+            normalized but they must all be positive)
         """
         self.jumping_distributions = jumping_distributions
         self.weights = weights
@@ -33,8 +47,8 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def jumping_distributions(self):
         """
-        Property storing a list of JumpingDistribution objects which make up
-        this JumpingDistributionSum.
+        A list of `distpy.jumping.JumpingDistribution.JumpingDistribution`
+        objects which are weighted by this `JumpingDistributionSum`.
         """
         if not hasattr(self, '_jumping_distributions'):
             raise AttributeError("jumping_distributions was referenced " +\
@@ -44,11 +58,16 @@ class JumpingDistributionSum(JumpingDistribution):
     @jumping_distributions.setter
     def jumping_distributions(self, value):
         """
-        Setter for the JumpingDistribution objects making up this
-        JumpingDistributionSum.
+        Setter for the `JumpingDistributionSum.jumping_distributions`.
         
-        value: sequence of JumpingDistribution objects making up this
-               JumpingDistributionSum
+        Parameters
+        ----------
+        value : sequence
+            sequence of
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` objects
+            with the same
+            `distpy.jumping.JumpingDistribution.JumpingDistribution.numparams`
+            that will be weighted
         """
         if type(value) in sequence_types:
             if all([isinstance(element, JumpingDistribution)\
@@ -76,8 +95,8 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def num_jumping_distributions(self):
         """
-        Property storing the number of JumpingDistribution objects which make
-        up this JumpingDistributionSum object.
+        The number of `distpy.jumping.JumpingDistribution.JumpingDistribution`
+        objects which make up this `JumpingDistributionSum` object.
         """
         if not hasattr(self, '_num_jumping_distributions'):
             self._num_jumping_distributions = len(self.jumping_distributions)
@@ -86,7 +105,7 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def weights(self):
         """
-        Property storing the weights with which to combine the distributions.
+        The weights with which to combine the distributions.
         """
         if not hasattr(self, '_weights'):
             raise AttributeError("weights was referenced before it was set.")
@@ -95,9 +114,13 @@ class JumpingDistributionSum(JumpingDistribution):
     @weights.setter
     def weights(self, value):
         """
-        Setter for the weights with which to combine the distributions.
+        Setter for `JumpingDistributionSum.weights`.
         
-        value: sequence of numbers
+        Parameters
+        ----------
+        weights : sequence
+            weighted with which to combine `jumping_distributions` (need not be
+            normalized but they must all be positive)
         """
         if type(value) in sequence_types:
             if len(value) == self.num_jumping_distributions:
@@ -116,8 +139,7 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def total_weight(self):
         """
-        Property storing the sum of all of the weights given to this
-        distribution.
+        The sum of all of the weights given to this distribution.
         """
         if not hasattr(self, '_total_weight'):
             self._total_weight = np.sum(self.weights)
@@ -126,9 +148,8 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def discrete_cdf_values(self):
         """
-        Property storing the upper bound of CDF values allocated to each model.
-        The sequence is monotonically increasing and its last element is equal
-        to 1.
+        The upper bound of CDF values allocated to each model. The sequence is
+        monotonically increasing and its last element is equal to 1.
         """
         if not hasattr(self, '_discrete_cdf_values'):
             self._discrete_cdf_values =\
@@ -137,20 +158,41 @@ class JumpingDistributionSum(JumpingDistribution):
     
     def draw(self, source, shape=None, random=rand):
         """
-        Draws a point (or more) from the jumping_distribution.
+        Draws destination point(s) from this jumping distribution given a
+        source point.
         
-        source: the source point of the jump. must be either a single number in
-                the 1D case or a 1D vector in the multi-dimensional case
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this `JumpingDistributionSum` is univariate, source should be
+            a single number
+            - otherwise, source should be `numpy.ndarray` of shape (numparams,)
+        shape : None or int or tuple
+            - if None, a single destination is returned
+                - if this distribution is univariate, a single number is
+                returned
+                - if this distribution is multivariate, a 1D `numpy.ndarray`
+                describing the coordinates of the destination is returned
+            - if int \\(n\\), \\(n\\) destinations are returned
+                - if this distribution is univariate, a 1D `numpy.ndarray` of
+                length \\(n\\) is returned
+                - if this distribution describes \\(p\\) dimensions, a 2D
+                `numpy.ndarray` is returned whose shape is \\((n,p)\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned
+                - if this distribution is univariate, a `numpy.ndarray` of
+                shape \\((n_1,n_2,\\ldots,n_k)\\) is returned
+                - if this distribution describes \\(p\\) parameters, a
+                `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k,p)\\) is
+                returned
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        destinations : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         if type(shape) is type(None):
             uniform = random.uniform()
@@ -183,14 +225,28 @@ class JumpingDistributionSum(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the logarithm of the value of this distribution at the given
-        point. It must be implemented by all subclasses.
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf` is given by
+            \\(\\ln{f(\\boldsymbol{x},\\boldsymbol{y})}\\)
         """
         values = np.exp([jumping_distribution.log_value(source, destination)\
             for jumping_distribution in self.jumping_distributions])
@@ -199,8 +255,7 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution.
         """
         if not hasattr(self, '_numparams'):
             raise AttributeError("numparams was referenced before " +\
@@ -209,12 +264,18 @@ class JumpingDistributionSum(JumpingDistribution):
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Tests for equality between this `JumpingDistributionSum` and `other`.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if object is a `JumpingDistributionSum` with the
+            same distributions and weights.
         """
         if isinstance(other, JumpingDistributionSum):
             if self.num_jumping_distributions == other.num_jumping_distributions:
@@ -232,23 +293,23 @@ class JumpingDistributionSum(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing a boolean describing whether this distribution is
-        discrete (True) or continuous (False).
+        A boolean describing whether this distribution is discrete (True) or
+        continuous (False).
         """
         if not hasattr(self, '_is_discrete'):
             raise AttributeError("is_discrete was referenced before " +\
                 "jumping_distributions was set.")
         return self._is_discrete
     
-    def fill_hdf5_group(self, group, save_metadata=True):
+    def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this
-        distribution. All subclasses must implement this function.
+        distribution.
         
-        group: hdf5 file group to fill with information about this distribution
-        save_metadata: if True, attempts to save metadata alongside
-                                distribution and throws error if it fails
-                       if False, metadata is ignored in saving process
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this distribution
         """
         group.attrs['class'] = 'JumpingDistributionSum'
         group.attrs['num_jumping_distributions'] =\
@@ -263,17 +324,23 @@ class JumpingDistributionSum(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group, *jumping_distribution_classes):
         """
-        Loads a JumpingDistribution from the given hdf5 file group.
+        Loads a `JumpingDistributionSum` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this Distribution was saved
-        jumping_distribution_classes: sequence (of length
-                                      num_jumping_distributions) of class
-                                      objects which can be used to load the
-                                      sub-distributions
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which fill_hdf5_group was called on when
+            this `JumpingDistributionSum` was saved
+        jumping_distribution_classes : sequence
+            sequence (of length
+            `JumpingDistributionSum.num_jumping_distributions`) of class
+            objects which can be used to load the sub-distributions
         
-        returns: a JumpingDistribution object created from the information in
-                 the given group
+        Returns
+        -------
+        loaded : `JumpingDistributionSum
+            a `JumpingDistributionSum` object created from the information in
+            the given group
         """
         try:
             assert(group.attrs['class'] == 'JumpingDistributionSum')
@@ -290,4 +357,3 @@ class JumpingDistributionSum(JumpingDistribution):
             jumping_distribution = cls.load_from_hdf5_group(subsubgroup)
             jumping_distributions.append(jumping_distribution)
         return JumpingDistributionSum(jumping_distributions, weights)
-

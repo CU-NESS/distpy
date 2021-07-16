@@ -386,7 +386,7 @@ class Distribution(Savable, Loadable):
         if self.numparams == 1:
             return (self.minimum, self.maximum)
         else:
-            return [(mn, mx) in zip(self.minimum, self.maximum)]
+            return list(zip(self.minimum, self.maximum))
     
     @property
     def is_discrete(self):

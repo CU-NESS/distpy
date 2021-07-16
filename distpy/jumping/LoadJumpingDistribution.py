@@ -1,10 +1,11 @@
 """
-File: distpy/jumping/LoadJumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing functions that load
+`distpy.jumping.JumpingDistribution.JumpingDistribution` objects from hdf5
+groups and hdf5 files.
 
-Description: File containing functions which load JumpingDistribution objects
-             from hdf5 groups and hdf5 files.
+**File**: $DISTPY/distpy/jumping/LoadJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 3 Jul 2021
 """
 from ..util import get_hdf5_value
 from ..distribution import load_distribution_from_hdf5_group
@@ -34,11 +35,19 @@ else:
 
 def load_jumping_distribution_from_hdf5_group(group):
     """
-    Loads a jumping distribution from the given hdf5 group.
+    Loads a `distpy.jumping.JumpingDistribution.JumpingDistribution` from the
+    given hdf5 group.
     
-    group: the hdf5 file group from which to load the jumping distribution
+    Parameters
+    ----------
+    group : h5py.Group
+        the hdf5 file group from which to load the
+        `distpy.jumping.JumpingDistribution.JumpingDistribution`
     
-    returns: JumpingDistribution object of the correct type
+    Returns
+    -------
+    loaded : `distpy.jumping.JumpingDistribution.JumpingDistribution`
+        distribution object of the correct type
     """
     try:
         class_name = group.attrs['class']
@@ -65,12 +74,19 @@ def load_jumping_distribution_from_hdf5_group(group):
 
 def load_jumping_distribution_from_hdf5_file(file_name):
     """
-    Loads JumpingDistribution object of any subclass from an hdf5 file at the
-    given file name.
+    Loads a `distpy.jumping.JumpingDistribution.JumpingDistribution` from the
+    given hdf5 file.
     
-    file_name: location of hdf5 file containing jumping distribution
+    Parameters
+    ----------
+    file_name : str
+        name of the hdf5 file from which to load the
+        `distpy.jumping.JumpingDistribution.JumpingDistribution`
     
-    returns: JumpingDistribution object contained in the hdf5 file
+    Returns
+    -------
+    loaded : `distpy.jumping.JumpingDistribution.JumpingDistribution`
+        distribution object of the correct type
     """
     if have_h5py:
         hdf5_file = h5py.File(file_name, 'r')

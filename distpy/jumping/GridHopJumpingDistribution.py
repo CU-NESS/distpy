@@ -1,12 +1,11 @@
 """
-File: distpy/jumping/GridHopJumpingDistribution.py
-Author: Keith Tauscher
-Date: 22 Sep 2018
+Module containing class representing a jumping distribution that exists on a
+discrete grid. It can only yield jumps that go to neighbor points of the source
+or don't move at all.
 
-Description: File containing class representing a JumpingDistribution defined
-             on a grid of integers (which may or may not have minima and/or
-             maxima) which jumps with a specific probability away from the
-             source and never jumps more than one space.
+**File**: $DISTPY/distpy/jumping/GridHopJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 11 Jul 2021
 """
 import numpy as np
 from ..util import int_types, numerical_types, sequence_types,\
@@ -15,22 +14,25 @@ from .JumpingDistribution import JumpingDistribution
 
 class GridHopJumpingDistribution(JumpingDistribution):
     """
-    Class representing a JumpingDistribution defined on a grid of integers
-    (which may or may not have minima and/or maxima) which jumps with a
-    specific probability away from the source and never jumps more than one
-    space.
+    Class representing a jumping distribution that exists on a discrete grid.
+    It can only yield jumps that go to neighbor points of the source or don't
+    move at all.
     """
     def __init__(self, ndim=2, jumping_probability=0.5, minima=None,\
         maxima=None):
         """
-        Initializes an GridHopJumpingDistribution with the given jumping
+        Initializes a `GridHopJumpingDistribution` with the given jumping
         probability (and extrema, if applicable).
         
-        jumping_probability: number between 0 and 1 (exclusive) describing the
-                             probability with which the destination is
-                             different from the source.
-        minima: sequence of None or integers
-        maxima: sequence of None or integers
+        Parameters
+        ----------
+        jumping_probability : float
+            number between 0 and 1 (exclusive) describing the probability with
+            which the destination is different from the source.
+        minima : sequence
+            sequence of None or integers describing grid mins
+        maxima : sequence
+            sequence of None or integers describing grid maxes
         """
         self.ndim = ndim
         self.jumping_probability = jumping_probability
@@ -40,7 +42,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def ndim(self):
         """
-        Property storing the number of parameters this distribution describes.
+        The number of parameters this distribution describes.
         """
         if not hasattr(self, '_ndim'):
             raise AttributeError("ndim was referenced before it was set.")
@@ -49,9 +51,12 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @ndim.setter
     def ndim(self, value):
         """
-        Setter for the number of parameters this distribution describes.
+        Setter for `GridHopJumpingDistribution.ndim`.
         
-        value: an integer greater than 1
+        Parameters
+        ----------
+        value : int
+            an integer greater than 1
         """
         if type(value) in int_types:
             if value > 0:
@@ -71,8 +76,8 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def jumping_probability(self):
         """
-        Property storing the probability (0<p<1) with which the destination is
-        different than the source.
+        The probability, \\(0<p<1\\), with which the destination is different
+        than the source.
         """
         if not hasattr(self, '_jumping_probability'):
             raise AttributeError("jumping_probability referenced before it " +\
@@ -82,9 +87,12 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @jumping_probability.setter
     def jumping_probability(self, value):
         """
-        Setter for the jumping_probability property.
+        Setter for `GridHopJumpingDistribution.jumping_probability`.
         
-        value: number greater than 0 and less than 1
+        Parameters
+        ----------
+        value : float
+            number greater than 0 and less than 1
         """
         if type(value) in numerical_types:
             if (value > 0) and (value < 1):
@@ -98,7 +106,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def log_jumping_probability(self):
         """
-        Property storing the natural logarithm of the jumping probability
+        The natural logarithm of the jumping probability, \\(\\ln{p}\\)
         """
         if not hasattr(self, '_log_jumping_probability'):
             self._log_jumping_probability = np.log(self.jumping_probability)
@@ -107,8 +115,8 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def log_of_complement_of_jumping_probability(self):
         """
-        Property storing the natural logarithm of the complement of the jumping
-        probability.
+        The natural logarithm of the complement of the jumping probability,
+        \\(\\ln{(1-p)}\\).
         """
         if not hasattr(self, '_log_of_complement_of_jumping_probability'):
             self._log_of_complement_of_jumping_probability =\
@@ -118,7 +126,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def minima(self):
         """
-        Property storing either a list of None's or minimal allowable values.
+        A list of either None's or minimal allowable values.
         """
         if not hasattr(self, '_minima'):
             raise AttributeError("minima referenced before it was set.")
@@ -127,9 +135,13 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @minima.setter
     def minima(self, value):
         """
-        Setter for the minima.
+        Setter for `GridHopJumpingDistribution.minima`.
         
-        value: sequence of either None or minimal allowable values
+        Parameters
+        ----------
+        value : sequence
+            sequence of either None or minimal allowable values for each
+            parameter
         """
         if type(value) in sequence_types:
             if all([((type(element) is type(None)) or\
@@ -146,7 +158,7 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def maxima(self):
         """
-        Property storing either a list of None's or maximal allowable values.
+        A list of either None's or maximal allowable values.
         """
         if not hasattr(self, '_maxima'):
             raise AttributeError("maxima referenced before it was set.")
@@ -155,9 +167,13 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @maxima.setter
     def maxima(self, value):
         """
-        Setter for the maxima.
+        Setter for `GridHopJumpingDistribution.maxima`.
         
-        value: sequence of either None or maximal allowable values
+        Parameters
+        ----------
+        value : sequence
+            sequence of either None or minimal allowable values for each
+            parameter
         """
         if type(value) in sequence_types:
             if all([((type(element) is type(None)) or\
@@ -177,12 +193,8 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def jumps(self):
         """
-        Calculates the nonzero jumps this distribution could ever make.
-        
-        source: integer tuple of length ndim
-        
-        returns: array of shape (njumps,ndim) containing the njumps possible
-                 jumps from the given source
+        The nonzero jumps this distribution could ever make as a
+        \\(2N\\times N\\) matrix.
         """
         if not hasattr(self, '_jumps'):
             self._jumps = np.zeros((2 * self.ndim, self.ndim))
@@ -195,10 +207,16 @@ class GridHopJumpingDistribution(JumpingDistribution):
         """
         Finds the indices of jumps which are legal from the given source.
         
-        source: integer tuple of length ndim
+        Parameters
+        ----------
+        source : sequence
+            integer sequence of length `GridHopJumpingDistribution.ndim`
         
-        returns: 1D array of indices into self.jumps which represent legal
-                 jumps from the given source
+        Returns
+        -------
+        returns : numpy.ndarray
+            1D array of indices into `GridHopJumpingDistribution.jumps` which
+            represent legal jumps from the given source
         """
         are_possible = np.ndarray((2 * self.ndim,), dtype=bool)
         are_possible[0::2] = (self.minima < source)
@@ -207,12 +225,18 @@ class GridHopJumpingDistribution(JumpingDistribution):
     
     def num_possible_jumps(self, source):
         """
-        Calculates the number of possible jumps which can be taken from the
-        given source.
+        Finds the number of possible jumps which can be taken from the given
+        source.
         
-        source: int tuple of length ndim
+        Parameters
+        ----------
+        source : sequence
+            int sequence of length `GridHopJumpingDistribution.ndim`
         
-        return: single positive integer
+        Returns
+        -------
+        num_jumps : int
+            single positive integer number of legal nonzero jumps
         """
         return len(self.possible_jumps(source))
     
@@ -220,10 +244,17 @@ class GridHopJumpingDistribution(JumpingDistribution):
         """
         Draws a single value from this distribution.
         
-        source: integer tuple of length ndim
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : sequence
+            integer sequence of length `GridHopJumpingDistribution.ndim`
+        random : numpy.random.RandomState
+            the random number generator to use (default: numpy.random)
         
-        returns: integer tuple within 1 of source
+        Returns
+        -------
+        destination : sequence
+            single integer tuple within 1 of source
         """
         uniform = random.rand()
         if uniform < self.jumping_probability:
@@ -239,11 +270,19 @@ class GridHopJumpingDistribution(JumpingDistribution):
         """
         Draws arbitrary shape of random values given the source point.
         
-        source: integer tuple from which to jump
-        shape: tuple of ints describing shape of output
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : sequence
+            integer sequence of length `GridHopJumpingDistribution.ndim`
+        shape : tuple
+            shape of `destinations[...,index]`
+        random : numpy.random.RandomState
+            the random number generator to use (default: numpy.random)
         
-        returns: numpy.ndarray of shape shape
+        Returns
+        -------
+        destination : numpy.ndarray
+            array of shape `shape+(GridHopJumpingDistribution.ndim,)`
         """
         uniform = random.rand(*shape)
         jump_magnitudes = (uniform < self.jumping_probability).astype(int)
@@ -259,16 +298,28 @@ class GridHopJumpingDistribution(JumpingDistribution):
     def draw(self, source, shape=None, random=np.random):
         """
         Draws a destination point from this jumping distribution given a source
-        point.
+        point. Must be implemented by any base class.
         
-        source: single integer number
-        shape: if None, single random value is drawn
-               if int n, n random values are drawn
-               if tuple of ints, the shape of a numpy.ndarray of destination
-                                 values
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this `JumpingDistribution` is univariate, source should be
+            a single number
+            - otherwise, source should be `numpy.ndarray` of shape (numparams,)
+        shape : None or int or tuple
+            - if None, a single destination is returned as a 1D `numpy.ndarray`
+            describing the coordinates of the destination is returned as a 2D
+            `numpy.ndarray` is returned whose shape is \\((n,p)\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned as a
+            `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k,p)\\) is returned
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: random values (type/shape determined by shape argument)
+        Returns
+        -------
+        drawn : numpy.ndarray
+            destination point(s) drawn
         """
         if type(shape) is type(None):
             return self.draw_single_value(source, random=random)
@@ -278,23 +329,44 @@ class GridHopJumpingDistribution(JumpingDistribution):
     
     def is_allowable(self, point):
         """
-        Finds whether the given point is between the minima and maxima.
+        Finds whether the given point is between the
+        `GridHopJumpingDistribution.minima` and
+        `GridHopJumpingDistribution.maxima`.
         
-        point: int tuple of length ndim
+        Parameters
+        ----------
+        point : sequence
+            int tuple of length `GridHopJumpingDistribution.ndim`
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if every value in `point` is between its
+            corresponding minimum and maximum
         """
         return (np.all(self.minima <= point) and np.all(self.maxima >= point))
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : numpy.ndarray
+            if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : numpy.ndarray
+            if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf` is given by
+            \\(\\ln{f(\\boldsymbol{x},\\boldsymbol{y})}\\)
         """
         if (not self.is_allowable(source)) or\
             (not self.is_allowable(destination)):
@@ -311,13 +383,26 @@ class GridHopJumpingDistribution(JumpingDistribution):
     
     def log_value_difference(self, source, destination):
         """
-        Computes the log-PDF difference:
-        ln(f(source->destination)/f(destination->source))
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : numpy.ndarray
+            if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : numpy.ndarray
+            if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number difference between one-way log-PDF's
+        Returns
+        -------
+        log_pdf_difference : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf_difference` is given by \\(\\ln{f(\\boldsymbol{x},\
+            \\boldsymbol{y})}-\\ln{f(\\boldsymbol{y},\\boldsymbol{x})}\\)
         """
         if (not self.is_allowable(source)) or\
             (not self.is_allowable(destination)):
@@ -337,19 +422,27 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution. Same
+        as `GridHopJumpingDistribution.ndim`
         """
         return self.ndim
     
     def __eq__(self, other):
         """
-        Tests for equality between this jumping distribution and other. All
-        subclasses must implement this function.
+        Tests for equality between this jumping distribution and other.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is an `GridHopJumpingDistribution`
+            with the same `GridHopJumpingDistribution.minima` and
+            `GridHopJumpingDistribution.maxima`, and
+            `GridHopJumpingDistribution.jumping_probability`
         """
         if isinstance(other, GridHopJumpingDistribution):
             if self.ndim == other.ndim:
@@ -365,8 +458,9 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Boolean describing whether this `GridHopJumpingDistribution` describes
+        discrete (True) or continuous (False) variable(s). Since this is a
+        discrete distribution, it is always True.
         """
         return True
     
@@ -375,7 +469,10 @@ class GridHopJumpingDistribution(JumpingDistribution):
         Fills the given hdf5 file group with information about this
         distribution.
         
-        group: hdf5 file group to fill with information about this distribution
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this distribution
         """
         group.attrs['class'] = 'GridHopJumpingDistribution'
         group.attrs['jumping_probability'] = self.jumping_probability
@@ -386,13 +483,18 @@ class GridHopJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads an GridHopJumpingDistribution from the given hdf5 file group.
+        Loads a `GridHopJumpingDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this GridHopJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `GridHopJumpingDistribution.fill_hdf5_group` was called on
         
-        returns: an GridHopJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `GridHopJumpingDistribution`
+            a `GridHopJumpingDistribution` object loaded from the given group
         """
         try:
             assert group.attrs['class'] == 'GridHopJumpingDistribution'

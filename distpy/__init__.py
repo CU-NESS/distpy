@@ -75,8 +75,18 @@ distribution_class_names = ['DistributionList', 'DistributionSet',\
 distribution_class_names = ['distpy.distribution.{0!s}.{0!s}'.format(name)\
     for name in distribution_class_names]
 
-class_names =\
-    util_class_names + transform_class_names + distribution_class_names
+jumping_distribution_class_names = ['', 'Adjacency', 'Binomial', 'Gaussian',\
+    'GridHop', 'LocaleIndependent', 'SourceDependentGaussian',\
+    'SourceIndependent', 'TruncatedGaussian', 'Uniform']
+jumping_distribution_class_names = ['JumpingDistributionList',\
+    'JumpingDistributionSet', 'JumpingDistributionSum',\
+    'MetropolisHastingsSampler'] + ['{!s}JumpingDistribution'.format(name)\
+    for name in jumping_distribution_class_names]
+jumping_distribution_class_names = ['distpy.jumping.{0!s}.{0!s}'.format(name)\
+    for name in jumping_distribution_class_names]
+
+class_names = util_class_names + transform_class_names +\
+    distribution_class_names + jumping_distribution_class_names
 
 # init not included in magic_names because __init__ is automatically documented
 # hash not included because it appears automatically

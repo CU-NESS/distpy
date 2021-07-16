@@ -1,10 +1,16 @@
 """
-File: distpy/jumping/GaussianJumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a jumping distribution whose destination
+is distributed uniformly in an ellipse centered on the source. The PDF of this
+distribution is
+$$f(\\boldsymbol{x},\\boldsymbol{y})=\\begin{cases}\
+\\frac{\\Gamma\\left(\\frac{N}{2}+1\\right)}{\\left|(N+2)\\pi\
+\\boldsymbol{\\Sigma}\\right|^{1/2}} & (\\boldsymbol{y}-\\boldsymbol{x})^T\
+\\boldsymbol{\\Sigma}^{-1}(\\boldsymbol{y}-\\boldsymbol{x}) \\le N+2 \\\\\
+0 & \\text{otherwise} \\end{cases}$$
 
-Description: File containing a jumping distribution which is a uniform ellipse
-             centered on the source point and defined by a given covariance.
+**File**: $DISTPY/distpy/jumping/UniformJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 11 Jul 2021
 """
 import numpy as np
 import numpy.linalg as npla
@@ -16,23 +22,31 @@ from .JumpingDistribution import JumpingDistribution
 
 class UniformJumpingDistribution(JumpingDistribution):
     """
-    Class representing a jumping distribution which is centered on the source
-    point and has the given covariance.
+    Class representing a jumping distribution whose destination is distributed
+    uniformly in an ellipse centered on the source. The PDF of this
+    distribution is $$f(\\boldsymbol{x},\\boldsymbol{y})=\\begin{cases}\
+    \\frac{\\Gamma\\left(\\frac{N}{2}+1\\right)}{\\left|(N+2)\\pi\
+    \\boldsymbol{\\Sigma}\\right|^{1/2}} & (\\boldsymbol{y}-\\boldsymbol{x})^T\
+    \\boldsymbol{\\Sigma}^{-1}(\\boldsymbol{y}-\\boldsymbol{x}) \\le N+2 \\\\\
+    0 & \\text{otherwise} \\end{cases}$$
     """
     def __init__(self, covariance):
         """
-        Initializes a UniformJumpingDistribution with the given covariance
+        Initializes a `UniformJumpingDistribution` with the given covariance
         matrix.
         
-        covariance: either single number (if this should be a 1D uniform) or
-                    square 2D array (if this should be a multivariate ellipse)
+        Parameters
+        ----------
+        covariance : float or numpy.ndarray
+            either single number (if this should be a 1D uniform) or square 2D
+            array (if this should be a multivariate ellipse)
         """
         self.covariance = covariance
     
     @property
     def covariance(self):
         """
-        Property storing a 2D numpy.ndarray of covariances.
+        A 2D `numpy.ndarray` of covariances.
         """
         if not hasattr(self, '_covariance'):
             raise AttributeError("covariance referenced before it was set.")
@@ -41,10 +55,12 @@ class UniformJumpingDistribution(JumpingDistribution):
     @covariance.setter
     def covariance(self, value):
         """
-        Sets the covariance of this GaussianJumpingDistribution
+        Setter for `UniformJumpingDistribution.covariance`
         
-        value: either a single number (if this GaussianJumpingDistribution
-               should be 1D) or a square 2D array
+        Parameters
+        ----------
+        value : float or numpy.ndarray
+            either a single number (if this should be 1D) or a square 2D array
         """
         if type(value) in numerical_types:
             self._covariance = np.ones((1, 1)) * value
@@ -61,8 +77,8 @@ class UniformJumpingDistribution(JumpingDistribution):
     @property
     def inverse_covariance(self):
         """
-        Property storing a 2D numpy.ndarray storing the inverse of the matrix
-        stored in covariance property.
+        A 2D numpy.ndarray storing the inverse of
+        `UniformJumpingDistribution.covariance`
         """
         if not hasattr(self, '_inverse_covariance'):
             self._inverse_covariance = npla.inv(self.covariance)
@@ -71,8 +87,8 @@ class UniformJumpingDistribution(JumpingDistribution):
     @property
     def constant_log_value(self):
         """
-        Property storing a constant in the log value which is independent of
-        both the source and the destination.
+        A constant in the log value which is independent of both the source and
+        the destination.
         """
         if not hasattr(self, '_constant_log_value'):
             n_over_2 = self.numparams / 2.
@@ -86,22 +102,48 @@ class UniformJumpingDistribution(JumpingDistribution):
     def matrix_for_draw(self):
         """
         Property storing the matrix square root of
-        (self.covariance * (self.numparams + 2)), which plays an important role
-        in the drawing from this JumpingDistribution.
+        `self.covariance * (self.numparams + 2)`, which plays an important role
+        in the efficient drawing from this `UniformJumpingDistribution`.
         """
         return scila.sqrtm(self.covariance * (self.numparams + 2))
     
     def draw(self, source, shape=None, random=np.random):
         """
-        Draws a destination point from this jumping distribution given a source
-        point.
+        Draws a destination point from this `UniformJumpingDistribution` given
+        a source point.
         
-        source: if this JumpingDistribution is univariate, source should be a
-                                                           single number
-                otherwise, source should be numpy.ndarray of shape (numparams,)
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this JumpingDistribution is univariate, source should be
+            a single number
+            - otherwise, source should be `numpy.ndarray` of shape (numparams,)
+        shape : None or int or tuple
+            - if None, a single destination is returned
+                - if this distribution is univariate, a single number is
+                returned
+                - if this distribution is multivariate, a 1D `numpy.ndarray`
+                describing the coordinates of the destination is returned
+            - if int \\(n\\), \\(n\\) destinations are returned
+                - if this distribution is univariate, a 1D `numpy.ndarray` of
+                length \\(n\\) is returned
+                - if this distribution describes \\(p\\) dimensions, a 2D
+                `numpy.ndarray` is returned whose shape is \\((n,p)\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned
+                - if this distribution is univariate, a `numpy.ndarray` of
+                shape \\((n_1,n_2,\\ldots,n_k)\\) is returned
+                - if this distribution describes \\(p\\) parameters, a
+                `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k,p)\\) is
+                returned
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: destination in same format as source
+        Returns
+        -------
+        drawn : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         if self.numparams == 1:
             return random.uniform(source - self.half_span,\
@@ -126,13 +168,28 @@ class UniformJumpingDistribution(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf` is given by
+            \\(\\ln{f(\\boldsymbol{x},\\boldsymbol{y})}\\)
         """
         difference = (destination - source)
         chi2 = np.dot(difference, np.dot(difference, self.inverse_covariance))
@@ -143,21 +200,36 @@ class UniformJumpingDistribution(JumpingDistribution):
     
     def log_value_difference(self, source, destination):
         """
-        Computes the log-PDF difference:
-        ln(f(source->destination)/f(destination->source))
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`. While this
+        method has a default version, overriding it may provide an efficiency
+        benefit.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number difference between one-way log-PDF's
+        Returns
+        -------
+        log_pdf_difference : float
+            0, indicating that a jump
+            \\(\\boldsymbol{x}\\rightarrow\\boldsymbol{y}\\) is equally likely
+            as a jump \\(\\boldsymbol{y}\\rightarrow\\boldsymbol{x}\\)
         """
         return 0.
     
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = self.covariance.shape[0]
@@ -166,8 +238,8 @@ class UniformJumpingDistribution(JumpingDistribution):
     @property
     def half_span(self):
         """
-        Property storing the distance between the source and farthest possible
-        destination (valid in the case where this distribution is univariate!).
+        The distance between the source and farthest possible destination
+        (valid only in the case where this distribution is univariate!).
         """
         if not hasattr(self, '_half_span'):
             if self.numparams == 1:
@@ -180,12 +252,18 @@ class UniformJumpingDistribution(JumpingDistribution):
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Tests for equality between this distribution and other.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another `UniformJumpingDistribution`
+            with the same covariance
         """
         if isinstance(other, UniformJumpingDistribution):
             if self.numparams == other.numparams:
@@ -199,18 +277,21 @@ class UniformJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Boolean (False) describing whether this distribution describes discrete
+        (True) or continuous (False) variable(s).
         """
         return False
     
     def fill_hdf5_group(self, group, covariance_link=None):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        fact that this is a GaussianJumpingDistribution is saved along with the
-        mean and covariance.
+        Fills the given hdf5 file group with data from this distribution.
         
-        group: hdf5 file group to fill
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill
+        covariance_link : str or h5py.Dataset or None
+            link to mean vector in hdf5 file, if it exists
         """
         group.attrs['class'] = 'UniformJumpingDistribution'
         create_hdf5_dataset(group, 'covariance', data=self.covariance,\
@@ -219,13 +300,19 @@ class UniformJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a UniformJumpingDistribution from the given hdf5 file group.
+        Loads a `UniformJumpingDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this UniformJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `UniformJumpingDistribution.fill_hdf5_group` was called on
         
-        returns: a UniformJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `UniformJumpingDistribution`
+            a `UniformJumpingDistribution` object created from the information
+            in the given group
         """
         try:
             assert group.attrs['class'] == 'UniformJumpingDistribution'

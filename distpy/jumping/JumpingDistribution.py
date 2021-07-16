@@ -1,9 +1,34 @@
 """
-File: distpy/jumping/JumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing base class for all distributions that describe jumping
+through a space. These are used heavily by Markov Chain Monte Carlo (MCMC)
+samplers. All subclasses must implement:
 
-Description: File containing base class for all jumping distributions.
+- `JumpingDistribution.draw` method: draws one or more random destination
+points from the distribution given the source point
+- `JumpingDistribution.log_value` method: evaluates the distribution at a given
+source and destination
+- `JumpingDistribution.log_value_difference` method: finds the difference
+between the probability density of
+\\(\\boldsymbol{x}\\rightarrow\\boldsymbol{y}\\) and the density of
+\\(\\boldsymbol{y}\\rightarrow\\boldsymbol{x}\\). This method has a default
+definition which evaluates `JumpingDistribution.log_value` twice, but it can be
+overridden to be made more efficient. This is especially useful if the
+distribution is symmetric under swaps of source and destination because it
+should always return zero.
+- `JumpingDistribution.numparams` property: describes the number of parameters
+in the space being traversed.
+- `JumpingDistribution.__eq__` method: checks for equality of the distribution
+with another object
+- `JumpingDistribution.is_discrete` property: describes whether the space being
+traversed is discrete or continuous.
+- `JumpingDistribution.fill_hdf5_group` method: fills a `h5py.Group` with
+information about this distribution so it can be loaded later.
+- `JumpingDistribution.load_from_hdf5_group` staticmethod: loads a previously
+saved distribution.
+
+**File**: $DISTPY/distpy/jumping/JumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 12 Feb 2018
 """
 import numpy as np
 import matplotlib.pyplot as pl
@@ -15,62 +40,128 @@ cannot_instantiate_jumping_distribution_error = NotImplementedError("Some " +\
 
 class JumpingDistribution(Savable, Loadable):
     """
-    This class exists for error catching. Since it exists as
-    a superclass of all the jumping distributions, one can call
-    isinstance(to_check, JumpingDistribution) to see if to_check is indeed a
-    kind of jumping distribution.
+    Base class for all distributions that describe jumping through a space.
+    These are used heavily by Markov Chain Monte Carlo (MCMC) samplers. All
+    subclasses must implement:
     
-    All subclasses of this one will implement
-    self.draw(source) --- draws a destination point from this distribution
-                          given a source point
-    self.log_value(source, destination) --- computes the difference between the
-                                            log pdf of going from source to
-                                            destination and the log probability
-                                            of going from destination to source
-    self.numparams --- property, not function, storing number of parameters
-    self.__eq__(other) --- checks for equality with another object
-    self.fill_hdf5_group(group) --- fills given hdf5 group with data from
-                                    distribution
-    
-    In draw() and log_value(), point is a configuration. It could be a
-    single number for a univariate distribution or a numpy.ndarray for a
-    multivariate distribution.
+    - `JumpingDistribution.draw` method: draws one or more random destination
+    points from the distribution given the source point
+    - `JumpingDistribution.log_value` method: evaluates the distribution at a
+    given source and destination
+    - `JumpingDistribution.log_value_difference` method: finds the difference
+    between the probability density of
+    \\(\\boldsymbol{x}\\rightarrow\\boldsymbol{y}\\) and the density of
+    \\(\\boldsymbol{y}\\rightarrow\\boldsymbol{x}\\). This method has a default
+    definition which evaluates `JumpingDistribution.log_value` twice, but it
+    can be overridden to be made more efficient. This is especially useful if
+    the distribution is symmetric under swaps of source and destination because
+    it should always return zero.
+    - `JumpingDistribution.numparams` property: describes the number of
+    parameters in the space being traversed.
+    - `JumpingDistribution.__eq__` method: checks for equality of the
+    distribution with another object
+    - `JumpingDistribution.is_discrete` property: describes whether the space
+    being traversed is discrete or continuous.
+    - `JumpingDistribution.fill_hdf5_group` method: fills a `h5py.Group` with
+    information about this distribution so it can be loaded later.
+    - `JumpingDistribution.load_from_hdf5_group` staticmethod: loads a
+    previously saved distribution.
     """
-    def draw(self, source, random=None):
+    def draw(self, source, shape=None, random=None):
         """
         Draws a destination point from this jumping distribution given a source
         point. Must be implemented by any base class.
         
-        source: if this JumpingDistribution is univariate, source should be a
-                                                           single number
-                otherwise, source should be numpy.ndarray of shape (numparams,)
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this `JumpingDistribution` is univariate, source should be
+            a single number
+            - otherwise, source should be `numpy.ndarray` of shape (numparams,)
+        shape : None or int or tuple
+            - if None, a single destination is returned
+                - if this distribution is univariate, a single number is
+                returned
+                - if this distribution is multivariate, a 1D `numpy.ndarray`
+                describing the coordinates of the destination is returned
+            - if int \\(n\\), \\(n\\) destinations are returned
+                - if this distribution is univariate, a 1D `numpy.ndarray` of
+                length \\(n\\) is returned
+                - if this distribution describes \\(p\\) dimensions, a 2D
+                `numpy.ndarray` is returned whose shape is \\((n,p)\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned
+                - if this distribution is univariate, a `numpy.ndarray` of
+                shape \\((n_1,n_2,\\ldots,n_k)\\) is returned
+                - if this distribution describes \\(p\\) parameters, a
+                `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k,p)\\) is
+                returned
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        drawn : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         raise cannot_instantiate_jumping_distribution_error
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`. It must
+        be implemented by all subclasses.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf` is given by
+            \\(\\ln{f(\\boldsymbol{x},\\boldsymbol{y})}\\)
         """
         raise cannot_instantiate_jumping_distribution_error
     
     def log_value_difference(self, source, destination):
         """
-        Computes the log-PDF difference:
-        ln(f(source->destination)/f(destination->source))
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`. While this
+        method has a default version, overriding it may provide an efficiency
+        benefit.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number difference between one-way log-PDF's
+        Returns
+        -------
+        log_pdf_difference : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf_difference` is given by \\(\\ln{f(\\boldsymbol{x},\
+            \\boldsymbol{y})}-\\ln{f(\\boldsymbol{y},\\boldsymbol{x})}\\)
         """
         return self.log_value(source, destination) -\
             self.log_value(destination, source)
@@ -78,73 +169,123 @@ class JumpingDistribution(Savable, Loadable):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution. It
+        must be implemented by all subclasses.
         """
         raise cannot_instantiate_jumping_distribution_error
     
     def __len__(self):
         """
         Allows user to access the number of parameters in this distribution by
-        using the len function and not explicitly referencing the numparams
-        property.
+        using the `len` function and not explicitly referencing
+        `JumpingDistribution.numparams`.
         """
         return self.numparams
     
     def __eq__(self, other):
         """
-        Tests for equality between this jumping distribution and other. All
+        Tests for equality between this `JumpingDistribution` and `other`. All
         subclasses must implement this function.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if object is an equivalent `JumpingDistribution`
         """
         raise cannot_instantiate_jumping_distribution_error
     
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Boolean describing whether this `JumpingDistribution` describes
+        discrete (True) or continuous (False) variable(s).
         """
         raise cannot_instantiate_jumping_distribution_error
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with information about this jumping
-        distribution. All subclasses must implement this function.
+        Fills the given hdf5 file group with information about this
+        `JumpingDistribution`. All subclasses must implement this function.
         
-        group: hdf5 file group to fill with information about this jumping
-               distribution
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this
+            `JumpingDistribution`
         """
         raise cannot_instantiate_jumping_distribution_error
     
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a JumpingDistribution from the given hdf5 file group. All
-        JumpingDistribution subclasses must implement this method if things are
-        to be saved in hdf5 files.
+        Loads a `JumpingDistribution` from the given hdf5 file group. All
+        subclasses must implement this method if things are to be saved in hdf5
+        files.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this JumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `JumpingDistribution.fill_hdf5_group` was called on when this
+            `JumpingDistribution` was saved
         
-        returns: a JumpingDistribution object created from the information in
-                 the given group
+        Returns
+        -------
+        loaded : `JumpingDistribution`
+            a `JumpingDistribution` object created from the information in the
+            given group
         """
         raise cannot_instantiate_jumping_distribution_error
     
     def __call__(self, source, destination):
         """
-        Alias for log_value_difference function.
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`. While this
+        method has a default version, overriding it may provide an efficiency
+        benefit. Alias for `JumpingDistribution.log_value_difference`
+        
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
+        
+        Returns
+        -------
+        log_pdf_difference : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf_difference` is given by \\(\\ln{f(\\boldsymbol{x},\
+            \\boldsymbol{y})}-\\ln{f(\\boldsymbol{y},\\boldsymbol{x})}\\)
         """
         return self.log_value_difference(source, destination)
     
     def __ne__(self, other):
         """
-        This merely enforces that (a!=b) equals (not (a==b)) for all jumping
-        distribution objects a and b.
+        Tests for inequality between this `JumpingDistribution` and `other`.
+        All subclasses must implement this function.
+        
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
+        
+        Returns
+        -------
+        result : bool
+            False if and only if object is an equivalent `JumpingDistribution`
         """
         return (not self.__eq__(other))
     
@@ -152,26 +293,45 @@ class JumpingDistribution(Savable, Loadable):
         title='', fontsize=24, ax=None, show=False, **kwargs):
         """
         Plots the PDF of this distribution evaluated at the given x values.
+        This method can only be called on univariate jumping distributions.
         
-        source: the source point of the jumping distribution.
-        x_values: 1D numpy.ndarray of sorted x values at which to evaluate this
-                  distribution
-        scale_factor: allows for the pdf values to be scaled by a constant
-                      (default 1)
-        xlabel: label to place on x axis
-        ylabel: label to place on y axis
-        title: title to place on top of plot
-        fontsize: size of labels and title
-        ax: Axes object on which to plot distribution values.
-            If None, a new Axes object is created on a new Figure object
-        show: if True, matplotlib.pyplot.show() is called before this function
-              returns
-        **kwargs: keyword arguments to pass to the matplotlib.pyplot.plot
-                  function if this is a continuous distribution or the
-                  matplotlib.pyplot.scatter function if this is a discrete
-                  distribution
+        Parameters
+        ----------
+        source : number
+            the source point of the jumping distribution (a single number
+            because this method assumes the distribution is univariate)
+        x_values : numpy.ndarray
+            1D `numpy.ndarray` of sorted destination values at which to
+            evaluate this distribution
+        scale_factor : float
+            allows for the pdf values to be scaled by a constant
+        xlabel : str
+            label to place on x-axis
+        ylabel : str
+            label to place on y-axis
+        title : str
+            title to place on top of plot
+        fontsize : int or str
+            size of labels and title
+        ax : matplotlib.Axes
+            object on which to plot distribution values. If None, a new
+            `matplotlib.Axes` object is created on a new `matplotlib.Figure`
+            object
+        show : bool
+            if True, matplotlib.pyplot.show() is called before this function
+            returns
+        kwargs : dict
+            keyword arguments to pass to the `matplotlib.pyplot.plot` function
+            if this is a continuous distribution or the
+            `matplotlib.pyplot.scatter` function if this is a discrete
+            distribution
         
-        returns: ax if show is False, None otherwise
+        Returns
+        -------
+        ax : None or matplotlib.Axes
+            - if show is False, the `matplotlib.Axes` on which the plot was
+            made is returned
+            - if show is True, `None` is returned
         """
         if self.numparams != 1:
             raise NotImplementedError('plot can only be called with 1D ' +\

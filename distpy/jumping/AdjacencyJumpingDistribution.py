@@ -1,12 +1,13 @@
 """
-File: distpy/jumping/AdjacencyJumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a 1D distribution that jumps from integers
+to integers. Its PMF is represented by: $$f(x,y) = \\begin{cases}\
+1-p & y=x \\\\ p/2 & y=x-1\\wedge x\\ne \\text{max} \\\\\
+p & y=x-1\\wedge x=\\text{max}\\\\ p/2 & y=x+1\\wedge x\\ne \\text{min}\\\\\
+p & y=x+1\\wedge x=\\text{min}\\\\ 0 & \\text{otherwise}\\end{cases}$$
 
-Description: File containing class representing a JumpingDistribution defined
-             on the integers (which may or may not have minima and/or maxima)
-             which jumps with a specific probability away from the source and
-             never jumps more than by 1.
+**File**: $DISTPY/distpy/jumping/AdjacencyJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 3 Jul 2021
 """
 import numpy as np
 from ..util import int_types, numerical_types
@@ -16,22 +17,28 @@ log2 = np.log(2)
 
 class AdjacencyJumpingDistribution(JumpingDistribution):
     """
-    Class representing a JumpingDistribution defined on the integers (which may
-    or may not have minima and/or maxima) which jumps with a specific
-    probability away from the source and never jumps more than by 1.
+    Class representing a 1D distribution that jumps from integers to integers.
+    Its PMF is represented by: $$f(x,y) = \\begin{cases} 1-p & y=x \\\\\
+    p/2 & y=x-1\\wedge x\\ne \\text{max} \\\\ p & y=x-1\\wedge x=\\text{max}\
+    \\\\ p/2 & y=x+1\\wedge x\\ne \\text{min}\\\\ p &\
+    y=x+1\\wedge x=\\text{min}\\\\ 0 & \\text{otherwise}\\end{cases}$$
     """
     def __init__(self, jumping_probability=0.5, minimum=None, maximum=None):
         """
-        Initializes an AdjacencyJumpingDistribution with the given jumping
+        Initializes an `AdjacencyJumpingDistribution` with the given jumping
         probability (and extrema, if applicable).
         
-        jumping_probability: number between 0 and 1 (exclusive) describing the
-                             probability with which the destination is
-                             different from the source.
-        minimum: if None, no minimum is used
-                 if an int, the minimum integer ever drawn by the distribution
-        maximum: if None, no maximum is used
-                 if an int, the maximum integer ever drawn by the distribution
+        Parameters
+        ----------
+        jumping_probability : float
+            number between 0 and 1 (exclusive) describing the probability with
+            which the destination is different from the source.
+        minimum : int or None
+            - if None, no minimum is used
+            - if an int, the minimum integer ever drawn by the distribution
+        maximum : int or None
+            - if None, no maximum is used
+            - if an int, the maximum integer ever drawn by the distribution
         """
         self.jumping_probability = jumping_probability
         self.minimum = minimum
@@ -40,8 +47,8 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def jumping_probability(self):
         """
-        Property storing the probability (0<p<1) with which the destination is
-        different than the source.
+        The probability, \\(0<p<1\\) with which the destination is different
+        than the source.
         """
         if not hasattr(self, '_jumping_probability'):
             raise AttributeError("jumping_probability referenced before it " +\
@@ -51,9 +58,12 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @jumping_probability.setter
     def jumping_probability(self, value):
         """
-        Setter for the jumping_probability property.
+        Setter for `AdjacencyJumpingDistribution.jumping_probability`.
         
-        value: number greater than 0 and less than 1
+        Parameters
+        ----------
+        value : float
+            number greater than 0 and less than 1
         """
         if type(value) in numerical_types:
             if (value > 0) and (value < 1):
@@ -67,7 +77,7 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def log_jumping_probability(self):
         """
-        Property storing the natural logarithm of the jumping probability
+        The natural logarithm of the jumping probability, \\(\\ln{p}\\).
         """
         if not hasattr(self, '_log_jumping_probability'):
             self._log_jumping_probability = np.log(self.jumping_probability)
@@ -76,8 +86,8 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def log_of_complement_of_jumping_probability(self):
         """
-        Property storing the natural logarithm of the complement of the jumping
-        probability.
+        The natural logarithm of the complement of the jumping probability,
+        \\(\\ln{(1-p)}\\).
         """
         if not hasattr(self, '_log_of_complement_of_jumping_probability'):
             self._log_of_complement_of_jumping_probability =\
@@ -87,9 +97,9 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def minimum(self):
         """
-        Property storing either None (if this distribution should be able to
-        jump towards negative infinity) or the minimum integer this
-        distribution should ever draw.
+        Either None (if this distribution should be able to jump towards
+        negative infinity) or the minimum integer this distribution should ever
+        draw.
         """
         if not hasattr(self, '_minimum'):
             raise AttributeError("minimum referenced before it was set.")
@@ -98,9 +108,13 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @minimum.setter
     def minimum(self, value):
         """
-        Setter for the minimum allowable drawn integer.
+        Setter for `AdjacencyJumpingDistribution.minimum`.
         
-        value: either None or the minimum allowable integer
+        Parameters
+        ----------
+        value : int or None
+            - if None, no minimum is used
+            - if an int, the minimum integer ever drawn by the distribution
         """
         if (type(value) is type(None)) or (type(value) in int_types):
             self._minimum = value
@@ -110,9 +124,8 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def maximum(self):
         """
-        Property storing either None (if this distribution should be able to
-        jump towards positive infinity) or the maximum integer this
-        distribution should ever draw.
+        Either None (if this distribution should be able to jump towards
+        infinity) or the maximum integer this distribution should ever draw.
         """
         if not hasattr(self, '_maximum'):
             raise AttributeError("maximum referenced before it was set.")
@@ -121,9 +134,13 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @maximum.setter
     def maximum(self, value):
         """
-        Setter for the maximum allowable drawn integer.
+        Setter for `AdjacencyJumpingDistribution.maximum`.
         
-        value: either None or the maximum allowable integer
+        Parameters
+        ----------
+        value : int or None
+            - if None, no maximum is used
+            - if an int, the maximum integer ever drawn by the distribution
         """
         if type(value) is type(None):
             self._maximum = value
@@ -139,10 +156,17 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         """
         Draws a single value from this distribution.
         
-        source: single integer
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : int
+            single starting point
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: single integer within 1 of source
+        Returns
+        -------
+        destination : int
+            single int satisfying \\((y-x)\\in\\{-1,0,1\\}\\)
         """
         uniform = random.rand()
         if uniform < self.jumping_probability:
@@ -161,11 +185,21 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         """
         Draws arbitrary shape of random values given the source point.
         
-        source: a single integer number from which to jump
-        shape: tuple of ints describing shape of output
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : int
+            a single integer number from which to jump
+        shape : tuple
+            tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned as a
+            `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k)\\)
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: numpy.ndarray of shape shape
+        Returns
+        -------
+        destinations : int or numpy.ndarray
+            drawn destination(s)
         """
         uniform = random.rand(*shape)
         jumps = np.where(uniform < self.jumping_probability, 1, 0)
@@ -179,17 +213,26 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     
     def draw(self, source, shape=None, random=np.random):
         """
-        Draws a destination point from this jumping distribution given a source
-        point.
+        Draws random value(s) given the source point.
         
-        source: single integer number
-        shape: if None, single random value is drawn
-               if int n, n random values are drawn
-               if tuple of ints, the shape of a numpy.ndarray of destination
-                                 values
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : int
+            a single integer number from which to jump
+        shape : None or int or tuple
+            - if None, a single int destination is returned
+            - if int \\(n\\), \\(n\\) destinations are returned in a 1D
+            `numpy.ndarray` of length \\(n\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned as a
+            `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k)\\)
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: random values (type/shape determined by shape argument)
+        Returns
+        -------
+        destinations : int or numpy.ndarray
+            drawn destination(s)
         """
         if type(shape) is type(None):
             return self.draw_single_value(source, random=random)
@@ -199,13 +242,22 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`. It must
+        be implemented by all subclasses.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : int
+            source point
+        destination : int
+            destination point
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(x,y)=\\text{Pr}[y|x]\\), `source` is
+            \\(x\\) and `destination` is \\(y\\), then `log_pdf` is given by
+            \\(\\ln{f(x,y)}\\)
         """
         displacement = destination - source
         if displacement == 0:
@@ -225,13 +277,22 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     
     def log_value_difference(self, source, destination):
         """
-        Computes the log-PDF difference:
-        ln(f(source->destination)/f(destination->source))
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : int
+            source point
+        destination : int
+            destination point
         
-        returns: single number difference between one-way log-PDF's
+        Returns
+        -------
+        log_pdf_difference : float
+            if the distribution is \\(f(x,y)=\\text{Pr}[y|x]\\), `source` is
+            \\(x\\) and `destination` is \\(y\\), then `log_pdf_difference` is
+            given by \\(\\ln{f(x,y)}-\\ln{f(y,x)}\\)
         """
         displacement = destination - source
         if displacement == 0:
@@ -261,19 +322,27 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution. Since
+        this distribution is univariate, this property is 1.
         """
         return 1
     
     def __eq__(self, other):
         """
-        Tests for equality between this jumping distribution and other. All
-        subclasses must implement this function.
+        Tests for equality between this jumping distribution and other.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is an `AdjacencyJumpingDistribution`
+            with the same `AdjacencyJumpingDistribution.minimum`,
+            `AdjacencyJumpingDistribution.maximum`, and
+            `AdjacencyJumpingDistribution.jumping_probability`
         """
         if isinstance(other, AdjacencyJumpingDistribution):
             jumping_probabilities_equal = np.isclose(self.jumping_probability,\
@@ -288,8 +357,8 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Boolean describing whether this `AdjacencyJumpingDistribution`. Since
+        it exists, on a grid, this is always True.
         """
         return True
     
@@ -298,7 +367,10 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
         Fills the given hdf5 file group with information about this
         distribution.
         
-        group: hdf5 file group to fill with information about this distribution
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this distribution
         """
         group.attrs['class'] = 'AdjacencyJumpingDistribution'
         group.attrs['jumping_probability'] = self.jumping_probability
@@ -310,13 +382,19 @@ class AdjacencyJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads an AdjacencyJumpingDistribution from the given hdf5 file group.
+        Loads an `AdjacencyJumpingDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this AdjacencyJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `AdjacencyJumpingDistribution.fill_hdf5_group` was called on
         
-        returns: an AdjacencyJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `AdjacencyJumpingDistribution`
+            an `AdjacencyJumpingDistribution` object created from the
+            information in the given group
         """
         try:
             assert group.attrs['class'] == 'AdjacencyJumpingDistribution'

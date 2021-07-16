@@ -1,11 +1,13 @@
 """
-File: distpy/jumping/LocaleIndependentJumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a jumping distribution which describes a
+translation whose distribution does not depend on the starting location. If the
+PDF of the translation distribution is \\(g(\\boldsymbol{t})\\), this
+distribution's PDF is given by
+$$f(\\boldsymbol{x},\\boldsymbol{y})=g(\\boldsymbol{y}-\\boldsymbol{x})$$
 
-Description: File containing a class which represents a jumping distribution
-             whose value is dependent only on the displacement between the
-             source and destination points.
+**File**: $DISTPY/distpy/jumping/LocalIndependentJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 11 Jul 2021
 """
 import numpy as np
 from ..util import int_types
@@ -14,24 +16,30 @@ from .JumpingDistribution import JumpingDistribution
 
 class LocaleIndependentJumpingDistribution(JumpingDistribution):
     """
-    Class which represents a degenerate sort of jumping distribution: one whose
-    value is independent of the source of the jump.
+    Class representing a jumping distribution which describes a translation
+    whose distribution does not depend on the starting location. If the PDF of
+    the translation distribution is \\(g(\\boldsymbol{t})\\), this
+    distribution's PDF is given by
+    $$f(\\boldsymbol{x},\\boldsymbol{y})=g(\\boldsymbol{y}-\\boldsymbol{x})$$
     """
     def __init__(self, distribution):
         """
-        Initializes this LocaleIndependentJumpingDistribution with the given
+        Initializes this `LocaleIndependentJumpingDistribution` with the given
         core distribution.
         
-        distribution: a Distribution object describing the probability of the
-                      displacement between the source and destination.
+        Parameters
+        ----------
+        distribution : `distpy.distribution.Distribution.Distribution`
+            a distribution describing the probability of the displacement
+            between the source and destination.
         """
         self.distribution = distribution
     
     @property
     def distribution(self):
         """
-        Property storing the distribution describing the probability of the
-        displacement between the source and destination.
+        The distribution describing the probability of the displacement between
+        the source and destination.
         """
         if not hasattr(self, '_distribution'):
             raise AttributeError("distribution referenced before it was set.")
@@ -40,11 +48,13 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
     @distribution.setter
     def distribution(self, value):
         """
-        Setter for the core distribution of this
-        LocaleIndependentJumpingDistribution.
+        Setter for `LocaleIndependentJumpingDistribution.distribution`
         
-        value: a Distribution object describing the probability of the
-               displacement between the source and destination
+        Parameters
+        ----------
+        value : `distpy.distribution.Distribution.Distribution`
+            a distribution describing the probability of the displacement
+            between the source and destination.
         """
         if isinstance(value, Distribution):
             self._distribution = value
@@ -56,20 +66,38 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
         Draws a destination point from this jumping distribution given a source
         point.
         
-        source: if this JumpingDistribution is univariate, source should be a
-                                                           single number
-                otherwise, source should be numpy.ndarray of shape (numparams,)
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this `LocaleIndependentJumpingDistribution` is univariate,
+            source should be a single number
+            - otherwise, source should be `numpy.ndarray` of shape (numparams,)
+        shape : None or int or tuple
+            - if None, a single destination is returned
+                - if this distribution is univariate, a single number is
+                returned
+                - if this distribution is multivariate, a 1D `numpy.ndarray`
+                describing the coordinates of the destination is returned
+            - if int \\(n\\), \\(n\\) destinations are returned
+                - if this distribution is univariate, a 1D `numpy.ndarray` of
+                length \\(n\\) is returned
+                - if this distribution describes \\(p\\) dimensions, a 2D
+                `numpy.ndarray` is returned whose shape is \\((n,p)\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned
+                - if this distribution is univariate, a `numpy.ndarray` of
+                shape \\((n_1,n_2,\\ldots,n_k)\\) is returned
+                - if this distribution describes \\(p\\) parameters, a
+                `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k,p)\\) is
+                returned
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: either single value (if distribution is 1D and shape is None)
-                 or array of values
+        Returns
+        -------
+        destinations : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -84,25 +112,57 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the underlying distribution of this
+            `LocaleIndependentJumpingDistribution` is \\(g(\\boldsymbol{z})\\),
+            `source` is \\(\\boldsymbol{x}\\) and `destination` is
+            \\(\\boldsymbol{y}\\), then `log_pdf` is given by
+            \\(\\ln{g(\\boldsymbol{y}-\\boldsymbol{x})}\\)
         """
         return self.distribution.log_value(destination - source)
     
     def log_value_difference(self, source, destination):
         """
-        Computes the log-PDF difference:
-        ln(f(source->destination)/f(destination->source))
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number difference between one-way log-PDF's
+        Returns
+        -------
+        log_pdf : float
+            if the underlying distribution of this
+            `LocaleIndependentJumpingDistribution` is \\(g(\\boldsymbol{z})\\),
+            `source` is \\(\\boldsymbol{x}\\) and `destination` is
+            \\(\\boldsymbol{y}\\), then `log_pdf` is given by
+            \\(\\ln{g(\\boldsymbol{y}-\\boldsymbol{x})} -\
+            \\ln{g(\\boldsymbol{x}-\\boldsymbol{y})}\\)
         """
         displacement = destination - source
         return self.distribution.log_value(displacement) -\
@@ -111,19 +171,25 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution.
         """
         return self.distribution.numparams
     
     def __eq__(self, other):
         """
-        Tests for equality between this jumping distribution and other. All
-        subclasses must implement this function.
+        Tests for equality between this jumping distribution and other.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is another
+            `LocaleIndependentJumpingDistribution` with the same
+            `LocaleIndependentJumpingDistribution.distribution`
         """
         if isinstance(other, LocaleIndependentJumpingDistribution):
             return (self.distribution == other.distribution)
@@ -133,7 +199,7 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
+        Boolean describing whether this `LocaleIndependentJumpingDistribution`
         describes discrete (True) or continuous (False) variable(s).
         """
         return self.distribution.is_discrete
@@ -143,8 +209,11 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
         Fills the given hdf5 file group with information about this jumping
         distribution.
         
-        group: hdf5 file group to fill with information about this jumping
-               distribution
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this jumping
+            distribution
         """
         group.attrs['class'] = 'LocaleIndependentJumpingDistribution'
         self.distribution.fill_hdf5_group(group.create_group('distribution'))
@@ -152,14 +221,20 @@ class LocaleIndependentJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a LocaleIndependentJumpingDistribution from the given hdf5 file
+        Loads a `LocaleIndependentJumpingDistribution` from the given hdf5 file
         group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this LocaleIndependentJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group on which
+            `LocaleIndependentJumpingDistribution.fill_hdf5_group` was called
         
-        returns: a LocaleIndependentJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded: `LocaleIndependentJumpingDistribution`
+            `LocaleIndependentJumpingDistribution` loaded from information in
+            the given group
         """
         try:
             assert\

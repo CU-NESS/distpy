@@ -1,23 +1,28 @@
 """
-File: distpy/jumping/JumpingDistributionList.py
-Author: Keith Tauscher
-Date: 27 May 2019
+Module containing a container which can hold an arbitrary number of
+`distpy.jumping.JumpingDistribution.JumpingDistribution` objects, each of which
+can have any number of parameters which it describes (as long as the specific
+`distpy.jumping.JumpingDistribution.JumpingDistribution` supports that number
+of parameters). `distpy.jumping.JumpingDistribution.JumpingDistribution`
+objects can be added through `JumpingDistributionList.add_distribution`. Once
+all the distributions are added, points can be drawn using the
+`JumpingDistributionList.draw` method and the log value of the entire set of
+distributions can be evaluated at a given source and destination using the
+`JumpingDistributionList.log_value` and
+`JumpingDistributionList.log_value_difference` methods. See documentation of
+individual methods for further details. This class represents a list-like
+container of `distpy.jumping.JumpingDistribution.JumpingDistribution` objects;
+see `distpy.jumping.JumpingDistributionSet.JumpingDistributionSet` for a
+dictionary- or set-like container of
+`distpy.jumping.JumpingDistribution.JumpingDistribution` objects. Unlike the
+`distpy.jumping.JumpingDistributionSet.JumpingDistributionSet` class,
+`JumpingDistributionList` is a subclass of
+`distpy.jumping.JumpingDistribution.JumpingDistribution` and implements all of
+its methods and properties.
 
-Description: A container which can hold an arbitrary number of jumping
-             distributions, each of which can have any number of parameters
-             which it describes (as long as the specific jumping distribution
-             supports that number of parameters). JumpingDistribution objects
-             can be added through
-             JumpingDistributionList.add_distribution(distribution, transforms)
-             where distribution is a JumpingDistribution and transforms is a
-             TransformList (or something which can be cast into one) describing
-             how parameters are transformed. Once all the jumping distributions
-             are added, points can be drawn using
-             JumpingDistributionList.draw(source) and the log_value of the
-             entire list of jumping distributions can be evaluated at a point
-             using JumpingDistributionList.log_value(point) just like any other
-             JumpingDistribution object. See documentation of individual
-             functions for further details.
+**File**: $DISTPY/distpy/jumping/JumpingDistributionList.py  
+**Author**: Keith Tauscher  
+**Date**: 3 Jul 2021
 """
 import numpy as np
 import numpy.random as rand
@@ -27,23 +32,47 @@ from .JumpingDistribution import JumpingDistribution
 
 class JumpingDistributionList(JumpingDistribution):
     """
-    An object which keeps track of many jumping distributions which can be
-    univariate or multivariate. It provides methods like log_value, which calls
-    log_value on all of its constituent distributions, and draw, which draws
-    from all of its constituent distributions.
+    A container which can hold an arbitrary number of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects, each of
+    which can have any number of parameters which it describes (as long as the
+    specific `distpy.jumping.JumpingDistribution.JumpingDistribution` supports
+    that number of parameters).
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects can be
+    added through `JumpingDistributionList.add_distribution`. Once all the
+    distributions are added, points can be drawn using the
+    `JumpingDistributionList.draw` method and the log value of the entire set
+    of distributions can be evaluated at a given source and destination using
+    the `JumpingDistributionList.log_value` and
+    `JumpingDistributionList.log_value_difference` methods. See documentation
+    of individual methods for further details. This class represents a
+    list-like container of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects; see
+    `distpy.jumping.JumpingDistributionSet.JumpingDistributionSet` for a
+    dictionary- or set-like container of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects. Unlike
+    the `distpy.jumping.JumpingDistributionSet.JumpingDistributionSet` class,
+    `JumpingDistributionList` is a subclass of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` and implements all
+    of its methods and properties.
     """
     def __init__(self, jumping_distribution_tuples=[]):
         """
-        Creates a new JumpingDistributionList with the given distributions
+        Creates a new `JumpingDistributionList` with the given distributions
         inside.
         
-        jumping_distribution_tuples: a list of lists/tuples of the form
-                                     (jumping_distribution, transforms) where
-                                     jumping_distribution is an instance of the
-                                     JumpingDistribution class and transforms
-                                     is a TransformList (or something which can
-                                     be cast into one) which apply to the
-                                     parameters of jumping_distribution
+        Parameters
+        ----------
+        jumping_distribution_tuples : sequence
+            a list of sequences of the form `(distribution, transforms)` or
+            `(distribution,)` where:
+            
+            - `distribution` is a
+            `distpy.jumping.JumpingDistribution.JumpingDistribution`object
+            - `transforms` (if given) is a
+            `distpy.transform.TransformList.TransformList` or something that
+            can be cast to one (can be a single
+            `distpy.transform.Transform.Transform` if `distribution` is
+            univariate)
         """
         self._data = []
         if type(jumping_distribution_tuples) in sequence_types:
@@ -67,31 +96,39 @@ class JumpingDistributionList(JumpingDistribution):
     @property
     def empty(self):
         """
-        Finds whether this JumpingDistributionList is empty.
-        
-        returns True if no jumping distributions have been added
-                False otherwise
+        Boolean describing whether this `JumpingDistributionList` is empty.
         """
         return (len(self._data) == 0)
     
     @property
     def numparams(self):
         """
-        Property storing the number of parameters in this DistributionList.
+        The integer number of parameters described by this
+        `JumpingDistributionList`.
         """
         return len(self.transform_list)
+    
+    def __len__(self):
+        """
+        Function allowing users to access the number of parameters described by
+        this `JumpingDistributionList` by using the built-in `len` function and
+        not explicitly referencing `JumpingDistributionList.numparams`.
+        """
+        return self.numparams
 
     def add_distribution(self, jumping_distribution, transforms=None):
         """
-        Adds a jumping distribution and any transforms which go with it to the
-        JumpingDistributionList.
+        Adds a `distpy.jumping.JumpingDistribution.JumpingDistribution` and the
+        parameters it describes to the `JumpingDistributionList`.
         
-        jumping_distribution: JumpingDistribution object describing the given
-                              variates
-        transforms: TransformList object (or something castable to one, such as
-                    a sequence of strings which can be cast to Transform
-                    objects) which apply to the variates (can be a single
-                    string if the jumping distribution is univariate)
+        Parameters
+        ----------
+        jumping_distribution : `distpy.jumping.JumpingDistribution.JumpingDistribution`
+            distribution describing how the given parameters jump
+        transforms : `distpy.transform.TransformList.TransformList` or\
+        `distpy.transform.Transform.Transform` or sequence or None
+            list of transformations to apply to the parameters (can be a single
+            string if `distribution` is univariate)
         """
         if isinstance(jumping_distribution, JumpingDistribution):
             transforms = TransformList.cast(transforms,\
@@ -105,20 +142,28 @@ class JumpingDistributionList(JumpingDistribution):
     @property
     def num_jumping_distributions(self):
         """
-        Property storing the number of jumping_distributions in this
-        JumpingDistributionList.
+        The integer number of
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+        this `JumpingDistributionList`.
         """
         return len(self._data)
     
     def __add__(self, other):
         """
-        Adds this JumpingDistributionList to another.
+        Adds this `JumpingDistributionList` to another by multiplying their
+        PDFs and assuming the parameters of `self` and `other` are independent.
+        Allows for use of the `+` operator on `JumpingDistributionList`
+        objects.
         
-        other: a JumpingDistributionList object with parameters distinct from
-               the parameters of self
+        Parameters
+        ----------
+        other : `JumpingDistributionList`
+            a `JumpingDistributionList` to combine with this one
         
-        returns: JumpingDistributionList object which is the combination of the
-                 given JumpingDistributionList objects
+        Returns
+        -------
+        combined : `JumpingDistributionList`
+            combination of the given `JumpingDistributionList` objects
         """
         if isinstance(other, JumpingDistributionList):
             return JumpingDistributionList(\
@@ -129,10 +174,21 @@ class JumpingDistributionList(JumpingDistribution):
     
     def __iadd__(self, other):
         """
-        Adds all jumping_distributions from other to this
-        JumpingDistributionList.
+        Adds all distributions from `other` to this `JumpingDistributionList`.
+        Allows for use of the `+=` operator with `JumpingDistributionList`
+        objects.
         
-        other: JumpingDistributionList object
+        Parameters
+        ----------
+        other : `JumpingDistributionList`
+            `JumpingDistributionList` with parameters distinct from the
+            parameters of `self`
+        
+        Returns
+        -------
+        self : `JumpingDistributionList`
+            this object with its state changed to include distributions from
+            `other`
         """
         if isinstance(other, JumpingDistributionList):
             for distribution_tuple in other._data:
@@ -144,18 +200,26 @@ class JumpingDistributionList(JumpingDistribution):
     
     def modify_transforms(self, new_transform_list):
         """
-        Finds a JumpingDistributionList with the same jumping distributions but
-        different transforms. Draws from this JumpingDistributionList and the
-        returned JumpingDistributionList will differ by the given transforms.
+        Finds a `JumpingDistributionList` with the same jumping distributions
+        but different transforms. Draws from this `JumpingDistributionList` and
+        the returned `JumpingDistributionList` will differ by the given
+        transformations.
         
-        new_transform_list: TransformList (or something that can be cast into
-                            one) containing the new transforms
+        Parameters
+        ----------
+        new_transform_list : `distpy.transform.TransformList.TransformList` or\
+        `distpy.transform.Transform.Transform` or sequence or None
+            list of transformations to apply to the parameters (can be a single
+            string if `distribution` is univariate)
         
-        returns: new JumpingDistributionList object with the same jumping
-                 distribution but different transforms
+        Returns
+        -------
+        modified : `JumpingDistributionList`
+            new `JumpingDistributionList` object with the same jumping
+            distribution but different transforms
         """
         new_transform_list =\
-            TransformList.cast(transforms, num_transforms=self.numparams)
+            TransformList.cast(self.transforms, num_transforms=self.numparams)
         (new_data, running_index) = ([], 0)
         for (jumping_distribution, transforms) in self._data:
             new_running_index = running_index + jumping_distribution.numparams
@@ -167,15 +231,24 @@ class JumpingDistributionList(JumpingDistribution):
     
     def draw(self, source, shape=None, random=rand):
         """
-        Draws a point from this jumping distribution by drawing points from all
-        component jumping distributions.
+        Draws a destination from all distributions given the source.
         
-        source: the source point in the full space in the form of a 1D
-                numpy.ndarray of length numparams.
-        shape: shape of arrays which are values of return value
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : numpy.ndarray
+            1D array of source values
+        shape : tuple or int or None
+            - if `shape` is None, the values of `destination[...,index]` are
+            numbers
+            - if `shape` is an int, the values of `destination[...,index]` are
+            1D arrays of length `shape`
+            - if `shape` is a tuple, the values of `destination[...,index]` are
+            arrays of shape `shape`
         
-        returns a numpy.ndarray with shape given by shape+(numparams,)
+        Returns
+        -------
+        destination : dict
+            array of destination values (shape determined by `shape` parameter)
         """
         none_shape = (type(shape) is type(None))
         if none_shape:
@@ -212,16 +285,30 @@ class JumpingDistributionList(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Evaluates the log of the product of the values of the jumping
-        distributions contained in this JumpingDistributionList.
+        Evaluates the log of the product of the values of the distributions
+        contained in this `JumpingDistributionList` from `source` to
+        `destination`.
         
-        source: a numparams-length 1D numpy.ndarray representing the source
-                point
-        destination: a numparams-length 1D numpy.ndarray representing the
-                     destination point
+        Parameters
+        ----------
+        source : numpy.ndarray
+            1D array containing source values
+        destination : numpy.ndarray
+            1D array containing destination values
         
-        returns: the total log_value coming from contributions from all
-                 jumping distributions
+        Returns
+        -------
+        total_log_value : float
+            the total `log_value` coming from contributions from all
+            distributions. If `source` is
+            \\(\\begin{bmatrix} \\boldsymbol{x}_1 \\\\ \\boldsymbol{x}_2 \\\\\
+            \\vdots \\\\ \\boldsymbol{x}_N \\end{bmatrix}\\) and `destination`
+            is \\(\\begin{bmatrix} \\boldsymbol{y}_1 \\\\\
+            \\boldsymbol{y}_2 \\\\ \\vdots \\\\ \\boldsymbol{y}_N\
+            \\end{bmatrix}\\), then `total_log_value` is
+            \\(\\sum_{k=1}^N\\ln{g_k(\\boldsymbol{x}_k,\\boldsymbol{y}_k)}\\),
+            where \\(g_k\\) is the PDF of the \\(k^{\\text{th}}\\) parameter
+            chunk.
         """
         if (type(source) in numerical_types) and\
             (type(destination) in numerical_types):
@@ -270,16 +357,30 @@ class JumpingDistributionList(JumpingDistribution):
     
     def log_value_difference(self, source, destination):
         """
-        Evaluates the log of the product of the values of the jumping
-        distributions contained in this JumpingDistributionList.
+        Evaluates the log of the product of the ratios of the distributions
+        contained in this `JumpingDistributionList` from source to destination.
         
-        source: a numparams-length 1D numpy.ndarray representing the source
-                point
-        destination: a numparams-length 1D numpy.ndarray representing the
-                     destination point
+        Parameters
+        ----------
+        source : numpy.ndarray
+            1D array containing source values
+        destination : numpy.ndarray
+            1D array containing destination values
         
-        returns: the total log_value coming from contributions from all
-                 jumping distributions
+        Returns
+        -------
+        total_log_value_difference : float
+            the total `log_value` coming from contributions from all
+            distributions. If `source` is
+            \\(\\begin{bmatrix} \\boldsymbol{x}_1 \\\\ \\boldsymbol{x}_2 \\\\\
+            \\vdots \\\\ \\boldsymbol{x}_N \\end{bmatrix}\\) and `destination`
+            is \\(\\begin{bmatrix} \\boldsymbol{y}_1 \\\\\
+            \\boldsymbol{y}_2 \\\\ \\vdots \\\\ \\boldsymbol{y}_N\
+            \\end{bmatrix}\\), then `total_log_value_difference` is
+            \\(\\sum_{k=1}^N\\left[\\ln{g_k(\\boldsymbol{x}_k,\
+            \\boldsymbol{y}_k)}-\\ln{g_k(\\boldsymbol{y}_k,\
+            \\boldsymbol{x}_k)}\\right]\\), where \\(g_k\\) is the PDF of the
+            \\(k^{\\text{th}}\\) parameter chunk.
         """
         if (type(source) in numerical_types) and\
             (type(destination) in numerical_types):
@@ -330,12 +431,18 @@ class JumpingDistributionList(JumpingDistribution):
     
     def __getitem__(self, which):
         """
-        Gets a JumpingDistributionList with only the specified jumping
+        Gets a `JumpingDistributionList` with only the specified jumping
         distributions.
         
-        which: either an int, slice, or sequence of ints
+        Parameters
+        ----------
+        which : int or sequence or slice
+            object determining which distributions to keep
         
-        returns: a JumpingDistributionList object
+        Returns
+        -------
+        subset : `JumpingDistributionList`
+            a JumpingDistributionList object with only the given distributions
         """
         if type(which) in int_types:
             jumping_distribution_list = JumpingDistributionList(\
@@ -355,18 +462,25 @@ class JumpingDistributionList(JumpingDistribution):
     
     def delete_distribution(self, index):
         """
-        Deletes a jumping distribution from this JumpingDistributionList.
+        Deletes a distribution from this `JumpingDistributionList`.
         
-        index: the integer index of the jumping_distribution to delete
+        Parameters
+        ----------
+        index : int
+            the index of the distribution to delete
         """
         self._data = self._data[:index] + self._data[index+1:]
     
     def __delitem__(self, which):
         """
-        Deletes the specified jumping distributions. For documentation, see
-        delete_distribution function.
+        Deletes a distribution from this `JumpingDistributionList`. Alias for
+        `JumpingDistributionList.delete_distribution` that allows for the use
+        of the `del` keyword with `JumpingDistributionList` objects
         
-        which: either an integer, a slice, or a sequence of integers
+        Parameters
+        ----------
+        which : int or sequence or slice
+            object determining which distributions to delete
         """
         if type(which) in int_types:
             self.delete_distribution(which)
@@ -384,17 +498,26 @@ class JumpingDistributionList(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing whether all of the jumping distributions in this list
-        are discrete.
+        Boolean describing whether all of the jumping distributions in this
+        `JumpingDistributionList` are discrete.
         """
         return all([jumping_distribution.is_discrete\
             for (jumping_distribution, transforms) in self._data])
     
     def __eq__(self, other):
         """
-        Checks for equality of this JumpingDistributionList with other. Returns
-        True if other has the same jumping_distribution_tuples and False
-        otherwise.
+        Checks for equality of this `JumpingDistributionList` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if other is another `JumpingDistributionList` that
+            has the same distribution tuples
         """
         def jumping_distribution_tuples_equal(first, second):
             #
@@ -423,15 +546,27 @@ class JumpingDistributionList(JumpingDistribution):
     
     def __ne__(self, other):
         """
-        This function simply asserts that (a != b) == (not (a == b))
+        Checks for inequality of this `JumpingDistributionList` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object with which to check for inequality
+        
+        Returns
+        -------
+        result : bool
+            False if and only if other is another `JumpingDistributionList`
+            that has the same distribution tuples
         """
         return (not self.__eq__(other))
     
     @property
     def transform_list(self):
         """
-        Property storing the TransformList object describing the transforms in
-        this DistributionList.
+        The `distpy.transform.TransformList.TransformList` object describing
+        the transformations of the parameters in this
+        `JumpingDistributionList`.
         """
         answer = TransformList()
         for (jumping_distribution, transforms) in self._data:
@@ -440,13 +575,17 @@ class JumpingDistributionList(JumpingDistribution):
     
     def discrete_sublist(self):
         """
-        Function which compiles a sublist of the JumpingDistribution objects
-        in this JumpingDistributionList: those that represent discrete
+        Function which compiles a sublist of the
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+        this `JumpingDistributionList`: those that represent discrete
         variables.
         
-        returns: a JumpingDistributionList object containing all
-                 JumpingDistribution objects in this JumpingDistributionList
-                 which describe discrete variables
+        Returns
+        -------
+        sublist : `JumpingDistributionList`
+            a `JumpingDistributionList` object containing all
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+            this `JumpingDistributionList` which describe discrete variables
         """
         answer = JumpingDistributionList()
         for (jumping_distribution, transforms) in self._data:
@@ -456,13 +595,17 @@ class JumpingDistributionList(JumpingDistribution):
     
     def continuous_sublist(self):
         """
-        Function which compiles a sublist of the JumpingDistribution objects in
-        this JumpingDistributionList: those that represent continuous
+        Function which compiles a sublist of the
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+        this `JumpingDistributionList`: those that represent continuous
         variables.
         
-        returns: a JumpingDistributionList object containing all 
-                 JumpingDistribution objects in this JumpingDistributionList
-                 which describe continuous variables
+        Returns
+        -------
+        sublist : `JumpingDistributionList`
+            a `JumpingDistributionList` object containing all
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+            this `JumpingDistributionList` which describe continuous variables
         """
         answer = JumpingDistributionList()
         for (jumping_distribution, transforms) in self._data:
@@ -472,9 +615,15 @@ class JumpingDistributionList(JumpingDistribution):
     
     def transformed_version(self):
         """
-        Function which returns a version of this JumpingDistributionList where
-        the parameters exist in transformed space (instead of transforms being
-        carried through this object).
+        Finds a version of this `JumpingDistributionList` that exists in
+        transformed space.
+        
+        Returns
+        -------
+        transformed : `JumpingDistributionList`
+            a version of this `JumpingDistributionList` where the parameters
+            exist in transformed space (instead of transforms being carried
+            through this object).
         """
         answer = JumpingDistributionList()
         for (jumping_distribution, transforms) in self._data:
@@ -484,10 +633,13 @@ class JumpingDistributionList(JumpingDistribution):
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this
-        JumpingDistributionList. Each jumping distribution tuple is saved as a
-        subgroup in the hdf5 file.
+        `JumpingDistributionList`. Each jumping distribution tuple is saved as
+        a subgroup in the hdf5 file.
         
-        group: the hdf5 file group to fill
+        Parameters
+        ----------
+        group : h5py.Group
+            the hdf5 file group to fill
         """
         group.attrs['class'] = 'JumpingDistributionList'
         for (ituple, jumping_distribution_tuple) in enumerate(self._data):
@@ -499,13 +651,20 @@ class JumpingDistributionList(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group, *jumping_distribution_classes):
         """
-        Loads a DistributionList object from the given group.
+        Loads a `DistributionList` object from the given group.
         
-        group: the group which was included in self.fill_hdf5_group(group)
-        jumping_distribution_classes: JumpingDistribution subclasses with which
-                                      to load subdistributions
+        Parameters
+        ----------
+        group : h5py.Group
+            the group which was included in self.fill_hdf5_group(group)
+        jumping_distribution_classes : sequence
+            sequence of `distpy.jumping.JumpingDistribution.JumpingDistribution`
+            subclasses with which to load subdistributions
         
-        returns: JumpingDistributionList object
+        Returns
+        -------
+        loaded: `JumpingDistributionList`
+            `JumpingDistributionList` loaded from the given group
         """
         ituple = 0
         jumping_distribution_tuples = []

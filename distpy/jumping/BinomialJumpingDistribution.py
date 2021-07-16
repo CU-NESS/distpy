@@ -1,11 +1,16 @@
 """
-File: distpy/jumping/BinomialJumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a jumping distribution based on the
+binomial distribution. Its PMF is given by $$(y-\\text{min})|(x-\\text{min})\
+\\sim \\begin{cases} \\text{Binomial}\\left(\\text{max}-\\text{min},\
+\\frac{x-\\text{min}}{\\text{max}-\\text{min}}\\right) &\
+\\text{min}<x<\\text{max} \\\\ \\text{Binomial}\\left(\\text{max}-\\text{min},\
+\\frac{1}{2(\\text{max}-\\text{min})}\\right) & x=\\text{min} \\\\\
+\\text{Binomial}\\left(\\text{max}-\\text{min},\
+1-\\frac{1}{2(\\text{max}-\\text{min})}\\right)& x=\\text{max} \\end{cases}$$
 
-Description: File containing class representing a jumping distribution on the
-             integers where there is a defined minimum and maximum. This one is
-             based on the binomial distribution.
+**File**: $DISTPY/distpy/jumping/BinomialJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 3 Jul 2021
 """
 import numpy as np
 from scipy.special  import gammaln as log_gamma
@@ -14,15 +19,27 @@ from .JumpingDistribution import JumpingDistribution
 
 class BinomialJumpingDistribution(JumpingDistribution):
     """
-    Class representing a jumping distribution on the integers where there is a
-    defined minimum and maximum. This is based on the binomial distribution.
+    Class representing a jumping distribution based on the binomial
+    distribution. Its PMF is given by $$(y-\\text{min})|(x-\\text{min}) \\sim\
+    \\begin{cases} \\text{Binomial}\\left(\\text{max}-\\text{min},\
+    \\frac{x-\\text{min}}{\\text{max}-\\text{min}}\\right) &\
+    \\text{min}<x<\\text{max} \\\\ \\text{Binomial}\
+    \\left(\\text{max}-\\text{min},\
+    \\frac{1}{2(\\text{max}-\\text{min})}\\right) & x=\\text{min} \\\\\
+    \\text{Binomial}\\left(\\text{max}-\\text{min},\
+    1-\\frac{1}{2(\\text{max}-\\text{min})}\\right)& x=\\text{max}\
+    \\end{cases}$$
     """
     def __init__(self, minimum, maximum):
         """
-        Initializes a BinomialJumpingDistribution with the given extrema.
+        Initializes a `BinomialJumpingDistribution` with the given extrema.
         
-        minimum: minimum allowable value of integer parameter
-        maximum: maximum allowable value of integer parameter
+        Parameters
+        ----------
+        minimum : int
+            minimum allowable value of integer parameter
+        maximum : int
+            maximum allowable value of integer parameter
         """
         self.minimum = minimum
         self.maximum = maximum
@@ -30,7 +47,7 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def minimum(self):
         """
-        Property storing the minimum allowable integer value of the parameter.
+        The minimum allowable integer value of the parameter.
         """
         if not hasattr(self, '_minimum'):
             raise AttributeError("minimum was referenced before it was set.")
@@ -39,9 +56,12 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @minimum.setter
     def minimum(self, value):
         """
-        Setter for the minimum allowable integer value of the parameter.
+        Setter for `BinomialJumpingDistribution.minimum`.
         
-        value: an integer
+        Parameters
+        ----------
+        value : int
+            minimum allowable value of integer parameter
         """
         if type(value) in int_types:
             self._minimum = value
@@ -51,7 +71,7 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def maximum(self):
         """
-        Property storing the maximum allowable integer value of the parameter.
+        The maximum allowable integer value of the parameter.
         """
         if not hasattr(self, '_maximum'):
             raise AttributeError("maximum was referenced before it was set.")
@@ -60,9 +80,12 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @maximum.setter
     def maximum(self, value):
         """
-        Setter for the maximum allowable integer value of the parameter.
+        Setter for `BinomialJumpingDistribution.maximum`.
         
-        value: an integer greater than the int stored in the minimum property
+        Parameters
+        ----------
+        value : int
+            maximum allowable value of integer parameter
         """
         if type(value) in int_types:
             if value > self.minimum:
@@ -76,8 +99,8 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def span(self):
         """
-        Property storing the difference between the minimum and maximum allowed
-        value of the parameter.
+        The difference between the minimum and maximum allowed value of the
+        parameter, \\(\\text{max}-\\text{min}\\).
         """
         if not hasattr(self, '_span'):
             self._span = (self.maximum - self.minimum)
@@ -86,7 +109,8 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def reciprocal_span(self):
         """
-        Property storing the reciprocal of the span property.
+        The reciprocal of the span property,
+        \\(\\frac{1}{\\text{max}-\\text{min}}\\).
         """
         if not hasattr(self, '_reciprocal_span'):
             self._reciprocal_span = (1. / self.span)
@@ -95,7 +119,8 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def half_reciprocal_span(self):
         """
-        Property storing half of the reciprocal of the span property.
+        Half of the reciprocal of the span property,
+        \\(\\frac{1}{2(\\text{max}-\\text{min})}\\).
         """
         if not hasattr(self, '_half_reciprocal_span'):
             self._half_reciprocal_span = self.reciprocal_span / 2
@@ -103,16 +128,24 @@ class BinomialJumpingDistribution(JumpingDistribution):
     
     def p_from_shifted_source(self, shifted_source):
         """
-        Finds the p value of the binomial distribution associated with the
-        given source (which is assumed to already have self.minimum subtracted)
+        Finds the value of the \\(p\\) parameter of the binomial distribution
+        whose mean is the given source (which is assumed to already have
+        `BinomialJumpingDistribution.minimum` subtracted)
         
-        shifted_source: integer between 0 and
-                        self.span=self.maximum-self.minimum (inclusive)
+        Parameters
+        ----------
+        shifted_source : int
+            integer between 0 and `BinomialJumpingDistribution.span`
+            (inclusive)
         
-        returns: p satisfying 0 < p < 1 where pN is near (and usually equal to)
-                 shifted_source (p cannot be 0 or 1 because that would imply it
-                 could never jump away from the minimum or maximum, and would
-                 therefore violate the ergodicity requirement of Markov chains)
+        Returns
+        -------
+        probability_of_success : float
+            p satisfying \\(0 < p < 1\\) where \\(pN\\) is near (and usually
+            equal to) shifted_source (p cannot be 0 or 1 because that would
+            imply it could never jump away from the minimum or maximum, and
+            would therefore violate the ergodicity requirement of Markov
+            chains)
         """
         if shifted_source == 0:
             return self.half_reciprocal_span
@@ -126,11 +159,25 @@ class BinomialJumpingDistribution(JumpingDistribution):
         Draws a destination point from this jumping distribution given a source
         point.
         
-        source: single integer number
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : int
+            integer source point
+        shape : None or int or tuple
+            - if None, a single destination is returned as a single number
+            - if int \\(n\\), \\(n\\) destinations are returned as a 1D
+            `numpy.ndarray` of length \\(n\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned as a
+            `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k)\\)
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: either single value (if shape is None) or np.ndarray of given
-                 shape.
+        Returns
+        -------
+        drawn : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         return self.minimum + random.binomial(self.span,\
             self.p_from_shifted_source(source - self.minimum), size=shape)
@@ -138,8 +185,8 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def log_value_constant(self):
         """
-        Property storing a constant in the log value of this distribution which
-        is independent of the source and destination integers.
+        A constant in the log value of this distribution which is independent
+        of the source and destination integers.
         """
         if not hasattr(self, '_log_value_constant'):
             self._log_value_constant = log_gamma(self.span + 1)
@@ -147,22 +194,21 @@ class BinomialJumpingDistribution(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source: either single integer between minimum and maximum or array of
-                such values
-        destination: if source is a single integer, destination can be a single
-                                                    integer or an array of
-                                                    integers.
-                     if source is an array, destination and source must be
-                                            arrays castable to a common shape.
+        Parameters
+        ----------
+        source : int
+            source integer
+        destination : int
+            destination integer
         
-        returns: if source is a single number, returns log values in same form
-                                               as destination
-                 if source and destination are both arrays, returns log values
-                                                            in numpy.ndarray of
-                                                            same shape as
-                                                            destination-source
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(x,y)=\\text{Pr}[y|x]\\), `source` is
+            \\(x\\) and `destination` is \\(y\\), then `log_pdf` is given by
+            \\(\\ln{f(x,y)}\\)
         """
         shifted_source = source - self.minimum
         shifted_destination = destination - self.minimum
@@ -175,19 +221,26 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution. Since
+        this distribution is univariate, this property is always 1.
         """
         return 1
     
     def __eq__(self, other):
         """
-        Tests for equality between this jumping distribution and other. All
-        subclasses must implement this function.
+        Tests for equality between this jumping distribution and other.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if `other` is an `BinomialJumpingDistribution`
+            with the same `BinomialJumpingDistribution.minimum` and
+            `BinomialJumpingDistribution.maximum`
         """
         if isinstance(other, BinomialJumpingDistribution):
             return (self.minimum == other.minimum) and\
@@ -198,18 +251,22 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Boolean describing whether this `BinomialJumpingDistribution` describes
+        discrete (True) or continuous (False) variable(s). Since this is a
+        discrete distribution, it is always True.
         """
         return True
     
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with information about this jumping
-        distribution. All subclasses must implement this function.
+        distribution.
         
-        group: hdf5 file group to fill with information about this jumping
-               distribution
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this jumping
+            distribution
         """
         group.attrs['class'] = 'BinomialJumpingDistribution'
         group.attrs['minimum'] = self.minimum
@@ -218,13 +275,18 @@ class BinomialJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a BinomialJumpingDistribution from the given hdf5 file group.
+        Loads a `BinomialJumpingDistribution` from the given hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this BinomialJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `BinomialJumpingDistribution.fill_hdf5_group` was called on
         
-        returns: a BinomialJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `BinomialJumpingDistribution`
+            `BinomialJumpingDistribution` object loaded from the given group
         """
         try:
             assert group.attrs['class'] == 'BinomialJumpingDistribution'

@@ -1,11 +1,14 @@
 """
-File: distpy/jumping/MetropolisHastingsSampler.py
-Author: Keith Tauscher (with inspiration from DFM's emcee)
-Date: 12 Feb 2018
+Module containing class that performs a Metropolis Hastings (MH) Markov Chain
+Monte Carlo (MCMC) sampling, which essentially samples a difficult distribution
+by sampling a simpler distribution and rejecting points so that the final
+distribution matches the target distribution. It is a Markov Chain because the
+distribution of each point in the sampling depends only on the location of the
+last drawn point.
 
-Description: File containing class implementing an MCMC Sampler class using
-             distpy's JumpingDistributionSet objects for the storing of
-             proposal distributions.
+**File**: $DISTPY/distpy/jumping/MetropolisHastingsSampler.py  
+**Author**: Keith Tauscher  
+**Date**: 11 Jul 2021
 """
 from __future__ import division
 import numpy as np
@@ -28,21 +31,38 @@ except:
     
 def array_from_dictionary(dictionary, parameters):
     """
-    Creates an array out of the dictionary.
-        
-    dictionary: dict with parameters as keys and arrays or numbers as values 
+    Creates an array out of the given parameter dictionary.
     
-    returns: array of ndim 1 greater than values ndim
+    Parameters
+    ----------
+    dictionary : dict
+        dictionary with parameter names as keys and arrays or numbers as values
+    
+    Returns
+    -------
+    array : numpy.ndarray
+        array with one more dimension than that of the values of dictionary
+        containing the parameter values from the dictionary
     """
     return np.array([dictionary[parameter] for parameter in parameters])
 
 def dictionary_from_array(array, parameters):
     """
-    Creates a dictionary out of the arrays.
-   
-    array: numpy.ndarray whose first dimension has length num_parameters
+    Creates a dictionary out of the arrays, assuming they represent values of
+    the given parameters.
     
-    returns: dictionary with parameters as keys
+    Parameters
+    ----------
+    array : numpy.ndarray
+        array whose first dimension has length `len(parameters)`
+    parameters : sequence
+        sequence of string parameter names to use as keys of the returned
+        dictionary
+    
+    Returns
+    -------
+    dictionary : dict
+        dictionary with parameters as keys and numbers from `array` as values
     """
     return {parameter: array[iparameter]\
         for (iparameter, parameter) in enumerate(parameters)}
@@ -51,10 +71,37 @@ def choose_destination(input_tuple):
     """
     Chooses a destination point given the source point and its loglikelihood.
     
-    input_tuple: (source, lnprob, jumping_distribution_set, logprobability,
-                 args, kwargs, parameters, random)
+    Parameters
+    ----------
+    input_tuple : tuple
+        tuple of the form `(source, lnprob, jumping_distribution_set,\
+        logprobability, args, kwargs, parameters, random)`:
+        
+        - `source` is a 1D `numpy.ndarray` describing the source point
+        - `lnprob` is the log of the target PDF evaluated at `source`
+        - `jumping_distribution_set` is a
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` object
+        describing how to evaluate and draw jumps
+        - `logprobability` is a Callable that gives the value of the target PDF
+        at a given point
+        - `args` is a sequence of positional arguments to pass to
+        `logprobability`
+        - `kwargs` is a dictionary of keyword arguments to pass to
+        `logprobability`
+        - `parameters` is a sequence of string parameter names
+        - `random` the random number generator in a specific state
     
-    returns: output_tuple: (destination, newlnprob, accepted, random)
+    Returns
+    -------
+    output_tuple : tuple
+        tuple of the form `(destination, newlnprob, accepted, random)`:
+        
+        - `destination` is a 1D `numpy.ndarray` describing the destination
+        point
+        - `newlnprob` is the log probability evaluated at `destination`
+        - `accepted` is a boolean describing whether or not the jump performed
+        in this function was accepted to arrive at `destination`
+        - `random` is the random number generator in an updated state
     """
     (source, lnprob, jumping_distribution_set, logprobability, args, kwargs,\
         parameters, random) = input_tuple
@@ -76,18 +123,26 @@ def choose_destination(input_tuple):
 
 class DummyPool(object):
     """
-    Class representing a dummy-Pool which uses the built-in map function to do
-    its mapping.
+    Class representing a dummy-`Pool` which uses the built-in map function to
+    do its mapping. This will be used if `multiprocess` is not installed or if
+    `MetropolisHastingsSampler.num_threads` is set to 1.
     """
     def map(self, function, iterable):
         """
         Calls the given function on each element of the given iterable.
         
-        function: function to apply to each element of iterable
-        iterable: sequence of elements to which to apply function
+        Parameters
+        ----------
+        function : Callable
+            function to apply to each element of iterable
+        iterable : sequence
+            elements to which to apply function
         
-        returns: list where every element is given by the application of the
-                 function to the corresponding element of the iterable
+        Returns
+        -------
+        mapped : sequence
+            sequence whose elements are found by applying the function to the
+            corresponding element of the iterable
         """
         return map(function, iterable)
     
@@ -99,25 +154,37 @@ class DummyPool(object):
 
 class MetropolisHastingsSampler(object):
     """
-    Class implementing an MCMC Sampler class using distpy's
-    JumpingDistributionSet objects for the storing of proposal distributions.
+    Class that performs a Metropolis Hastings (MH) Markov Chain Monte Carlo
+    (MCMC) sampling, which essentially samples a difficult distribution by
+    sampling a simpler distribution and rejecting points so that the final
+    distribution matches the target distribution. It is a Markov Chain because
+    the distribution of each point in the sampling depends only on the location
+    of the last drawn point.
     """
     def __init__(self, parameters, num_walkers, logprobability,\
         jumping_distribution_set, num_threads=1, args=[], kwargs={}):
         """
         Initializes a new sampler of the given log probability function.
         
-        parameters: names of parameters explored by this sampler
-        num_walkers: the number of independent MCMC iterates should be run at once
-        logprobability: callable taking parameter array as input
-        jumping_distribution_set: JumpingDistributionSet object storing
-                                  proposal distributions used to sample given
-                                  log probability function
-        num_threads: the number of threads to use in log likelihood calculations
-                  for walkers. Default: 1, 1 is best unless loglikelihood is
-                  slow (meaning taking many ms)
-        args: extra positional arguments to pass to logprobability
-        kwargs: extra keyword arguments to pass to logprobability
+        Parameters
+        ----------
+        parameters : sequence
+            sequence of string names of parameters explored by this sampler
+        num_walkers : int
+            the number of independent MCMC iterates should be run at once
+        logprobability : Callable
+            Callable taking parameter array as input
+        jumping_distribution_set : `distpy.jumping.JumpingDistributionSet.JumpingDistributionSet`
+            object storing proposal distributions used to sample given log
+            probability function
+        num_threads : int
+            the number of threads to use in log likelihood calculations for
+            walkers. Default: 1, 1 is best unless loglikelihood is slow
+            (meaning taking many ms)
+        args : sequence
+            extra positional arguments to pass to `logprobability`
+        kwargs : dict
+            extra keyword arguments to pass to `logprobability`
         """
         self.parameters = parameters
         self.num_walkers = num_walkers
@@ -131,8 +198,8 @@ class MetropolisHastingsSampler(object):
     @property
     def args(self):
         """
-        Property storing a sequence of positional arguments to pass to the
-        logprobability function.
+        A sequence of positional arguments to pass to
+        `MetropolisHastingsSampler.logprobability`.
         """
         if not hasattr(self, '_args'):
             raise AttributeError("args was referenced before it was set.")
@@ -141,10 +208,13 @@ class MetropolisHastingsSampler(object):
     @args.setter
     def args(self, value):
         """
-        Setter for the positional arguments to pass to the logprobability
-        function.
+        Setter for `MetropolisHastingsSampler.args`
         
-        value: must be a sequence
+        Parameters
+        ----------
+        value : sequence
+            sequence of positional arguments to pass to
+            `MetropolisHastingsSampler.logprobability`
         """
         if type(value) in sequence_types:
             self._args = value
@@ -154,8 +224,8 @@ class MetropolisHastingsSampler(object):
     @property
     def kwargs(self):
         """
-        Property storing a sequence of keyword arguments to pass to the
-        logprobability function.
+        A dictionary of keyword arguments to pass to
+        `MetropolisHastingsSampler.logprobability`.
         """
         if not hasattr(self, '_kwargs'):
             raise AttributeError("kwargs was referenced before it was set.")
@@ -164,9 +234,13 @@ class MetropolisHastingsSampler(object):
     @kwargs.setter
     def kwargs(self, value):
         """
-        Setter for the keyword arguments to pass to the logprobability function
+        Setter for `MetropolisHastingsSampler.kwargs`
         
-        value: must be a dictionary with string keys
+        Parameters
+        ----------
+        value : dict
+            dictionary of keyword arguments to pass to
+            `MetropolisHastingsSampler.logprobability`
         """
         if isinstance(value, dict):
             if all([isinstance(key, basestring) for key in value.keys()]):
@@ -180,8 +254,8 @@ class MetropolisHastingsSampler(object):
     @property
     def logprobability(self):
         """
-        Property storing the Callable that computes the log of the probability
-        density at a given point in parameter space.
+        The Callable that computes the log of the target probability density at
+        a given point in parameter space.
         """
         if not hasattr(self, '_logprobability'):
             raise AttributeError("logprobability was referenced before it " +\
@@ -191,9 +265,13 @@ class MetropolisHastingsSampler(object):
     @logprobability.setter
     def logprobability(self, value):
         """
-        Setter for the logprobability function.
+        Setter for `MetropolisHastingsSampler.logprobability`.
         
-        value: a callable object
+        Parameters
+        ----------
+        value : Callable
+            an object that can be called to evaluate the log of the target
+            probability density
         """
         if callable(value):
             self._logprobability = value
@@ -204,8 +282,8 @@ class MetropolisHastingsSampler(object):
     @property
     def random_number_generator(self):
         """
-        Property storing the random number generator to use. When this is first
-        evaluated it is set to numpy.random.mtrand.RandomState().
+        The random number generator to use. When this is first evaluated it is
+        set to `numpy.random.mtrand.RandomState()`.
         """
         if not hasattr(self, '_random_number_generator'):
             self._random_number_generator = np.random.mtrand.RandomState()
@@ -215,17 +293,23 @@ class MetropolisHastingsSampler(object):
     def random_state(self):
         """
         The state of the internal random number generator. It is the result of
-        calling get_state() on a numpy.random.mtrand.RandomState object. You
-        can try to set this property but be warned that if you do this and it
-        fails, it will do so silently.
+        calling `get_state()` on a `numpy.random.mtrand.RandomState` object.
+        You can try to set this property but be warned that if you do this and
+        it fails, it will do so silently.
         """
         return self.random_number_generator.get_state()
 
     @random_state.setter
     def random_state(self, state):
         """
-        Try to set the state of the random number generator but fail silently
-        if it doesn't work.
+        Sets `MetropolisHastingsSampler.random_state`. This is done internally
+        and the user should only set this at their own risk.
+        
+        Parameters
+        ----------
+        state : tuple
+            value like the one returned by
+            `numpy.random.mtrand.RandomState.get_state`
         """
         try:
             self.random_number_generator.set_state(state)
@@ -235,8 +319,9 @@ class MetropolisHastingsSampler(object):
     @property
     def chain(self):
         """
-        Property storing the chain of positions in parameter space of the MCMC
-        iterates.
+        The chain of positions in parameter space of the MCMC iterates. It is a
+        `numpy.ndarray` of shape `(MetropolisHastingsSampler.num_walkers,\
+        num_steps, MetropolisHastingsSampler.num_parameters)`
         """
         if not hasattr(self, '_chain'):
             raise AttributeError("chain was referenced before it was set.")
@@ -245,10 +330,13 @@ class MetropolisHastingsSampler(object):
     @chain.setter
     def chain(self, value):
         """
-        Setter for the chain positions of this MCMC.
+        Setter for `MetropolisHastingsSampler.chain`.
         
-        value: a 3D array whose first (third) axis length is num_walkers
-               (num_parameters)
+        Parameters
+        ----------
+        value : numpy.ndarray
+            a 3D array of shape `(MetropolisHastingsSampler.num_walkers,\
+            num_steps, MetropolisHastingsSampler.num_parameters)`
         """
         if type(value) in sequence_types:
             value = np.array(value)
@@ -272,8 +360,9 @@ class MetropolisHastingsSampler(object):
     @property
     def lnprobability(self):
         """
-        Property storing the log of the probability density of the positions of
-        the chain links.
+        The log of the probability density of the positions of the chain links.
+        It is a 2D array of shape
+        `(MetropolisHastingsSampler.num_walkers, num_steps)`
         """
         if not hasattr(self, '_lnprobability'):
             raise AttributeError("lnprobability was referenced before it " +\
@@ -283,9 +372,13 @@ class MetropolisHastingsSampler(object):
     @lnprobability.setter
     def lnprobability(self, value):
         """
-        Setter for the lnprobability array.
+        Setter for `MetropolisHastingsSampler.lnprobability`.
         
-        value: 2D numpy.ndarray of shape whose first element is num_walkers
+        Parameters
+        ----------
+        value : numpy.ndarray
+            2D array of shape
+            `(MetropolisHastingsSampler.num_walkers, num_steps)`
         """
         if type(value) in sequence_types:
             value = np.array(value)
@@ -304,7 +397,7 @@ class MetropolisHastingsSampler(object):
     @property
     def num_iterations(self):
         """
-        Property storing the number of iterations stored in the sampler.
+        The integer number of iterations stored in the sampler.
         """
         if not hasattr(self, '_num_iterations'):
             raise AttributeError("num_iterations was referenced before it " +\
@@ -314,9 +407,12 @@ class MetropolisHastingsSampler(object):
     @num_iterations.setter
     def num_iterations(self, value):
         """
-        Setter for the number of iterations through which this Sampler has run.
+        Setter for `MetropolisHastingsSampler.num_iterations`.
         
-        value: non-negative integer
+        Parameters
+        ----------
+        value : int
+            non-negative integer number of iterations performed
         """
         if type(value) in int_types:
             if value >= 0:
@@ -330,7 +426,8 @@ class MetropolisHastingsSampler(object):
     @property
     def num_accepted(self):
         """
-        Property storing the number of accepted steps for each walker.
+        The number of accepted steps for each walker as a 1D array of length
+        `MetropolisHastingsSampler.num_walkers`.
         """
         if not hasattr(self, '_num_accepted'):
             raise AttributeError("num_accepted was referenced before it " +\
@@ -340,9 +437,12 @@ class MetropolisHastingsSampler(object):
     @num_accepted.setter
     def num_accepted(self, value):
         """
-        Setter for the number of accepted steps.
+        Setter for `MetropolisHastingsSampler.num_accepted`.
         
-        value: 1D numpy.ndarray object of length num_walkers
+        Parameters
+        ----------
+        value : numpy.ndarray
+            1D array of length `MetropolisHastingsSampler.num_walkers`
         """
         if type(value) in sequence_types:
             value = np.array(value)
@@ -361,16 +461,17 @@ class MetropolisHastingsSampler(object):
     @property
     def acceptance_fraction(self):
         """
-        Property storing the acceptance fraction given the current state of the
-        sampler.
+        The acceptance fraction given the current state of the sampler as a 1D
+        numpy.ndarray of length `MetropolisHastingsSampler.num_walkers` whose
+        values are between 0 and 1 (inclusive).
         """
         return self.num_accepted / self.num_iterations
     
     @property
     def num_threads(self):
         """
-        Property storing the number of threads to use in calculating log
-        likelihood values.
+        The integer number of threads to use in calculating log likelihood
+        values.
         """
         if not hasattr(self, '_num_threads'):
             raise AttributeError("num_threads referenced before it was set.")
@@ -379,9 +480,13 @@ class MetropolisHastingsSampler(object):
     @num_threads.setter
     def num_threads(self, value):
         """
-        Setter for the number of threads to use in log likelihood calculations.
+        Setter for `MetropolisHastingsSampler.num_threads`.
         
-        value: a positive integer; 1 is best unless loglikelihood is very slow
+        Parameters
+        ----------
+        value : int
+            a positive integer. `value=1` is best unless loglikelihood is very
+            slow
         """
         if type(value) in int_types:
             if value > 0:
@@ -393,9 +498,9 @@ class MetropolisHastingsSampler(object):
     
     def create_pool(self):
         """
-        Property storing the Pool object which is used for log likelihood
-        calculations. It stores an object which has a map function and a close
-        function.
+        The `multiprocess.Pool` or `DummyPool` object which is used for log
+        likelihood calculations. It stores an object which has a
+        `map(function, iterable)` function and a `close()` function.
         """
         if have_multiprocess and (self.num_threads > 1):
             return Pool(self.num_threads)
@@ -409,8 +514,8 @@ class MetropolisHastingsSampler(object):
     @property
     def num_walkers(self):
         """
-        Property storing the integer number of independent MCMC iterates
-        evolved by this sampler.
+        The integer number of independent MCMC iterates evolved by this
+        sampler.
         """
         if not hasattr(self, '_num_walkers'):
             raise AttributeError("num_walkers referenced before it was set.")
@@ -419,10 +524,13 @@ class MetropolisHastingsSampler(object):
     @num_walkers.setter
     def num_walkers(self, value):
         """
-        Setter for the number of independent MCMC iterates evolved by this
-        sampler.
+        Setter for `MetropolisHastingsSampler.num_walkers`.
         
-        value: a positive integer
+        Parameters
+        ----------
+        value : int
+            a positive integer number of walkers to use. Using a number similar
+            in magnitude to the number of parameters is typically best
         """
         if type(value) in int_types:
             if value > 0:
@@ -436,8 +544,7 @@ class MetropolisHastingsSampler(object):
     @property
     def parameters(self):
         """
-        Property storing a list of the string names of the parameters explored
-        by this sampler.
+        A list of the string names of the parameters explored by this sampler.
         """
         if not hasattr(self, '_parameters'):
             raise AttributeError("parameters referenced before it was set.")
@@ -446,9 +553,12 @@ class MetropolisHastingsSampler(object):
     @parameters.setter
     def parameters(self, value):
         """
-        Setter for the names of the parameters explored by this sampler.
+        Setter for `MetropolisHastingsSampler.parameters`.
         
-        value: sequence of strings
+        Parameters
+        ----------
+        value : sequence
+            sequence of string parameter names
         """
         if type(value) in [list, tuple, np.ndarray]:
             if all([isinstance(element, basestring) for element in value]):
@@ -462,8 +572,8 @@ class MetropolisHastingsSampler(object):
     @property
     def num_parameters(self):
         """
-        Property storing the integer number of parameters (i.e. the dimension
-        of the explored space).
+        The integer number of parameters (i.e. the dimension of the explored
+        space).
         """
         if not hasattr(self, '_num_parameters'):
             self._num_parameters = len(self.parameters)
@@ -472,8 +582,9 @@ class MetropolisHastingsSampler(object):
     @property
     def jumping_distribution_set(self):
         """
-        Property storing the JumpingDistributionSet object storing the proposal
-        distributions of this MetropolisHastingsSampler.
+        The `distpy.jumping.JumpingDistributionSet.JumpingDistributionSet`
+        object storing the proposal distributions of this
+        `MetropolisHastingsSampler`.
         """
         if not hasattr(self, '_jumping_distribution_set'):
             raise AttributeError("jumping_distribution_set referenced " +\
@@ -483,11 +594,13 @@ class MetropolisHastingsSampler(object):
     @jumping_distribution_set.setter
     def jumping_distribution_set(self, value):
         """
-        Setter for the JumpingDistributionSet object storing the proposal
-        distributions of this MetropolisHastingsSampler.
+        Setter for `MetropolisHastingsSampler.jumping_distribution_set`.
         
-        value: JumpingDistributionSet object storing proposal distributions for
-               the string parameters being explored by this sampler
+        Parameters
+        ----------
+        value : `distpy.jumping.JumpingDistributionSet.JumpingDistributionSet`
+            object storing proposal distributions for the string parameters
+            being explored by this sampler
         """
         if isinstance(value, JumpingDistributionSet):
             if set(self.parameters) == set(value.params):
@@ -502,7 +615,10 @@ class MetropolisHastingsSampler(object):
 
     def reset(self):
         """
-        Clear chain, lnprobability, and the bookkeeping parameters.
+        Clears `MetropolisHastingsSampler.chain`,
+        `MetropolisHastingsSampler.lnprobability`,
+        `MetropolisHastingsSampler.num_iterations`, and
+        `MetropolisHastingsSampler.num_accepted` to reset the sampler.
         """
         self._chain = np.empty((self.num_walkers, 0, self.num_parameters))
         self.lnprobability = np.empty((self.num_walkers, 0))
@@ -512,19 +628,40 @@ class MetropolisHastingsSampler(object):
     
     def sample(self, point, lnprob=None, random_state=None, num_iterations=1):
         """
-        Advances the chain iterations steps as an iterator
-
-        point: the initial position vector(s).
-        lnprob: the logprobability evaluated at position point
-                If lnprob is not provided, the initial value is calculated.
-        random_state: (optional) the state of the random number generator. See
-                     the :func:`random_state` property for details.
-        num_iterations: (optional) integer number of steps to run.
-
-        At each iteration, this generator yields (pos, lnprob, rstate) where:
-                pos: the current positions of the chain in the parameter space
-                lnprob: the value of the log posterior at pos
-                rstate: the current state of the random number generator
+        Advances the chain `num_iterations` steps as an iterator.
+        
+        Parameters
+        ----------
+        point : numpy.ndarray
+            the initial position vectors of the walkers as a 2D array of shape
+            `(MetropolisHastingsSampler.num_walkers,\
+            MetropolisHastingsSampler.num_parameters)`.
+        lnprob : numpy.ndarray or None
+            the value of the logprobability function at the given `point`
+            
+            - if `lnprob` is an array, it should be 1D and have length
+            `MetropolisHastingsSampler.num_walkers`
+            - if `lnprob` is None, the log probability is calculated by this
+            method.
+        random_state : tuple
+            (optional) the state of the random number generator. See
+            `MetropolisHastingsSampler.random_state`.
+        num_iterations : int
+            integer number of steps to run. defaults to 1
+        
+        Returns
+        -------
+        state_tuple : tuple
+            At each iteration, this generator yields
+            `state_tuple=(pos, lnprob, rstate)` where:
+            
+            - `pos` contains the current positions of the chain in the
+            parameter space in an array of the same shape as the `points`
+            parameter
+            - `lnprob`: the value of the log posterior at `pos`, stored in an
+            array of the same shape as the `lnprob` parameter
+            - `rstate` is the current state of the random number generator,
+            stored as a tuple
         """
         self.random_state = random_state
         point = np.array(point)
@@ -559,16 +696,29 @@ class MetropolisHastingsSampler(object):
     def run_mcmc(self, initial_position, num_iterations,\
         initial_random_state=None, initial_lnprob=None, **kwargs):
         """
-        Iterate sample function for specified number of iterations.
+        Iterates `MetropolisHastingsSampler.sample` for specified number of
+        iterations.
         
-        initial_position: initial position vector
-        num_iterations: number of steps to run
-        initial_lnprob: log posterior probability density at initial_position.
-                        If initial_lnprob is not provided, the initial value is
-                        calculated.
-        initial_random_state: state of the random number generator. See the
-                              random_state property for details.
-        kwargs: keyword arguments that are passed to the sample function
+        Parameters
+        ----------
+        initial_position : numpy.ndarray
+            the initial position vectors of the walkers as a 2D array of shape
+            `(MetropolisHastingsSampler.num_walkers,\
+            MetropolisHastingsSampler.num_parameters)`.
+        num_iterations : int
+            number of steps to run
+        initial_lnprob : numpy.ndarray or None
+            the value of the logprobability function at the given `point`
+            
+            - if `lnprob` is an array, it should be 1D and have length
+            `MetropolisHastingsSampler.num_walkers`
+            - if `lnprob` is None, the log probability is calculated by this
+            method.
+        initial_random_state : tuple
+            (optional) the state of the random number generator. See
+            `MetropolisHastingsSampler.random_state`.
+        kwargs : dict
+            keyword arguments that are passed to the sample function
         """
         for results in self.sample(initial_position, initial_lnprob,\
             initial_random_state, num_iterations=num_iterations, **kwargs):

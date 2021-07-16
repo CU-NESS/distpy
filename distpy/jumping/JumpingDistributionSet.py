@@ -1,26 +1,30 @@
 """
-File: distpy/jumping/JumpingDistributionSet.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing a container which can hold an arbitrary number of
+`distpy.jumping.JumpingDistribution.JumpingDistribution` objects, each of which
+can have any number of parameters which it describes (as long as the specific
+`distpy.jumping.JumpingDistribution.JumpingDistribution` supports that number
+of parameters). `distpy.jumping.JumpingDistribution.JumpingDistribution`
+objects can be added through `JumpingDistributionSet.add_distribution`. Once
+all the distributions are added, points can be drawn using the
+`JumpingDistributionSet.draw` method and the log value of the entire set of
+distributions can be evaluated at a given source and destination using the
+`JumpingDistributionSet.log_value` and
+`JumpingDistributionSet.log_value_difference` methods. See documentation of
+individual methods for further details. This class represents a dictionary- or
+set-like container of `distpy.jumping.JumpingDistribution.JumpingDistribution`
+objects; see `distpy.jumping.JumpingDistributionList.JumpingDistributionList`
+for a list-like container of
+`distpy.jumping.JumpingDistribution.JumpingDistribution` objects.
 
-Description: A container which can hold an arbitrary number of jumping
-             distributions, each of which can have any number of parameters
-             which it describes (as long as the specific distribution supports
-             that number of parameters). Distribution objects can be added
-             through
-             JumpingDistributionSet.add_distribution(distribution, params)
-             where distribution is a JumpingDistribution and params is a list
-             of the parameters to which distribution applies. Once all the
-             jumping distributions are added, points can be drawn using
-             JumpingDistributionSet.draw() and the log_value of the entire set
-             of jumping distributions can be evaluated at a point using
-             JumpingDistributionSet.log_value(point). See documentation of
-             individual functions for further details.
+**File**: $DISTPY/distpy/jumping/JumpingDistributionSet.py  
+**Author**: Keith Tauscher  
+**Date**: 3 Jul 2021
 """
 import numpy as np
 from ..util import Savable, Loadable, int_types, sequence_types, triangle_plot
 from ..transform import NullTransform, TransformList, TransformSet
 from .JumpingDistribution import JumpingDistribution
+from .JumpingDistributionList import JumpingDistributionList
 from .LoadJumpingDistribution import load_jumping_distribution_from_hdf5_group
 try:
     # this runs with no issues in python 2 but raises error in python 3
@@ -31,21 +35,46 @@ except:
 
 class JumpingDistributionSet(Savable, Loadable):
     """
-    An object which keeps track of many jumping distributions which can be
-    univariate or multivariate. It provides methods like log_value, which calls
-    log_value on all of its constituent jumping distributions, and draw, which
-    draws from all of its constituent jumping distributions.
+    A container which can hold an arbitrary number of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects, each of
+    which can have any number of parameters which it describes (as long as the
+    specific `distpy.jumping.JumpingDistribution.JumpingDistribution` supports
+    that number of parameters).
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects can be
+    added through `JumpingDistributionSet.add_distribution`. Once all the
+    distributions are added, points can be drawn using the
+    `JumpingDistributionSet.draw` method and the log value of the entire set of
+    distributions can be evaluated at a given source and destination using the
+    `JumpingDistributionSet.log_value` and
+    `JumpingDistributionSet.log_value_difference` methods. See documentation of
+    individual methods for further details. This class represents a dictionary-
+    or set-like container of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects; see
+    `distpy.jumping.JumpingDistributionList.JumpingDistributionList` for a
+    list-like container of
+    `distpy.jumping.JumpingDistribution.JumpingDistribution` objects.
     """
     def __init__(self, jumping_distribution_tuples=[]):
         """
-        Creates a new JumpingDistributionSet with the given distributions
+        Creates a new `JumpingDistributionSet` with the given distributions
         inside.
         
-        jumping_distribution_tuples: a list of lists/tuples of the form
-                                     (distribution, params) where distribution
-                                     is an instance of the JumpingDistribution
-                                     class and params is a list of parameters
-                                     (strings) which distribution describes
+        Parameters
+        ----------
+        jumping_distribution_tuples : sequence
+            a list of sequences of the form
+            `(distribution, params, transforms)` or `(distribution, params)`
+            where:
+            
+            - `distribution` is a
+            `distpy.jumping.JumpingDistribution.JumpingDistribution`object
+            - `params` is a list of string parameter names `distribution`
+            describes (or a single string if `distribution` is univariate)
+            - `transforms` (if given) is a
+            `distpy.transform.TransformList.TransformList` or something that
+            can be cast to one (can be a single
+            `distpy.transform.Transform.Transform` if `distribution` is
+            univariate)
         """
         self._data = []
         if type(jumping_distribution_tuples) in sequence_types:
@@ -69,16 +98,14 @@ class JumpingDistributionSet(Savable, Loadable):
     @property
     def empty(self):
         """
-        Finds whether this JumpingDistributionSet is empty.
-        
-        returns True if no distributions have been added, False otherwise
+        Boolean describing whether this `JumpingDistributionSet` is empty.
         """
         return (len(self._data) == 0)
     
     @property
     def params(self):
         """
-        Finds and returns the parameters which this JumpingDistributionSet
+        List of string names of parameters which this `JumpingDistributionSet`
         describes.
         """
         if not hasattr(self, '_params'):
@@ -88,8 +115,8 @@ class JumpingDistributionSet(Savable, Loadable):
     @property
     def discrete_params(self):
         """
-        Finds and returns the discrete parameters which this
-        JumpingDistributionSet describes.
+        List of string parameter names which are described by the discrete part
+        of this `JumpingDistributionSet`.
         """
         if not hasattr(self, '_discrete_params'):
             self._discrete_params = []
@@ -98,8 +125,8 @@ class JumpingDistributionSet(Savable, Loadable):
     @property
     def continuous_params(self):
         """
-        Finds and returns the continuous parameters which this
-        JumpingDistributionSet describes.
+        List of string parameter names which are described by the continuous
+        part of this `JumpingDistributionSet`.
         """
         if not hasattr(self, '_continuous_params'):
             self._continuous_params = []
@@ -108,30 +135,36 @@ class JumpingDistributionSet(Savable, Loadable):
     @property
     def numparams(self):
         """
-        Property storing the number of parameters in this
-        JumpingDistributionSet.
+        The integer number of parameters described by this
+        `JumpingDistributionSet`.
         """
         return len(self.params)
     
     def __len__(self):
         """
         Function allowing users to access the number of parameters described by
-        this DistributionSet using the len function and not explicitly
-        referencing the numparams property.
+        this `JumpingDistributionSet` by using the built-in `len` function and
+        not explicitly referencing `JumpingDistributionSet.numparams`.
         """
         return self.numparams
     
     def add_distribution(self, distribution, params, transforms=None):
         """
-        Adds a jumping_distribution and the parameters it describes to the
-        JumpingDistributionSet.
+        Adds a `distpy.jumping.JumpingDistribution.JumpingDistribution` and the
+        parameters it describes to the `JumpingDistributionSet`.
         
-        distribution: JumpingDistribution object describing the given
-                      parameters
-        params list of parameters described by the given distribution
-               (can be a single string if the distribution is univariate)
-        transforms list of transformations to apply to the parameters
-                   (can be a single string if the distribution is univariate)
+        Parameters
+        ----------
+        distribution : `distpy.jumping.JumpingDistribution.JumpingDistribution`
+            distribution describing how the given parameters jump
+        params : sequence
+            sequence of string names of the parameters described by
+            `distribution` (can be a single string if the `distribution` is
+            univariate)
+        transforms : `distpy.transform.TransformList.TransformList` or\
+        `distpy.transform.Transform.Transform` or sequence or None
+            list of transformations to apply to the parameters (can be a single
+            string if `distribution` is univariate)
         """
         if isinstance(distribution, JumpingDistribution):
             transforms = TransformList.cast(transforms,\
@@ -186,13 +219,20 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def __add__(self, other):
         """
-        Adds this JumpingDistributionSet to another.
+        Adds this `JumpingDistributionSet` to another by multiplying their PDFs
+        and assuming the parameters of `self` and `other` are independent.
+        Allows for use of the `+` operator on `JumpingDistributionSet` objects.
         
-        other: a JumpingDistributionSet object with parameters distinct from
-               the parameters of self
+        Parameters
+        ----------
+        other : `JumpingDistributionSet`
+            a `JumpingDistributionSet` with parameters distinct from the
+            parameters of `self`
         
-        returns: JumpingDistributionSet object which is the combination of the
-                 given JumpingDistributionSet objects
+        Returns
+        -------
+        combined : `JumpingDistributionSet`
+            combination of the given `JumpingDistributionSet` objects
         """
         if isinstance(other, JumpingDistributionSet):
             if set(self.params) & set(other.params):
@@ -207,10 +247,21 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def __iadd__(self, other):
         """
-        Adds all distributions from other to this JumpingDistributionSet.
+        Adds all distributions from `other` to this `JumpingDistributionSet`.
+        Allows for use of the `+=` operator with `JumpingDistributionSet`
+        objects.
         
-        other: JumpingDistributionSet object with parameters distinct from the
-               parameters of self
+        Parameters
+        ----------
+        other : `JumpingDistributionSet`
+            `JumpingDistributionSet` with parameters distinct from the
+            parameters of `self`
+        
+        Returns
+        -------
+        self : `JumpingDistributionSet`
+            this object with its state changed to include distributions from
+            `other`
         """
         if isinstance(other, JumpingDistributionSet):
             for distribution_tuple in other._data:
@@ -225,7 +276,10 @@ class JumpingDistributionSet(Savable, Loadable):
         Modifies the names of the parameters in this distribution by applying
         the given function to each one.
         
-        function: function to apply to each parameter name
+        Parameters
+        ----------
+        function : Callable
+            function to apply to each parameter name
         """
         self._params = list(map(function, self.params))
         self._discrete_params = list(map(function, self.discrete_params))
@@ -235,13 +289,25 @@ class JumpingDistributionSet(Savable, Loadable):
 
     def draw(self, source, shape=None, random=np.random):
         """
-        Draws a point from all distributions.
+        Draws a destination from all distributions given the source.
         
-        source: dictionary with parameters as keys and source parameters as
-                values
-        shape: shape of arrays which are values of return value
+        Parameters
+        ----------
+        source : dict
+            dictionary with parameters as keys and source parameters as values
+        shape : tuple or int or None
+            - if `shape` is None, the values of the returned destination
+            dictionary are numbers
+            - if `shape` is an int, the values of the returned destination
+            dictionary are 1D arrays of length `shape`
+            - if `shape` is a tuple, the values of the returned destination
+            dictionary are arrays of shape `shape`
         
-        returns a dictionary of random values indexed by parameter name
+        Returns
+        -------
+        destination : dict
+            dictionary of random values indexed by parameter name. The shape of
+            the values of the dictionary are determined by `shape`
         """
         point = {}
         for (distribution, params, transforms) in self._data:
@@ -268,13 +334,30 @@ class JumpingDistributionSet(Savable, Loadable):
     def log_value(self, source, destination):
         """
         Evaluates the log of the product of the values of the distributions
-        contained in this JumpingDistributionSet from source to destination.
+        contained in this `JumpingDistributionSet` from `source` to
+        `destination`.
         
-        source, destination: should be dictionaries of values indexed by the
-                             parameter names
+        Parameters
+        ----------
+        source : dict
+            dictionary with parameters as keys and source parameters as values
+        destination : dict
+            dictionary with parameters as keys and destination parameters as
+            values
         
-        returns: the total log_value coming from contributions from all
-                 distributions
+        Returns
+        -------
+        total_log_value : float
+            the total `log_value` coming from contributions from all
+            distributions. If `source` is
+            \\(\\begin{bmatrix} \\boldsymbol{x}_1 \\\\ \\boldsymbol{x}_2 \\\\\
+            \\vdots \\\\ \\boldsymbol{x}_N \\end{bmatrix}\\) and `destination`
+            is \\(\\begin{bmatrix} \\boldsymbol{y}_1 \\\\\
+            \\boldsymbol{y}_2 \\\\ \\vdots \\\\ \\boldsymbol{y}_N\
+            \\end{bmatrix}\\), then `total_log_value` is
+            \\(\\sum_{k=1}^N\\ln{g_k(\\boldsymbol{x}_k,\\boldsymbol{y}_k)}\\),
+            where \\(g_k\\) is the PDF of the \\(k^{\\text{th}}\\) parameter
+            chunk.
         """
         if isinstance(source, dict) and isinstance(destination, dict):
             result = 0.
@@ -304,14 +387,31 @@ class JumpingDistributionSet(Savable, Loadable):
 
     def log_value_difference(self, source, destination):
         """
-        Evaluates the log of the product of the values of the distributions
-        contained in this JumpingDistributionSet from source to destination.
+        Evaluates the log of the product of the ratios of the distributions
+        contained in this `JumpingDistributionSet` from source to destination.
         
-        source, destination: should be dictionaries of values indexed by the
-                             parameter names
+        Parameters
+        ----------
+        source : dict
+            dictionary with parameters as keys and source parameters as values
+        destination : dict
+            dictionary with parameters as keys and destination parameters as
+            values
         
-        returns: the total log_value coming from contributions from all
-                 distributions
+        Returns
+        -------
+        total_log_value_difference : float
+            the total `log_value` coming from contributions from all
+            distributions. If `source` is
+            \\(\\begin{bmatrix} \\boldsymbol{x}_1 \\\\ \\boldsymbol{x}_2 \\\\\
+            \\vdots \\\\ \\boldsymbol{x}_N \\end{bmatrix}\\) and `destination`
+            is \\(\\begin{bmatrix} \\boldsymbol{y}_1 \\\\\
+            \\boldsymbol{y}_2 \\\\ \\vdots \\\\ \\boldsymbol{y}_N\
+            \\end{bmatrix}\\), then `total_log_value_difference` is
+            \\(\\sum_{k=1}^N\\left[\\ln{g_k(\\boldsymbol{x}_k,\
+            \\boldsymbol{y}_k)}-\\ln{g_k(\\boldsymbol{y}_k,\
+            \\boldsymbol{x}_k)}\\right]\\), where \\(g_k\\) is the PDF of the
+            \\(k^{\\text{th}}\\) parameter chunk.
         """
         if isinstance(source, dict) and isinstance(destination, dict):
             result = 0.
@@ -342,9 +442,26 @@ class JumpingDistributionSet(Savable, Loadable):
         """
         Finds the distribution associated with the given parameter. Also finds
         the index of the parameter in that distribution and the transformation
-        applied to the parameter.
+        applied to the parameter. Throws a `ValueError` if `parameter` is not
+        described by this `JumpingDistributionSet`.
         
-        parameter string name of parameter
+        Parameters
+        ----------
+        parameter : str
+            string name of parameter to search for
+        
+        Returns
+        -------
+        result : tuple
+            a tuple of the form `(distribution, index, transform)`, where:
+            
+            - `distribution` is the
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` that
+            applies to the given parameter
+            - `index` is the parameter index of the `parameter` in
+            `distribution`
+            - `transform` is the `distpy.transform.Transform.Transform` object
+            that applies to the given parameter
         """
         for (jumping_distribution, params, transforms) in self._data:
             for (iparam, param) in enumerate(params):
@@ -355,17 +472,46 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def __getitem__(self, parameter):
         """
-        Returns the same thing as: self.find_distribution(parameter)
+        Finds the distribution associated with the given parameter. Also finds
+        the index of the parameter in that distribution and the transformation
+        applied to the parameter. Throws a `ValueError` if `parameter` is not
+        described by this `JumpingDistributionSet`. Alias for
+        `JumpingDistributionSet.find_distribution` that allows for square
+        bracket indexing of `JumpingDistributionSet` objects
+        
+        Parameters
+        ----------
+        parameter : str
+            string name of parameter to search for
+        
+        Returns
+        -------
+        result : tuple
+            a tuple of the form `(distribution, index, transform)`, where:
+            
+            - `distribution` is the
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` that
+            applies to the given parameter
+            - `index` is the parameter index of the `parameter` in
+            `distribution`
+            - `transform` is the `distpy.transform.Transform.Transform` object
+            that applies to the given parameter
         """
         return self.find_distribution(parameter)
     
     def delete_distribution(self, parameter, throw_error=True):
         """
-        Deletes a distribution from this JumpingDistributionSet.
+        Deletes a distribution from this `JumpingDistributionSet`.
         
-        parameter: a parameter in the distribution
-        throw_error: if True (default), an error is thrown if the parameter
-                     is not found
+        Parameters
+        ----------
+        parameter : str
+            any parameter in the distribution to delete
+        throw_error : bool
+            - if `throw_error` is True (default), an error is thrown if
+            `parameter` is not found
+            - if `throw_error` is False, this method does nothing if
+            `parameter` is not found
         """
         for (idistribution, distribution_tuple) in enumerate(self._data):
             (distribution, params, transforms) = distribution_tuple
@@ -390,16 +536,33 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def __delitem__(self, parameter):
         """
-        Deletes the distribution associated with the given parameter. For
-        documentation, see delete_distribution function.
+        Deletes a distribution from this `JumpingDistributionSet`. Alias for
+        `JumpingDistributionSet.delete_distribution` with `throw_error=True`
+        that allows for the use of the `del` keyword with
+        `JumpingDistributionSet` objects
+        
+        Parameters
+        ----------
+        parameter : str
+            any parameter in the distribution to delete
         """
         self.delete_distribution(parameter, throw_error=True)
     
     def __eq__(self, other):
         """
-        Checks for equality of this JumpingDistributionSet with other. Returns
-        True if other has the same distribution_tuples (though they need not
-        be internally stored in the same order) and False otherwise.
+        Checks for equality of this `JumpingDistributionSet` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
+        
+        Returns
+        -------
+        result : bool
+            True if and only if other is another `JumpingDistributionSet` that
+            has the same distribution tuples (though they need not be
+            internally stored in the same order).
         """
         def distribution_tuples_equal(first, second):
             #
@@ -440,29 +603,21 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def __ne__(self, other):
         """
-        This function simply asserts that (a != b) == (not (a == b))
+        Checks for inequality of this `JumpingDistributionSet` with `other`.
+        
+        Parameters
+        ----------
+        other : object
+            object with which to check for inequality
+        
+        Returns
+        -------
+        result : bool
+            False if and only if other is another `JumpingDistributionSet` that
+            has the same distribution tuples (though they need not be
+            internally stored in the same order).
         """
         return (not self.__eq__(other))
-    
-    def _numerical_adjective(self, num):
-        #
-        # Creates a numerical adjective, such as '1st', '2nd', '6th' and so on.
-        #
-        if (type(num) in int_types) and (num >= 0):
-            base_string = str(num)
-            if num == 0:
-                return '0th'
-            elif num == 1:
-                return '1st'
-            elif num == 2:
-                return '2nd'
-            elif num == 3:
-                return '3rd'
-            else:
-                return str(num) + 'th'
-        else:
-            raise ValueError("Numerical adjectives apply only to " +\
-                "non-negative integers.")
     
     def _check_name(self, name):
         #
@@ -484,8 +639,8 @@ class JumpingDistributionSet(Savable, Loadable):
     @property
     def transform_set(self):
         """
-        Property storing the TransformSet object describing the transforms in
-        this DistributionSet.
+        The `distpy.transform.TransformSet.TransformSet` object describing the
+        transformations of the parameters in this `JumpingDistributionSet`.
         """
         if not hasattr(self, '_transform_set'):
             transforms_dictionary = {}
@@ -497,13 +652,16 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def discrete_subset(self):
         """
-        Function which compiles a subset of the JumpingDistribution objects
-        in this JumpingDistributionSet: those that represent discrete
-        variables.
+        Function which compiles a subset of the
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+        this `JumpingDistributionSet`: those that represent discrete variables.
         
-        returns: a JumpingDistributionSet object containing all
-                 JumpingDistribution objects in this JumpingDistributionSet
-                 which describe discrete variables
+        Returns
+        -------
+        subset : `JumpingDistributionSet`
+            distribution containing all
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+            this `JumpingDistributionSet` which describe discrete variables
         """
         answer = JumpingDistributionSet()
         for (distribution, params, transforms) in self._data:
@@ -513,12 +671,17 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def continuous_subset(self):
         """
-        Function which compiles a subset of the JumpingDistribution objects in
-        this JumpingDistributionSet: those that represent continuous variables.
+        Function which compiles a subset of the
+        `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+        this `JumpingDistributionSet`: those that represent continuous
+        variables.
         
-        returns: a JumpingDistributionSet object containing all
-                 JumpingDistribution objects in this JumpingDistributionSet
-                 which describe continuous variables
+        Returns
+        -------
+        subset : `JumpingDistributionSet`
+            distribution containing all
+            `distpy.jumping.JumpingDistribution.JumpingDistribution` objects in
+            this `JumpingDistributionSet` which describe continuous variables
         """
         answer = JumpingDistributionSet()
         for (distribution, params, transforms) in self._data:
@@ -528,15 +691,22 @@ class JumpingDistributionSet(Savable, Loadable):
     
     def jumping_distribution_list(self, parameters):
         """
-        Creates a DistributionList out of this DistributionSet by ordering it
-        in the same way as the given parameters.
+        Creates a
+        `distpy.jumping.JumpingDistributionList.JumpingDistributionList` out of
+        this `JumpingDistributionSet` by ordering it in the same way as the
+        given parameters.
         
-        parameters: the parameters whose distribution should be put into the
-                    list, including order. May oy may not contain all of this
-                    DistributionSet object's parameters
+        Parameters
+        ----------
+        parameters : sequence
+            the string names of the parameters whose distribution should be put
+            into the list, including order. May oy may not contain all of this
+            `JumpingDistributionSet` object's parameters
         
-        returns: DistributionList object containing the distribution of the
-                 given parameters
+        Returns
+        -------
+        list_form : `distpy.jumping.JumpingDistributionList.JumpingDistributionList`
+            object containing the distribution of the given parameters
         """
         to_list = [parameter for parameter in parameters]
         distribution_order = []
@@ -576,10 +746,13 @@ class JumpingDistributionSet(Savable, Loadable):
     def fill_hdf5_group(self, group):
         """
         Fills the given hdf5 file group with data about this
-        JumpingDistributionSet. Each distribution tuple is saved as a subgroup
-        in the hdf5 file.
+        `JumpingDistributionSet`. Each distribution tuple is saved as a
+        subgroup in the hdf5 file.
         
-        group: the hdf5 file group to fill
+        Parameters
+        ----------
+        group : h5py.Group
+            the hdf5 file group to fill
         """
         for (ituple, distribution_tuple) in enumerate(self._data):
             (distribution, params, transforms) = distribution_tuple
@@ -592,11 +765,17 @@ class JumpingDistributionSet(Savable, Loadable):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a JumpingDistributionSet from the given hdf5 file group.
+        Loads a `JumpingDistributionSet` from the given hdf5 file group.
         
-        group: the group from which to load a JumpingDistributionSet
+        Parameters
+        ----------
+        group : h5py.Group
+            the group from which to load a `JumpingDistributionSet`
         
-        returns: a JumpingDistributionSet object derived from the given group
+        Returns
+        -------
+        returns : `JumpingDistributionSet`
+            a `JumpingDistributionSet` object loaded from the given group
         """
         ituple = 0
         jumping_distribution_tuples = []
@@ -625,45 +804,87 @@ class JumpingDistributionSet(Savable, Loadable):
         """
         Makes a triangle plot out of ndraw samples from this distribution.
         
-        source: dictionary with parameters as keys and source parameters as
-                values
-        ndraw: integer number of samples to draw to plot in the triangle plot
-        parameters: sequence of string parameter names to include in the plot
-        figsize: the size of the figure on which to put the triangle plot
-        show: if True, matplotlib.pyplot.show is called before this function
-                       returns
-        kwargs_1D: keyword arguments to pass on to univariate_histogram
-                   function
-        kwargs_2D: keyword arguments to pass on to bivariate_histogram function
-        fontsize: the size of the label fonts
-        nbins: the number of bins for each sample
-        plot_type: 'contourf', 'contour', or 'histogram'
-        plot_limits: if not None, a dictionary whose keys are parameter names
-                                  and whose values are 2-tuples of the form
-                                  (low, high) representing the desired axis
-                                  limits for each variable in untransformed
-                                  space
-                     if None (default), bins are used to decide plot limits
-        reference_value_mean: reference values to place on plots, if there are
-                              any
-        reference_value_covariance: if not None, used (along with
-                                    reference_value_mean) to plot reference
-                                    ellipses in each bivariate histogram
-        contour_confidence_levels: the confidence level of the contour in the
-                                   bivariate histograms. Only used if plot_type
-                                   is 'contour' or 'contourf'. Can be single
-                                   number or sequence of numbers
-        tick_label_format_string: format string that can be called using
-                                  tick_label_format_string.format(x=loc) where
-                                  loc is the location of the tick in data
-                                  coordinates
-        num_ticks: integer number of ticks per panel
-        minor_ticks_per_major_tick: integer number of minor ticks per major
-                                    tick
-        xlabel_rotation: rotation of x-label in degrees, default: 0
-        xlabelpad: pad size for xlabel, default: None
-        ylabel_rotation: rotation of y-label in degrees, default: 90
-        ylabelpad: pad size for ylabel, default: None
+        Parameters
+        ----------
+        source : dict
+            dictionary with parameters as keys and source parameters as values
+        ndraw : int
+            the integer number of samples to draw to plot in the triangle plot
+        parameters : sequence
+            sequence of string parameter names to include in the plot
+        figsize : tuple
+            tuple of form (width, height) representing the size of the figure
+            on which to put the triangle plot
+        fig : `matplotlib.Figure` or None
+            - if provided, `fig` will be plotted on
+            - otherwise, a new `matplotlib.Figure` is created
+        show : bool
+            if True, `matplotlib.pyplot.show` is called before this function
+            returns
+        kwargs_1D : dict
+            keyword arguments to pass on to
+            `distpy.util.TrianglePlot.univariate_histogram` function
+        kwargs_2D : dict
+            keyword arguments to pass on to
+            `distpy.util.TrianglePlot.bivariate_histogram` function
+        fontsize : int, str, or None
+            integer size in points or one of ['xx-small', 'x-small', 'small',
+            'medium', 'large', 'x-large', 'xx-large'] representing size of
+            labels
+        nbins : int
+            the number of bins to use for each sample
+        plot_type : str or sequence
+            determines the matplotlib functions to use for univariate and
+            bivariate histograms
+            
+            - if `plot_type=='contourf'`: 'bar' and 'contourf' are used
+            - if `plot_type=='contour'`: 'plot' and 'contour' are used
+            - if `plot_type=='histogram'`: 'bar' and 'imshow' are used
+            - otherwise: plot_type should be a length-2 sequence of the form
+            (matplotlib_function_1D, matplotlib_function_2D)
+        plot_limits : sequence or None
+            - if None, bins are used to decide plot limits  
+            - otherwise, a sequence of 2-tuples of the form (low, high)
+            representing the desired axis limits for each variable
+        reference_value_mean : sequence or None
+            sequence of reference values to place on plots. Each element of the
+            sequence (representing each random variable) can be either a number
+            at which to plot a reference line or None if no line should be
+            plotted. Alternatively, if `reference_value_mean` is set to None,
+            no reference lines are plotted for any variable
+        reference_value_covariance : numpy.ndarray or None
+            covariance with which to create reference ellipses around
+            `reference_value_mean`. Should be an NxN array where N is the
+            number of random variables. If any of `reference_value_mean` are
+            None or `reference_value_covariance` is None, then no ellipses are
+            plotted
+        contour_confidence_levels : number or sequence of numbers
+            confidence level as a number between 0 and 1 or a 1D array of such
+            numbers. Only used if `matplotlib_function` is `'contour'` or
+            `'contourf'` or if `reference_value_mean` and
+            `reference_value_covariance` are both not None
+        tick_label_format_string : str
+            format string that can be called using
+            `tick_label_format_string.format(x=loc)` where `loc` is the
+            location of the tick in data coordinates
+        num_ticks : int
+            number of major ticks in each panel
+        minor_ticks_per_major_tick : int
+            number of minor ticks per major tick in each panel
+        xlabel_rotation : number
+            rotation of x-label in degrees
+        xlabelpad : number or None
+            pad size for xlabel or None if none should be used
+        ylabel_rotation : number
+            rotation of y-label in degrees
+        ylabelpad : number or None
+            pad size for ylabel or None if none should be used
+    
+        Returns
+        -------
+        figure : matplotlib.Figure or None
+            - if `show` is True, None is returned  
+            - otherwise, the matplotlib.Figure instance plotted on is returned
         """
         samples = self.draw(source, ndraw)
         if type(parameters) is type(None):

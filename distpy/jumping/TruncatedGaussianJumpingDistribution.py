@@ -1,10 +1,11 @@
 """
-File: distpy/jumping/GaussianJumpingDistribution.py
-Author: Keith Tauscher
-Date: 12 Feb 2018
+Module containing class representing a univariate jumping distribution whose
+translation is Gaussian distributed with the extra condition that the
+destination cannot fall outside a given range.
 
-Description: File containing a jumping distribution which is Gaussian centered
-             on the source point with a given covariance.
+**File**: $DISTPY/distpy/jumping/TruncatedGaussianJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 11 Jul 2021
 """
 import numpy as np
 import numpy.linalg as la
@@ -14,16 +15,27 @@ from .JumpingDistribution import JumpingDistribution
 
 class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     """
-    Class representing a jumping distribution which is centered on the source
-    point and has the given covariance.
+    Class representing a univariate jumping distribution whose translation is
+    Gaussian distributed with the extra condition that the destination cannot
+    fall outside a given range.
     """
     def __init__(self, variance, low=None, high=None):
         """
-        Initializes a TruncatedGaussianJumpingDistribution with the given
-        variance.
+        Initializes a `TruncatedGaussianJumpingDistribution` with the given
+        variance and endpoints.
         
-        variance: a single number representing the variance of the
-                  non-truncated Gaussian
+        Parameters
+        ----------
+        variance : float
+            a single number representing the variance of the non-truncated
+            Gaussian
+        low : float or None
+            - if None, the variate can be an arbitrarily large negative number
+            - if float, gives the lowest possible value of the variate
+        high : float or None
+            - if None, the variate can be an arbitrarily large positive number
+            - if float, gives the highest possible value of the variate and
+            must be larger than low
         """
         self.variance = variance
         self.low = low
@@ -32,8 +44,7 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @property
     def low(self):
         """
-        Property storing the low endpoint of this truncated Gaussian. If none
-        exists, it is -np.inf
+        The low endpoint of this truncated Gaussian. Can be -inf
         """
         if not hasattr(self, '_low'):
             raise AttributeError("low referenced before it was set.")
@@ -42,9 +53,13 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @low.setter
     def low(self, value):
         """
-        Setter for the low endpoint of this truncated Gaussian.
+        Setter for `TruncatedGaussianJumpingDistribution.low`.
         
-        value: either None (if there is no low endpoint) or a real number
+        Parameters
+        ----------
+        value : float or None
+            - if None, the variate can be an arbitrarily large negative number
+            - if float, gives the lowest possible value of the variate
         """
         if type(value) is type(None):
             self._low = -np.inf
@@ -56,8 +71,7 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @property
     def high(self):
         """
-        Property storing the high endpoint of this truncated Gaussian. If none
-        exists, it is +np.inf
+        The low endpoint of this truncated Gaussian. Can be +inf
         """
         if not hasattr(self, '_high'):
             raise AttributeError("high referenced before it was set.")
@@ -66,10 +80,13 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @high.setter
     def high(self, value):
         """
-        Setter for the high endpoint of this truncated Gaussian.
+        Setter for `TruncatedGaussianJumpingDistribution.high`.
         
-        value: either None (if there is no high endpoint) or a real number
-               larger than low
+        Parameters
+        ----------
+        value : float or None
+            - if None, the variate can be an arbitrarily large positive number
+            - if float, gives the highest possible value of the variate
         """
         if type(value) is type(None):
             self._high = np.inf
@@ -84,7 +101,7 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @property
     def variance(self):
         """
-        Property storing the variance of the non-truncated Gaussian.
+        The variance, \\(\\sigma^2\\), of the non-truncated Gaussian.
         """
         if not hasattr(self, '_variance'):
             raise AttributeError("variance referenced before it was set.")
@@ -93,10 +110,12 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @variance.setter
     def variance(self, value):
         """
-        Sets the variance of this TruncatedGaussianJumpingDistribution
+        Setter for `TruncatedGaussianJumpingDistribution.variance`.
         
-        value: either a single number (if this GaussianJumpingDistribution
-               should be 1D) or a square 2D array
+        Parameters
+        ----------
+        value : float
+            a positive number
         """
         if type(value) in numerical_types:
             self._variance = value
@@ -106,6 +125,7 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @property
     def root_twice_variance(self):
         """
+        The square root of twice the variance, \\(\\sqrt{2}\\sigma\\).
         """
         if not hasattr(self, '_root_twice_variance'):
             self._root_twice_variance = np.sqrt(2 * self.variance)
@@ -113,11 +133,19 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     
     def left_erf(self, source):
         """
-        Computes erf(low-source/root_twice_variance)
+        Computes the relevant error function evaluated at `source`
         
-        source: the mean of the truncated Gaussian
+        Parameters
+        ----------
+        source : float
+            the mean of the truncated Gaussian
         
-        returns: a single number
+        Returns
+        -------
+        left_erf_value : float
+            if `TruncatedGaussianJumpingDistribution.low` is \\(l\\), `source`
+            is \\(\\mu\\), and variance \\(\\sigma^2\\), then `left_erf_value`
+            is \\(\\text{erf}\\left(\\frac{l-\\mu}{\\sqrt{2}\\sigma}\\right)\\)
         """
         if self.low == -np.inf:
             return (-1.)
@@ -126,11 +154,19 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     
     def right_erf(self, source):
         """
-        Computes erf(high-source/root_twice_variance)
+        Computes the relevant error function evaluated at `source`
         
-        source: the mean of the truncated Gaussian
+        Parameters
+        ----------
+        source : float
+            the mean of the truncated Gaussian
         
-        returns: a single number
+        Returns
+        -------
+        right_erf_value : float
+            if `TruncatedGaussianJumpingDistribution.high` is \\(h\\), `source`
+            is \\(\\mu\\), and variance \\(\\sigma^2\\), then `left_erf_value`
+            is \\(\\text{erf}\\left(\\frac{h-\\mu}{\\sqrt{2}\\sigma}\\right)\\)
         """
         if self.high == np.inf:
             return 1.
@@ -139,17 +175,31 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     
     def erf_difference(self, source):
         """
-        Computes right_erf(source)-left_erf(source)
+        Computes the difference of the two error function values.
+        right_erf(source)-left_erf(source)
         
-        source: the mean of the truncated Gaussian
+        Parameters
+        ----------
+        source : float
+            the mean of the truncated Gaussian
         
-        returns: a single number between 0 (exclusive) and 2 (inclusive)
+        Returns
+        -------
+        erf_difference_value : float
+            if `TruncatedGaussianJumpingDistribution.high` is \\(h\\),
+            `TruncatedGaussianJumpingDistribution.low` is \\(l\\), `source` is
+            \\(\\mu\\), and variance \\(\\sigma^2\\), then
+            `erf_value_difference` is
+            \\(\\text{erf}\\left(\\frac{h-\\mu}{\\sqrt{2}\\sigma}\\right)-\
+            \\text{erf}\\left(\\frac{l-\\mu}{\\sqrt{2}\\sigma}\\right)\\)
         """
         return (self.right_erf(source) - self.left_erf(source))
     
     @property
     def constant_in_log_value(self):
         """
+        A constant in the log value which is independent of both the source and
+        the destination.
         """
         if not hasattr(self, '_constant_in_log_value'):
             self._constant_in_log_value =\
@@ -161,19 +211,25 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
         Draws a destination point from this jumping distribution given a source
         point.
         
-        source: if this JumpingDistribution is univariate, source should be a
-                                                           single number
-                otherwise, source should be numpy.ndarray of shape (numparams,)
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : float
+            source point
+        shape : None or int or tuple
+            - if None, a single destination is returned as a single number
+            - if int \\(n\\), \\(n\\) destinations are returned as a 1D
+            `numpy.ndarray` of length \\(n\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned as a
+            `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k)\\)
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        drawn : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         uniforms = random.uniform(size=shape)
         erfinv_argument = ((uniforms * self.right_erf(source)) +\
@@ -182,13 +238,21 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : float
+            source point
+        destination : float
+            destination point
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(x,y)=\\text{Pr}[y|x]\\), `source` is
+            \\(x\\) and `destination` is \\(y\\), then `log_pdf` is given by
+            \\(\\ln{f(x,y)}\\)
         """
         difference = (destination - source)
         return (self.constant_in_log_value +\
@@ -197,13 +261,24 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     
     def log_value_difference(self, source, destination):
         """
-        Computes the log-PDF difference:
-        ln(f(source->destination)/f(destination->source))
+        Computes the difference in the log-PDF of jumping from `source` to
+        `destination` and of jumping from `destination` to `source`. While this
+        method has a default version, overriding it may provide an efficiency
+        benefit.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : float
+            source point
+        destination : float
+            destination point
         
-        returns: single number difference between one-way log-PDF's
+        Returns
+        -------
+        log_pdf_difference : float
+            if the distribution is \\(f(x,y)=\\text{Pr}[y|x]\\), `source` is
+            \\(x\\) and `destination` is \\(y\\), then `log_pdf_difference` is
+            given by \\(\\ln{f(x,y)}-\\ln{f(y,x)}\\)
         """
         return np.log(\
             self.erf_difference(destination) / self.erf_difference(source))
@@ -211,20 +286,17 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. Since the truncated Gaussian is only easily analytically
-        sampled in the case of 1 parameter, these Truncated Gaussians only
-        allow 1 parameter.
+        The integer number of parameters described by this distribution. Since
+        the truncated Gaussian is only easily analytically sampled in the case
+        of 1 parameter, `TruncatedGaussianJumpingDistribution` only allows one
+        parameter.
         """
         return 1
     
     @property
     def standard_deviation(self):
         """
-        Property storing the square root of the variance (in the case that
-        numparams == 1). If this Gaussian is multivariate, referencing this
-        property will throw a NotImplementedError because the standard
-        deviation is not well defined in this case.
+        The square root of the variance.
         """
         if not hasattr(self, '_standard_deviation'):
             self._standard_deviation = np.sqrt(self.variance)
@@ -232,12 +304,22 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Tests for equality between this `TruncatedGaussianJumpingDistribution`
+        and `other`.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if object is another
+            `TruncatedGaussianJumpingDistribution` with the same
+            `TruncatedGaussianJumpingDistribution.variance`,
+            `TruncatedGaussianJumpingDistribution.low`, and
+            `TruncatedGaussianJumpingDistribution.high`
         """
         if isinstance(other, TruncatedGaussianJumpingDistribution):
             if self.numparams == other.numparams:
@@ -254,18 +336,20 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Boolean describing whether this `TruncatedGaussianJumpingDistribution`
+        describes discrete (True) or continuous (False) variable(s). Since
+        Gaussian distributions are continuous, this is always False.
         """
         return False
     
     def fill_hdf5_group(self, group):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        fact that this is a GaussianJumpingDistribution is saved along with the
-        mean and covariance.
+        Fills the given hdf5 file group with data from this distribution.
         
-        group: hdf5 file group to fill
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this distribution
         """
         group.attrs['class'] = 'TruncatedGaussianJumpingDistribution'
         group.attrs['variance'] = self.variance
@@ -277,14 +361,20 @@ class TruncatedGaussianJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a TruncatedGaussianJumpingDistribution from the given hdf5 file
+        Loads a `TruncatedGaussianJumpingDistribution` from the given hdf5 file
         group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this TruncatedGaussianJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `TruncatedGaussianJumpingDistribution.fill_hdf5_group` was called
+            on
         
-        returns: a TruncatedGaussianJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `TruncatedGaussianJumpingDistribution`
+            distribution loaded from information in the given group
         """
         try:
             assert\

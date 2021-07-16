@@ -1,11 +1,23 @@
 """
-File: distpy/jumping/SourceDependentGaussianJumpingDistribution.py
-Author: Keith Tauscher
-Date: 6 Oct 2018
+Module containing class representing a jumping distribution whose translation
+is Gaussian distributed with a covariance depending on the source. Its PDF is
+given by $$f(\\boldsymbol{x},\\boldsymbol{y})=\
+\\left|2\\pi\\boldsymbol{\\Sigma}(\\boldsymbol{x})\\right|^{-1/2}\
+\\exp{\\left\\{-\\frac{1}{2}(\\boldsymbol{y}-\\boldsymbol{x})^T\
+\\left[\\boldsymbol{\\Sigma}(\\boldsymbol{x})\\right]^{-1}\
+(\\boldsymbol{y}-\\boldsymbol{x})\\right\\}},$$ where
+\\(\\boldsymbol{\\Sigma}(\\boldsymbol{x})\\) is determined from a set of points
+\\(\\boldsymbol{z}_k\\) and associated covariances
+\\(\\boldsymbol{\\Lambda}_k\\). In particular,
+\\(\\boldsymbol{\\Sigma}(\\boldsymbol{x})=\\boldsymbol{\\Lambda}_{\\kappa}\\),
+where \\(\\kappa=\\underset{k}{\\text{argmin}}\\left\\{\
+(\\boldsymbol{x}-\\boldsymbol{z}_k)^T\
+\\left[\\boldsymbol{\\Lambda}_k\\right]^{-1}\
+(\\boldsymbol{x}-\\boldsymbol{z}_k)\\right\\}\\).
 
-Description: File containing a jumping distribution which is Gaussian centered
-             on the source point with one of multiple covariances dependending
-             on the source.
+**File**: $DISTPY/distpy/jumping/TruncatedGaussianJumpingDistribution.py  
+**Author**: Keith Tauscher  
+**Date**: 11 Jul 2021
 """
 import numpy as np
 import numpy.linalg as npla
@@ -15,21 +27,38 @@ from .JumpingDistribution import JumpingDistribution
 
 class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     """
-    Class representing a jumping distribution which is Gaussian centered on
-    on the source point with one of multiple covariances dependending on the
-    source.
+    Class representing a jumping distribution whose translation is Gaussian
+    distributed with a covariance depending on the source. Its PDF is given by
+    $$f(\\boldsymbol{x},\\boldsymbol{y})=\
+    \\left|2\\pi\\boldsymbol{\\Sigma}(\\boldsymbol{x})\\right|^{-1/2}\
+    \\exp{\\left\\{-\\frac{1}{2}(\\boldsymbol{y}-\\boldsymbol{x})^T\
+    \\left[\\boldsymbol{\\Sigma}(\\boldsymbol{x})\\right]^{-1}\
+    (\\boldsymbol{y}-\\boldsymbol{x})\\right\\}},$$ where
+    \\(\\boldsymbol{\\Sigma}(\\boldsymbol{x})\\) is determined from a set of
+    points \\(\\boldsymbol{z}_k\\) and associated covariances
+    \\(\\boldsymbol{\\Lambda}_k\\). In particular,
+    \\(\\boldsymbol{\\Sigma}(\\boldsymbol{x})=\
+    \\boldsymbol{\\Lambda}_{\\kappa}\\),
+    where \\(\\kappa=\\underset{k}{\\text{argmin}}\\left\\{\
+    (\\boldsymbol{x}-\\boldsymbol{z}_k)^T\
+    \\left[\\boldsymbol{\\Lambda}_k\\right]^{-1}\
+    (\\boldsymbol{x}-\\boldsymbol{z}_k)\\right\\}\\).
     """
     def __init__(self, points, covariances):
         """
-        Initializes a SourceDependentGaussianJumpingDistribution with the given
-        points and covariance matrices.
+        Initializes a `SourceDependentGaussianJumpingDistribution` with the
+        given points and covariance matrices.
         
-        points: sequence of either single numbers (if this should be a 1D
-                Gaussian) or a vectors of length numparams (if this should be
-                a multivariate Gaussian)
-        covariances: sequence of either single numbers (if this should be a 1D
-                    Gaussian) or square 2D arrays (if this should be a
-                    multivariate Gaussian)
+        Parameters
+        ----------
+        points : sequence
+            sequence of either single numbers (if this should be a 1D Gaussian)
+            or arrays of length numparams (if this should be a multivariate
+            Gaussian), representing \\(\\boldsymbol{z}_k\\)
+        covariances : sequence
+            sequence of either single numbers (if this should be a 1D Gaussian)
+            or square 2D arrays (if this should be a multivariate Gaussian),
+            representing \\(\\boldsymbol{\\Sigma}_k\\)
         """
         self.points = points
         self.covariances = covariances
@@ -37,8 +66,8 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def points(self):
         """
-        Property storing the points which define the centers of the different
-        covariance regions.
+        The points, \\(\\boldsymbol{z}_k\\), which define the centers of the
+        different covariance regions.
         """
         if not hasattr(self, '_points'):
             raise AttributeError("points was referenced before it was set.")
@@ -47,11 +76,14 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @points.setter
     def points(self, value):
         """
-        Setter for the points which define the centers of different covariance
-        regions.
+        Setter for `SourceDependentGaussianJumpingDistribution.points`.
         
-        value: sequence of either single numbers (if univariate) or 1D arrays
-               (if multivariate)
+        Parameters
+        ----------
+        value : sequence
+            sequence of either single numbers (if this should be a 1D Gaussian)
+            or arrays of length numparams (if this should be a multivariate
+            Gaussian), representing \\(\\boldsymbol{z}_k\\)
         """
         if type(value) in sequence_types:
             if all([type(element) in numerical_types for element in value]):
@@ -76,7 +108,7 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def num_points(self):
         """
-        Property storing the number of different regions/number of points.
+        The number of different regions/number of points.
         """
         if not hasattr(self, '_num_points'):
             self._num_points = len(self.points)
@@ -85,7 +117,8 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def covariances(self):
         """
-        Property storing a sequence of 2D numpy.ndarray of covariances.
+        The sequence of 2D numpy.ndarray of covariances,
+        \\(\\boldsymbol{\\Sigma}_k\\).
         """
         if not hasattr(self, '_covariances'):
             raise AttributeError("covariances referenced before it was set.")
@@ -94,10 +127,14 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @covariances.setter
     def covariances(self, value):
         """
-        Sets the covariances of this SourceDependentGaussianJumpingDistribution
+        Setter for `SourceDependentGaussianJumpingDistribution.covariances`.
         
-        value: sequence of single numbers (if this distribution is 1D) or
-               square 2D arrays (if this distribution is multivariate)
+        Parameters
+        ----------
+        value : sequence
+            sequence of either single numbers (if this should be a 1D Gaussian)
+            or square 2D arrays (if this should be a multivariate Gaussian),
+            representing \\(\\boldsymbol{\\Sigma}_k\\)
         """
         if type(value) in sequence_types:
             if all([type(element) in numerical_types for element in value]):
@@ -132,8 +169,9 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def inverse_covariances(self):
         """
-        Property storing a 2D numpy.ndarray storing the inverses of the
-        matrices stored in covariances property.
+        Sequence of 2D `numpy.ndarray` objects storing the inverses of the
+        matrices stored in
+        `SourceDependentGaussianJumpingDistribution.covariances` property.
         """
         if not hasattr(self, '_inverse_covariances'):
             self._inverse_covariances =\
@@ -143,8 +181,8 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def constants_in_log_value(self):
         """
-        Property storing a constant in the log value which is independent of
-        both the source and the destination.
+        A constant in the log value which is independent of both the source and
+        the destination.
         """
         if not hasattr(self, '_constants_in_log_value'):
             self._constants_in_log_value =\
@@ -156,7 +194,9 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def square_root_covariances(self):
         """
-        Property storing the square roots of the covariance matrices.
+        Sequence of 2D `numpy.ndarray` objects storing the square roots of the
+        matrices stored in
+        `SourceDependentGaussianJumpingDistribution.covariances` property.
         """
         if not hasattr(self, '_square_root_covariances'):
             self._square_root_covariances = []
@@ -177,8 +217,8 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def standard_deviations(self):
         """
-        Property storing the standard deviations possible for this
-        JumpingDistribution if it is univariate.
+        The standard deviations possible for this
+        `SourceDependentGaussianJumpingDistribution` if it is univariate.
         """
         if not hasattr(self, '_standard_deviations'):
             if self.numparams == 1:
@@ -191,13 +231,19 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     
     def choose_point_from_source(self, source):
         """
-        Finds the index of the point defining the region whose covariance
-        should be used when jumping from the given source.
+        Finds the index of the point, \\(\\boldsymbol{z}_k\\), defining the
+        region whose covariance should be used when jumping from the given
+        source.
         
-        source: single number if univariate, 1D array if multivariate
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            single number if univariate, 1D array if multivariate
         
-        returns: integer index of point to use to define distribution from
-                 given source
+        Returns
+        -------
+        region : int
+            integer index of point to use to define distribution from `source`
         """
         return np.argmin([np.dot(pnt - source, np.dot(pnt - source, invcov))\
             for (pnt, invcov) in zip(self.points, self.inverse_covariances)])
@@ -207,19 +253,38 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
         Draws a destination point from this jumping distribution given a source
         point.
         
-        source: if this JumpingDistribution is univariate, source should be a
-                                                           single number
-                otherwise, source should be numpy.ndarray of shape (numparams,)
-        shape: if None, returns single random variate
-                        (scalar for univariate ; 1D array for multivariate)
-               if int, n, returns n random variates
-                          (1D array for univariate ; 2D array for multivariate)
-               if tuple of n ints, returns that many random variates
-                                   n-D array for univariate ;
-                                   (n+1)-D array for multivariate
-        random: the random number generator to use (default: numpy.random)
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this `SourceDependentGaussianJumpingDistribution` is
+            univariate, source should be a single number
+            - otherwise, source should be `numpy.ndarray` of shape (numparams,)
+        shape : None or int or tuple
+            - if None, a single destination is returned
+                - if this distribution is univariate, a single number is
+                returned
+                - if this distribution is multivariate, a 1D `numpy.ndarray`
+                describing the coordinates of the destination is returned
+            - if int \\(n\\), \\(n\\) destinations are returned
+                - if this distribution is univariate, a 1D `numpy.ndarray` of
+                length \\(n\\) is returned
+                - if this distribution describes \\(p\\) dimensions, a 2D
+                `numpy.ndarray` is returned whose shape is \\((n,p)\\)
+            - if tuple of ints \\((n_1,n_2,\\ldots,n_k)\\),
+            \\(\\prod_{m=1}^kn_m\\) destinations are returned
+                - if this distribution is univariate, a `numpy.ndarray` of
+                shape \\((n_1,n_2,\\ldots,n_k)\\) is returned
+                - if this distribution describes \\(p\\) parameters, a
+                `numpy.ndarray` of shape \\((n_1,n_2,\\ldots,n_k,p)\\) is
+                returned
+        random : numpy.random.RandomState
+            the random number generator to use (default: `numpy.random`)
         
-        returns: either single value (if distribution is 1D) or array of values
+        Returns
+        -------
+        destinations : number or numpy.ndarray
+            either single value or array of values. See documentation on
+            `shape` above for the type of the returned value
         """
         point_index = self.choose_point_from_source(source)
         if self.numparams == 1:
@@ -237,13 +302,28 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     
     def log_value(self, source, destination):
         """
-        Computes the log-PDF: ln(f(source->destination))
+        Computes the log-PDF of jumping from `source` to `destination`.
         
-        source, destination: either single values (if distribution is 1D) or
-                             arrays of values
+        Parameters
+        ----------
+        source : number or numpy.ndarray
+            - if this distribution is univariate, `source` must be a number
+            - if this distribution describes \\(p\\) parameters, `source` must
+            be a 1D `numpy.ndarray` of length \\(p\\)
+        destination : number or numpy.ndarray
+            - if this distribution is univariate, `destination` must be a
+            number
+            - if this distribution describes \\(p\\) parameters, `destination`
+            must be a 1D `numpy.ndarray` of length \\(p\\)
         
-        returns: single number, logarithm of value of this distribution at the
-                 given point
+        Returns
+        -------
+        log_pdf : float
+            if the distribution is \\(f(\\boldsymbol{x},\\boldsymbol{y})=\
+            \\text{Pr}[\\boldsymbol{y}|\\boldsymbol{x}]\\), `source` is
+            \\(\\boldsymbol{x}\\) and `destination` is \\(\\boldsymbol{y}\\),
+            then `log_pdf` is given by
+            \\(\\ln{f(\\boldsymbol{x},\\boldsymbol{y})}\\)
         """
         point_index = self.choose_point_from_source(source)
         difference = (destination - source)
@@ -259,8 +339,7 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def numparams(self):
         """
-        Property storing the integer number of parameters described by this
-        distribution. It must be implemented by all subclasses.
+        The integer number of parameters described by this distribution.
         """
         if not hasattr(self, '_numparams'):
             self._numparams = len(self.points[0])
@@ -268,12 +347,21 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     
     def __eq__(self, other):
         """
-        Tests for equality between this distribution and other. All subclasses
-        must implement this function.
+        Tests for equality between this
+        `SourceDependentGaussianJumpingDistribution` and `other`.
         
-        other: JumpingDistribution with which to check for equality
+        Parameters
+        ----------
+        other : object
+            object with which to check for equality
         
-        returns: True or False
+        Returns
+        -------
+        result : bool
+            True if and only if object is another
+            `SourceDependentGaussianJumpingDistribution` with the same
+            `SourceDependentGaussianJumpingDistribution.points` and
+            `SourceDependentGaussianJumpingDistribution.covariances`
         """
         if isinstance(other, SourceDependentGaussianJumpingDistribution):
             if self.numparams == other.numparams:
@@ -293,18 +381,20 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @property
     def is_discrete(self):
         """
-        Property storing boolean describing whether this JumpingDistribution
-        describes discrete (True) or continuous (False) variable(s).
+        Toolean describing whether this distribution describes discrete (True)
+        or continuous (False) variable(s). Since Gaussian distributions are
+        continuous, this is always False.
         """
         return False
     
     def fill_hdf5_group(self, group, covariance_link=None):
         """
-        Fills the given hdf5 file group with data from this distribution. The
-        fact that this is a SourceDependentGaussianJumpingDistribution is saved
-        along with the mean and covariance.
+        Fills the given hdf5 file group with data from this distribution.
         
-        group: hdf5 file group to fill
+        Parameters
+        ----------
+        group : h5py.Group
+            hdf5 file group to fill with information about this distribution
         """
         group.attrs['class'] = 'SourceDependentGaussianJumpingDistribution'
         create_hdf5_dataset(group, 'points', data=self.points)
@@ -313,14 +403,20 @@ class SourceDependentGaussianJumpingDistribution(JumpingDistribution):
     @staticmethod
     def load_from_hdf5_group(group):
         """
-        Loads a SourceDependentGaussianJumpingDistribution from the given hdf5
-        file group.
+        Loads a `SourceDependentGaussianJumpingDistribution` from the given
+        hdf5 file group.
         
-        group: the same hdf5 file group which fill_hdf5_group was called on
-               when this GaussianJumpingDistribution was saved
+        Parameters
+        ----------
+        group : h5py.Group
+            the same hdf5 file group which
+            `SourceDependentGaussianJumpingDistribution.fill_hdf5_group` was
+            called on
         
-        returns: a GaussianJumpingDistribution object created from the
-                 information in the given group
+        Returns
+        -------
+        loaded : `SourceDependentGaussianJumpingDistribution
+            distribution loaded from information in the given group
         """
         try:
             assert(group.attrs['class'] ==\
